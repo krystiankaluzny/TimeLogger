@@ -1,7 +1,12 @@
 package org.obywatelgcc.timelogger
 
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.database.Cursor
+import android.net.Uri
 import android.os.Bundle
+import android.provider.CalendarContract
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -27,8 +32,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
@@ -44,6 +50,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
@@ -53,36 +61,104 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import android.Manifest
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.graphics.Color
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val callbackId = 42;
+        checkPermission(
+            callbackId, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR
+        )
+        testCalenders()
         enableEdgeToEdge()
         setContent {
             TimeLoggerTheme {
-                Surface() {
-                    App()
+
+                Scaffold(
+                    topBar = { TopAppBar(title = { Text(text = getString(R.string.app_name)) }) }) { innerPadding ->
+                    App(innerPadding)
                 }
             }
+        }
+    }
+
+    private fun checkPermission(callbackId: Int, vararg permissionsId: String) {
+        var permissions = true
+        for (p in permissionsId) {
+            permissions =
+                permissions && ContextCompat.checkSelfPermission(this, p) == PERMISSION_GRANTED
+        }
+
+        if (!permissions) ActivityCompat.requestPermissions(this, permissionsId, callbackId)
+    }
+
+    private fun testCalenders() {
+        val EVENT_PROJECTION: Array<String> = arrayOf(
+            CalendarContract.Calendars._ID,                     // 0
+            CalendarContract.Calendars.ACCOUNT_NAME,            // 1
+            CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,   // 2
+            CalendarContract.Calendars.OWNER_ACCOUNT            // 3
+        )
+
+        // The indices for the projection array above.
+        val PROJECTION_ID_INDEX: Int = 0
+        val PROJECTION_ACCOUNT_NAME_INDEX: Int = 1
+        val PROJECTION_DISPLAY_NAME_INDEX: Int = 2
+        val PROJECTION_OWNER_ACCOUNT_INDEX: Int = 3
+
+        val uri: Uri = CalendarContract.Calendars.CONTENT_URI
+        val cur: Cursor? = contentResolver.query(uri, EVENT_PROJECTION, null, null, null)
+        cur?.apply {
+
+            Log.d("Dupa", "start")
+
+            while (cur.moveToNext()) {
+                val calID: Long = cur.getLong(PROJECTION_ID_INDEX)
+                val displayName: String = cur.getString(PROJECTION_DISPLAY_NAME_INDEX)
+                val accountName: String = cur.getString(PROJECTION_ACCOUNT_NAME_INDEX)
+                val ownerName: String = cur.getString(PROJECTION_OWNER_ACCOUNT_INDEX)
+
+                Log.d("Dupa", "testCalenders: $calID, $displayName, $accountName, $ownerName")
+            }
+            close()
         }
     }
 }
 
 @Composable
-fun App() {
+fun App(innerPadding: PaddingValues) {
     var viewModel: TimeEntryViewModel = viewModel()
 
-    MainScreen(viewModel)
+    MainScreen(viewModel, innerPadding)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("DefaultLocale")
 @Composable
-fun MainScreen(viewModel: TimeEntryViewModel) {
+fun MainScreen(viewModel: TimeEntryViewModel, innerPadding: PaddingValues) {
     var entryDescription by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(innerPadding)
     ) {
         LaunchedEffect(key1 = viewModel.started) {
             while (viewModel.started) {
@@ -91,12 +167,46 @@ fun MainScreen(viewModel: TimeEntryViewModel) {
             }
         }
 
-        Spacer(Modifier.width(16.dp))
+        val items = listOf("A", "B", "C", "D", "E", "F")
+        var textFieldState by remember { mutableStateOf(items[0]) }
+
+
+        ExposedDropdownMenuBox(
+            expanded = expanded, onExpandedChange = { expanded = it },
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
+            TextField(
+                value = textFieldState,
+                onValueChange = { },
+                label = { Text("Calender") },
+                // The `menuAnchor` modifier must be passed to the text field to handle
+                // expanding/collapsing the menu on click. A read-only text field has
+                // the anchor type `PrimaryNotEditable`.
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded, onDismissRequest = { expanded = false }) {
+                items.forEach { s ->
+                    DropdownMenuItem(onClick = {
+                        textFieldState = s
+                        expanded = false
+                    }, text = {
+                        Text(text = s)
+                    })
+                }
+            }
+        }
 
         OutlinedTextField(
             value = entryDescription,
             onValueChange = { entryDescription = it },
-            label = { Text(text = "Some description") },
+            label = { Text(text = "Task description") },
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth()
