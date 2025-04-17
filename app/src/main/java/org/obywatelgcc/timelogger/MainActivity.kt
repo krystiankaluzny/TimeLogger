@@ -16,7 +16,6 @@ import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -40,7 +39,6 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,7 +51,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.delay
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 import org.obywatelgcc.timelogger.viewmodel.TimeEntryViewModel
 import java.time.Instant
@@ -62,20 +59,14 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import android.Manifest
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.TopAppBar
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.collectAsState
+import java.time.LocalDateTime
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -144,7 +135,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun App(innerPadding: PaddingValues) {
-    var viewModel: TimeEntryViewModel = viewModel()
+    val viewModel: TimeEntryViewModel = viewModel()
 
     MainScreen(viewModel, innerPadding)
 }
@@ -160,12 +151,6 @@ fun MainScreen(viewModel: TimeEntryViewModel, innerPadding: PaddingValues) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(innerPadding)
     ) {
-        LaunchedEffect(key1 = viewModel.started) {
-            while (viewModel.started) {
-                delay(1000)
-                viewModel.update()
-            }
-        }
 
         val items = listOf("A", "B", "C", "D", "E", "F")
         var textFieldState by remember { mutableStateOf(items[0]) }
@@ -214,28 +199,18 @@ fun MainScreen(viewModel: TimeEntryViewModel, innerPadding: PaddingValues) {
 
         DateTimePickerRow(
             "Start",
-            viewModel.startDateTime.toLocalDate(),
-            viewModel.startDateTime.toLocalTime(),
+            viewModel.startDateTime.collectAsState().value,
             { localDate -> viewModel.updateStartDate(localDate) },
             { localTime -> viewModel.updateStartTime(localTime) })
 
         DateTimePickerRow(
             "End",
-            viewModel.endDateTime.toLocalDate(),
-            viewModel.endDateTime.toLocalTime(),
+            viewModel.endDateTime.collectAsState().value,
             { localDate -> viewModel.updateEndDate(localDate) },
             { localTime -> viewModel.updateEndTime(localTime) })
 
-        val durationSeconds = viewModel.duration.seconds
-        val hoursPart = durationSeconds / 3600
-        val minutesPart = (durationSeconds / 60) % 60
-        val secondsPart = durationSeconds % 60
         Text(
-            text = "Duration: ${
-                String.format(
-                    "%d:%02d:%02d", hoursPart, minutesPart, secondsPart
-                )
-            }", Modifier.padding(16.dp)
+            text = "Duration: ${viewModel.durationStr.collectAsState().value}", Modifier.padding(16.dp)
         )
 
         Row(
@@ -258,14 +233,15 @@ fun MainScreen(viewModel: TimeEntryViewModel, innerPadding: PaddingValues) {
 @Composable
 fun DateTimePickerRow(
     title: String,
-    initDate: LocalDate,
-    initTime: LocalTime,
+    initTimeDate: LocalDateTime,
     onDateSelected: (LocalDate) -> Unit = {},
     onTimeSelected: (LocalTime) -> Unit = {}
 ) {
 
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val timeFormatter = DateTimeFormatter.ofPattern("hh:mm:ss")
+    val initDate = initTimeDate.toLocalDate()
+    val initTime = initTimeDate.toLocalTime()
 
     ElevatedCard(
         modifier = Modifier
@@ -287,7 +263,7 @@ fun DateTimePickerRow(
                     Icon(Icons.Default.DateRange, contentDescription = "Select date")
                 }, modifier = Modifier.weight(1f)
             ) { onDismiss ->
-                DatePickerModal(onDateSelected = onDateSelected, onDismiss = onDismiss)
+                DatePickerDialog(onDateSelected = onDateSelected, onDismiss = onDismiss)
             }
 
             Spacer(Modifier.width(16.dp))
@@ -306,8 +282,8 @@ fun DateTimePickerRow(
 @Composable
 fun TextFiledWithPicker(
     value: String,
-    trailingIcon: @Composable (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    trailingIcon: @Composable (() -> Unit)? = null,
     picker: @Composable (onDismiss: () -> Unit) -> Unit
 ) {
     var showPicker by remember { mutableStateOf(false) }
@@ -337,7 +313,7 @@ fun TextFiledWithPicker(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatePickerModal(
+fun DatePickerDialog(
     onDateSelected: (LocalDate) -> Unit, onDismiss: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState()
