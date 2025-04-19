@@ -17,7 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import org.obywatelgcc.timelogger.ui.composite.App
+import org.obywatelgcc.timelogger.ui.compose.App
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 class MainActivity : ComponentActivity() {

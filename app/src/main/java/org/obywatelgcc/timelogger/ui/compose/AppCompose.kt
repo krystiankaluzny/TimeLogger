@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.ui.composite
+package org.obywatelgcc.timelogger.ui.compose
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -44,7 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import org.obywatelgcc.timelogger.viewmodel.TimeEntryViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -56,7 +56,7 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun App(innerPadding: PaddingValues) {
-    val viewModel: TimeEntryViewModel = viewModel()
+    val viewModel: TimeEntryViewModel = koinViewModel()
 
     TimeLoggerScreen(viewModel, innerPadding)
 }

@@ -10,11 +10,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.obywatelgcc.timelogger.model.calendar.CalendarRepository
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.Locale
 
-class TimeEntryViewModel : ViewModel() {
+class TimeEntryViewModel(
+    val calendarRepository: CalendarRepository
+) : ViewModel() {
 
     private val tickerDelayMs = 1000L
 

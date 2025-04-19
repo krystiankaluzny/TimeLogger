@@ -1,0 +1,14 @@
+package org.obywatelgcc.timelogger
+
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.module
+import org.obywatelgcc.timelogger.model.calendar.CalendarRepository
+import org.obywatelgcc.timelogger.model.calendar.CalendarRepositoryImpl
+import org.obywatelgcc.timelogger.viewmodel.TimeEntryViewModel
+
+val appModule = module {
+    singleOf(::CalendarRepositoryImpl) { bind<CalendarRepository>() }
+    viewModelOf(::TimeEntryViewModel)
+}
