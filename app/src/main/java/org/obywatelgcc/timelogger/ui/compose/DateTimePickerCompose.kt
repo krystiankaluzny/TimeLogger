@@ -51,7 +51,7 @@ fun DateTimePickerRow(
 ) {
 
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val timeFormatter = DateTimeFormatter.ofPattern("hh:mm:ss")
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
     val initDate = initTimeDate.toLocalDate()
     val initTime = initTimeDate.toLocalTime()
 

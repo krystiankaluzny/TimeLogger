@@ -1,11 +1,17 @@
 package org.obywatelgcc.timelogger.model.calendar
 
+import android.content.ContentResolver
+import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
+import androidx.core.content.ContextCompat.startActivity
 import kotlinx.coroutines.delay
+import java.time.ZoneId
 
 interface CalendarRepository {
 
@@ -17,8 +23,11 @@ class CalendarRepositoryImpl(
     private val androidContext: Context
 ) : CalendarRepository {
 
+    val contentResolver: ContentResolver = androidContext.contentResolver
+
     companion object {
-        val URI: Uri = CalendarContract.Calendars.CONTENT_URI
+        val CALENDAR_URI: Uri = CalendarContract.Calendars.CONTENT_URI
+        val EVENT_URI: Uri = CalendarContract.Events.CONTENT_URI
 
         val PROJECTION: Array<String> = arrayOf(
             CalendarContract.Calendars._ID,                     // 0
@@ -28,17 +37,16 @@ class CalendarRepositoryImpl(
         )
 
         // The indices for the projection array above.
-        val PROJECTION_ID_INDEX: Int = 0
-        val PROJECTION_ACCOUNT_NAME_INDEX: Int = 1
-        val PROJECTION_DISPLAY_NAME_INDEX: Int = 2
-        val PROJECTION_OWNER_ACCOUNT_INDEX: Int = 3
+        const val PROJECTION_ID_INDEX: Int = 0
+        const val PROJECTION_ACCOUNT_NAME_INDEX: Int = 1
+        const val PROJECTION_DISPLAY_NAME_INDEX: Int = 2
+        const val PROJECTION_OWNER_ACCOUNT_INDEX: Int = 3
     }
 
     override suspend fun findAll(): List<Calendar> {
         val result = mutableListOf<Calendar>()
 
-        val calenderCursor: Cursor? =
-            androidContext.contentResolver.query(URI, PROJECTION, null, null, null)
+        val calenderCursor: Cursor? = contentResolver.query(CALENDAR_URI, PROJECTION, null, null, null)
         calenderCursor?.apply {
             while (moveToNext()) {
                 result.add(
@@ -60,7 +68,29 @@ class CalendarRepositoryImpl(
         calendar: Calendar,
         entry: CalendarEntry
     ) {
-        Log.d("Dupa", "addEntryToCalendar: $calendar, $entry")
-        delay(1000)
+        Log.d("CalendarRepository", "addEntryToCalendar: $calendar, $entry")
+
+        val zoneId = ZoneId.systemDefault()
+        val starZoned = entry.start.atZone(zoneId)
+        val endZoned = entry.end.atZone(zoneId)
+
+        val values = ContentValues().apply {
+            put(CalendarContract.Events.DTSTART, starZoned.toEpochSecond() * 1000)
+            put(CalendarContract.Events.DTEND, endZoned.toEpochSecond() * 1000)
+            put(CalendarContract.Events.TITLE, entry.description)
+            put(CalendarContract.Events.DESCRIPTION, "")
+            put(CalendarContract.Events.CALENDAR_ID, calendar.id)
+            put(CalendarContract.Events.EVENT_TIMEZONE, zoneId.id)
+        }
+
+        Log.d("CalendarRepository", "addEntryToCalendar: $values")
+
+        val eventUri: Uri? = contentResolver.insert(EVENT_URI, values)
+
+//        Log.d("CalendarRepository", "addEntryToCalendar: $eventUri")
+//        val intent = Intent(Intent.ACTION_EDIT)
+//            .setData(eventUri)
+//            .putExtra(CalendarContract.Events.TITLE, "My New Title")
+//        androidContext.startActivity(intent)
     }
 }

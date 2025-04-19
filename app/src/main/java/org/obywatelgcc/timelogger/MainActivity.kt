@@ -29,7 +29,6 @@ class MainActivity : ComponentActivity() {
         checkPermission(
             callbackId, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR
         )
-        testCalenders()
         enableEdgeToEdge()
         setContent {
             TimeLoggerTheme {
@@ -50,37 +49,5 @@ class MainActivity : ComponentActivity() {
         }
 
         if (!permissions) ActivityCompat.requestPermissions(this, permissionsId, callbackId)
-    }
-
-    private fun testCalenders() {
-        val EVENT_PROJECTION: Array<String> = arrayOf(
-            CalendarContract.Calendars._ID,                     // 0
-            CalendarContract.Calendars.ACCOUNT_NAME,            // 1
-            CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,   // 2
-            CalendarContract.Calendars.OWNER_ACCOUNT            // 3
-        )
-
-        // The indices for the projection array above.
-        val PROJECTION_ID_INDEX: Int = 0
-        val PROJECTION_ACCOUNT_NAME_INDEX: Int = 1
-        val PROJECTION_DISPLAY_NAME_INDEX: Int = 2
-        val PROJECTION_OWNER_ACCOUNT_INDEX: Int = 3
-
-        val uri: Uri = CalendarContract.Calendars.CONTENT_URI
-        val cur: Cursor? = contentResolver.query(uri, EVENT_PROJECTION, null, null, null)
-        cur?.apply {
-
-            Log.d("Dupa", "start")
-
-            while (cur.moveToNext()) {
-                val calID: Long = cur.getLong(PROJECTION_ID_INDEX)
-                val displayName: String = cur.getString(PROJECTION_DISPLAY_NAME_INDEX)
-                val accountName: String = cur.getString(PROJECTION_ACCOUNT_NAME_INDEX)
-                val ownerName: String = cur.getString(PROJECTION_OWNER_ACCOUNT_INDEX)
-
-                Log.d("Dupa", "testCalenders: $calID, $displayName, $accountName, $ownerName")
-            }
-            close()
-        }
     }
 }
