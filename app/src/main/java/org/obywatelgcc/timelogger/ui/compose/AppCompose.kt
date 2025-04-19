@@ -1,6 +1,7 @@
 package org.obywatelgcc.timelogger.ui.compose
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -28,26 +29,38 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import org.obywatelgcc.timelogger.model.calendar.Calendar
+import org.obywatelgcc.timelogger.viewmodel.State
 import org.obywatelgcc.timelogger.viewmodel.TimeEntryViewModel
-import org.obywatelgcc.timelogger.viewmodel.UiState
 
 
 @Composable
 fun App(innerPadding: PaddingValues) {
     val viewModel: TimeEntryViewModel = koinViewModel()
-    val uiState = viewModel.uiState.collectAsState()
+    val calendarState = viewModel.calendarState.collectAsState()
 
-    when (uiState.value) {
-        UiState.INITIALIZING -> {
+    when (calendarState.value) {
+        State.BEFORE_INITIALIZING -> {
             CircularProgressIndicator()
         }
 
-        UiState.INITIALIZED -> {
+        State.SUCCESSFULLY_INITIALIZED -> {
             TimeLoggerScreen(viewModel, innerPadding)
+        }
+
+        State.CALENDARS_NOT_FOUND -> {
+            Box(modifier = Modifier.padding(innerPadding)) {
+                Text(
+                    text = "Sorry, but no calendars found",
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp),
+                    fontSize = 30.sp
+                )
+            }
         }
     }
 }
@@ -89,7 +102,7 @@ fun TimeLoggerScreen(viewModel: TimeEntryViewModel, innerPadding: PaddingValues)
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun CalendarDropdown(
-    calenderas: List<Calendar>,
+    calendars: List<Calendar>,
     selected: Calendar?,
     onSelect: (Calendar) -> Unit
 ) {
@@ -119,7 +132,7 @@ private fun CalendarDropdown(
 
         ExposedDropdownMenu(
             expanded = expanded, onDismissRequest = { expanded = false }) {
-            calenderas.forEach { c ->
+            calendars.forEach { c ->
                 DropdownMenuItem(onClick = {
                     textFieldState = c.description()
                     onSelect(c)

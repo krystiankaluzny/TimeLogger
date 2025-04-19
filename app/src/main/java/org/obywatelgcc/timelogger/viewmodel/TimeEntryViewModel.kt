@@ -22,13 +22,11 @@ class TimeEntryViewModel(
 
     private val tickerDelayMs = 1000L
 
-    private val _uiState = MutableStateFlow(UiState.INITIALIZING)
-    val uiState = _uiState.asStateFlow()
-
     private val _started = MutableStateFlow(false)
     val started = _started.asStateFlow()
 
     private val timeCalendarState = TimeCalendarState()
+    val calendarState = timeCalendarState.state.asStateFlow()
     val availableCalendars = timeCalendarState.availableCalendars.asStateFlow()
     val selectedCalendar = timeCalendarState.selectedCalendar.asStateFlow()
 
@@ -60,9 +58,7 @@ class TimeEntryViewModel(
 
     private fun initCalendars() {
         viewModelScope.launch {
-            _uiState.value = UiState.INITIALIZING
             timeCalendarState.init(calendarRepository.findAll())
-            _uiState.value = UiState.INITIALIZED
         }
     }
 
@@ -71,12 +67,13 @@ class TimeEntryViewModel(
     }
 
     fun start() {
-        _started.value = true
-
-        viewModelScope.launch {
-            while (_started.value) {
-                timeRangeState.refreshEndDateTime()
-                delay(tickerDelayMs)
+        if(!_started.value) {
+            _started.value = true
+            viewModelScope.launch {
+                while (_started.value) {
+                    timeRangeState.refreshEndDateTime()
+                    delay(tickerDelayMs)
+                }
             }
         }
     }
@@ -113,6 +110,3 @@ class TimeEntryViewModel(
     fun updateEndTime(localTime: LocalTime) = timeRangeState.updateEndTime(localTime)
 }
 
-enum class UiState {
-    INITIALIZING, INITIALIZED
-}

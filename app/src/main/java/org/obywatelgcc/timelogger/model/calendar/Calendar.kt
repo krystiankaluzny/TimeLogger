@@ -4,16 +4,16 @@ import java.time.LocalDateTime
 
 data class Calendar(
     val id : Long,
+    val accountName: String,
     val displayName: String,
-    val ownerName: String,
-    val accountName: String
+    val ownerName: String
 ) {
     fun description(): String {
-        if(ownerName == displayName) {
-            return displayName
+        if(accountName == displayName) {
+            return accountName
         }
 
-        return "$ownerName - $displayName"
+        return "$accountName - $displayName"
     }
 }
 
