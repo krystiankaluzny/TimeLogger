@@ -1,17 +1,12 @@
 package org.obywatelgcc.timelogger.model.calendar
 
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
-import androidx.core.content.ContextCompat.startActivity
-import kotlinx.coroutines.delay
-import java.time.ZoneId
 
 interface CalendarRepository {
 
@@ -20,7 +15,7 @@ interface CalendarRepository {
 }
 
 class CalendarRepositoryImpl(
-    private val androidContext: Context
+    androidContext: Context
 ) : CalendarRepository {
 
     val contentResolver: ContentResolver = androidContext.contentResolver
@@ -46,7 +41,8 @@ class CalendarRepositoryImpl(
     override suspend fun findAll(): List<Calendar> {
         val result = mutableListOf<Calendar>()
 
-        val calenderCursor: Cursor? = contentResolver.query(CALENDAR_URI, PROJECTION, null, null, null)
+        val calenderCursor: Cursor? =
+            contentResolver.query(CALENDAR_URI, PROJECTION, null, null, null)
         calenderCursor?.apply {
             while (moveToNext()) {
                 result.add(
@@ -70,27 +66,17 @@ class CalendarRepositoryImpl(
     ) {
         Log.d("CalendarRepository", "addEntryToCalendar: $calendar, $entry")
 
-        val zoneId = ZoneId.systemDefault()
-        val starZoned = entry.start.atZone(zoneId)
-        val endZoned = entry.end.atZone(zoneId)
-
         val values = ContentValues().apply {
-            put(CalendarContract.Events.DTSTART, starZoned.toEpochSecond() * 1000)
-            put(CalendarContract.Events.DTEND, endZoned.toEpochSecond() * 1000)
-            put(CalendarContract.Events.TITLE, entry.description)
+            put(CalendarContract.Events.DTSTART, entry.startMillis())
+            put(CalendarContract.Events.DTEND, entry.endMillis())
+            put(CalendarContract.Events.TITLE, entry.title)
             put(CalendarContract.Events.DESCRIPTION, "")
             put(CalendarContract.Events.CALENDAR_ID, calendar.id)
-            put(CalendarContract.Events.EVENT_TIMEZONE, zoneId.id)
+            put(CalendarContract.Events.EVENT_TIMEZONE, entry.zoneIdName())
         }
 
         Log.d("CalendarRepository", "addEntryToCalendar: $values")
 
         val eventUri: Uri? = contentResolver.insert(EVENT_URI, values)
-
-//        Log.d("CalendarRepository", "addEntryToCalendar: $eventUri")
-//        val intent = Intent(Intent.ACTION_EDIT)
-//            .setData(eventUri)
-//            .putExtra(CalendarContract.Events.TITLE, "My New Title")
-//        androidContext.startActivity(intent)
     }
 }

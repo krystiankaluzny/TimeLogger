@@ -32,15 +32,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.koin.androidx.compose.koinViewModel
 import org.obywatelgcc.timelogger.model.calendar.Calendar
 import org.obywatelgcc.timelogger.viewmodel.State
 import org.obywatelgcc.timelogger.viewmodel.TimeEntryViewModel
 
 
 @Composable
-fun App(innerPadding: PaddingValues) {
-    val viewModel: TimeEntryViewModel = koinViewModel()
+fun App(viewModel: TimeEntryViewModel, innerPadding: PaddingValues) {
     val calendarState = viewModel.calendarState.collectAsState()
 
     when (calendarState.value) {
@@ -77,10 +75,10 @@ fun TimeLoggerScreen(viewModel: TimeEntryViewModel, innerPadding: PaddingValues)
 
         val calendars = viewModel.availableCalendars.collectAsState()
         val selectedCalendar = viewModel.selectedCalendar.collectAsState()
-        val taskDescription = viewModel.taskDescription.collectAsState()
+        val entryTitle = viewModel.entryTitle.collectAsState()
 
         CalendarDropdown(calendars.value, selectedCalendar.value, { viewModel.selectCalendar(it) })
-        TaskDescriptionTextField(taskDescription.value, { viewModel.updateTaskDescription(it) })
+        EntryTitleTextField(entryTitle.value, { viewModel.updateEntryTitle(it) })
         StartDateTimeRow(viewModel)
         EndDateTimeRow(viewModel)
         DurationRow(viewModel)
@@ -92,7 +90,7 @@ fun TimeLoggerScreen(viewModel: TimeEntryViewModel, innerPadding: PaddingValues)
             modifier = Modifier
                 .fillMaxWidth(0.4f)
                 .height(50.dp),
-            onClick = { viewModel.save() }) {
+            onClick = { viewModel.trySave() }) {
             Text(text = "Save")
         }
     }
@@ -146,14 +144,14 @@ private fun CalendarDropdown(
 }
 
 @Composable
-private fun TaskDescriptionTextField(
+private fun EntryTitleTextField(
     initValue: String,
     onValueChange: (String) -> Unit
 ) {
     OutlinedTextField(
         value = initValue,
         onValueChange = onValueChange,
-        label = { Text(text = "Task description") },
+        label = { Text(text = "Task title") },
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth()

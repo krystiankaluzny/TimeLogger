@@ -1,15 +1,17 @@
 package org.obywatelgcc.timelogger.model.calendar
 
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 data class Calendar(
-    val id : Long,
+    val id: Long,
     val accountName: String,
     val displayName: String,
     val ownerName: String
 ) {
     fun description(): String {
-        if(accountName == displayName) {
+        if (accountName == displayName) {
             return accountName
         }
 
@@ -18,7 +20,22 @@ data class Calendar(
 }
 
 data class CalendarEntry(
-    val description: String,
-    val start: LocalDateTime,
-    val end: LocalDateTime
-)
+    val title: String,
+    val start: ZonedDateTime,
+    val end: ZonedDateTime,
+) {
+    companion object {
+        fun of(
+            title: String, start: LocalDateTime, end: LocalDateTime
+        ): CalendarEntry {
+            val zoneId = ZoneId.systemDefault()
+            val starZoned = start.atZone(zoneId)
+            val endZoned = end.atZone(zoneId)
+            return CalendarEntry(title, starZoned, endZoned)
+        }
+    }
+
+    fun startMillis() = start.toEpochSecond() * 1000
+    fun endMillis() = end.toEpochSecond() * 1000
+    fun zoneIdName(): String = end.zone.id
+}

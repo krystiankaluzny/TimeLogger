@@ -3,8 +3,10 @@ package org.obywatelgcc.timelogger.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -30,8 +32,8 @@ class TimeEntryViewModel(
     val availableCalendars = timeCalendarState.availableCalendars.asStateFlow()
     val selectedCalendar = timeCalendarState.selectedCalendar.asStateFlow()
 
-    private val _taskDescription = MutableStateFlow("")
-    val taskDescription = _taskDescription.asStateFlow()
+    private val _entryTitle = MutableStateFlow("")
+    val entryTitle = _entryTitle.asStateFlow()
 
     private val timeRangeState = TimeRangeState(viewModelScope)
     val startDateTime = timeRangeState.startDateTime.asStateFlow()
@@ -52,6 +54,9 @@ class TimeEntryViewModel(
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
+    private val _calendarEntryToSave = MutableSharedFlow<CalendarEntry>()
+    val calendarEntryToSave = _calendarEntryToSave.asSharedFlow()
+
     init {
         initCalendars()
     }
@@ -67,7 +72,7 @@ class TimeEntryViewModel(
     }
 
     fun start() {
-        if(!_started.value) {
+        if (!_started.value) {
             _started.value = true
             viewModelScope.launch {
                 while (_started.value) {
@@ -85,23 +90,26 @@ class TimeEntryViewModel(
         }
     }
 
-    fun save() {
+    fun trySave() {
         selectedCalendar.value?.also { calendar ->
             viewModelScope.launch {
                 stop()
-                val entry = CalendarEntry(
-                    taskDescription.value,
+                val entry = CalendarEntry.of(
+                    entryTitle.value,
                     startDateTime.value,
                     endDateTime.value
                 )
                 calendarRepository.addEntryToCalendar(calendar, entry)
+                //NOTE: replace calendarRepository.addEntryToCalendar with this emit,
+                // to call another activity that handle a new entry
+//                _calendarEntryToSave.emit(entry)
             }
         }
     }
 
     fun selectCalendar(calendar: Calendar) = timeCalendarState.select(calendar)
-    fun updateTaskDescription(description: String) {
-        _taskDescription.value = description
+    fun updateEntryTitle(description: String) {
+        _entryTitle.value = description
     }
 
     fun updateStartDate(localDate: LocalDate) = timeRangeState.updateStartDate(localDate)
