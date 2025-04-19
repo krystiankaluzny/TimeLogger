@@ -19,9 +19,15 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,8 +43,33 @@ import org.obywatelgcc.timelogger.viewmodel.State
 import org.obywatelgcc.timelogger.viewmodel.TimeEntryViewModel
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun App(viewModel: TimeEntryViewModel, innerPadding: PaddingValues) {
+fun App(viewModel: TimeEntryViewModel) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val appName = viewModel.appName.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.messageToShow.collect {
+            snackbarHostState.showSnackbar(it, "OK", duration = SnackbarDuration.Short)
+        }
+    }
+
+    Scaffold(
+        topBar = { TopAppBar(title = { Text(text = appName.value) }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    )
+    { innerPadding ->
+        AppCalendarState(viewModel, innerPadding)
+    }
+
+}
+
+@Composable
+private fun AppCalendarState(
+    viewModel: TimeEntryViewModel,
+    innerPadding: PaddingValues
+) {
     val calendarState = viewModel.calendarState.collectAsState()
 
     when (calendarState.value) {
@@ -70,9 +101,8 @@ fun TimeLoggerScreen(viewModel: TimeEntryViewModel, innerPadding: PaddingValues)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(innerPadding)
+        modifier = Modifier.padding(innerPadding),
     ) {
-
         val calendars = viewModel.availableCalendars.collectAsState()
         val selectedCalendar = viewModel.selectedCalendar.collectAsState()
         val entryTitle = viewModel.entryTitle.collectAsState()
@@ -151,7 +181,7 @@ private fun EntryTitleTextField(
     OutlinedTextField(
         value = initValue,
         onValueChange = onValueChange,
-        label = { Text(text = "Task title") },
+        label = { Text(text = "Event title") },
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth()

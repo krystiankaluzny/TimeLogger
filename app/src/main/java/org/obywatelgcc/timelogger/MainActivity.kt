@@ -10,9 +10,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -36,13 +33,13 @@ class MainActivity : ComponentActivity() {
         checkPermission(
             callbackId, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR
         )
+
+        viewModel.setAppName(getString(R.string.app_name))
+
         enableEdgeToEdge()
         setContent {
             TimeLoggerTheme {
-                Scaffold(
-                    topBar = { TopAppBar(title = { Text(text = getString(R.string.app_name)) }) }) { innerPadding ->
-                    App(viewModel, innerPadding)
-                }
+                App(viewModel)
             }
         }
 
@@ -52,9 +49,15 @@ class MainActivity : ComponentActivity() {
 
                     val intent = Intent(Intent.ACTION_INSERT)
                         .setData(CalendarContract.Events.CONTENT_URI)
-                        .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, calendarEntry.startMillis())
+                        .putExtra(
+                            CalendarContract.EXTRA_EVENT_BEGIN_TIME,
+                            calendarEntry.startMillis()
+                        )
                         .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, calendarEntry.endMillis())
-                        .putExtra(CalendarContract.Events.EVENT_TIMEZONE, calendarEntry.zoneIdName())
+                        .putExtra(
+                            CalendarContract.Events.EVENT_TIMEZONE,
+                            calendarEntry.zoneIdName()
+                        )
                         .putExtra(CalendarContract.Events.TITLE, calendarEntry.title)
                         .putExtra(CalendarContract.Events.DESCRIPTION, "")
 

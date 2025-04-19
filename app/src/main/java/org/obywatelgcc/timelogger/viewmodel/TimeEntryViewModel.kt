@@ -24,6 +24,9 @@ class TimeEntryViewModel(
 
     private val tickerDelayMs = 1000L
 
+    private val _appName = MutableStateFlow("")
+    val appName = _appName.asStateFlow()
+
     private val _started = MutableStateFlow(false)
     val started = _started.asStateFlow()
 
@@ -57,6 +60,9 @@ class TimeEntryViewModel(
     private val _calendarEntryToSave = MutableSharedFlow<CalendarEntry>()
     val calendarEntryToSave = _calendarEntryToSave.asSharedFlow()
 
+    private val _messageToShow = MutableSharedFlow<String>()
+    val messageToShow = _messageToShow.asSharedFlow()
+
     init {
         initCalendars()
     }
@@ -65,6 +71,10 @@ class TimeEntryViewModel(
         viewModelScope.launch {
             timeCalendarState.init(calendarRepository.findAll())
         }
+    }
+
+    fun setAppName(appName: String) {
+        _appName.value = appName
     }
 
     fun reset() {
@@ -99,7 +109,13 @@ class TimeEntryViewModel(
                     startDateTime.value,
                     endDateTime.value
                 )
-                calendarRepository.addEntryToCalendar(calendar, entry)
+                val result = calendarRepository.addEntryToCalendar(calendar, entry)
+
+                when(result.status) {
+                    CalendarRepository.AddEntryResult.Status.ALREADY_EXISTS -> _messageToShow.emit("Already exists")
+                    CalendarRepository.AddEntryResult.Status.CREATED -> _messageToShow.emit("Successfully saved")
+                    CalendarRepository.AddEntryResult.Status.ERROR -> _messageToShow.emit("Saving failed")
+                }
                 //NOTE: replace calendarRepository.addEntryToCalendar with this emit,
                 // to call another activity that handle a new entry
 //                _calendarEntryToSave.emit(entry)

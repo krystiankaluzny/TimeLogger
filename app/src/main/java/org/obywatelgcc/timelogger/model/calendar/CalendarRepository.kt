@@ -7,11 +7,22 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
+import org.obywatelgcc.timelogger.model.calendar.CalendarRepository.AddEntryResult
+import org.obywatelgcc.timelogger.model.calendar.CalendarRepository.AddEntryResult.Status
+import java.time.ZonedDateTime
+
 
 interface CalendarRepository {
 
     suspend fun findAll(): List<Calendar>
-    suspend fun addEntryToCalendar(calendar: Calendar, entry: CalendarEntry)
+    suspend fun addEntryToCalendar(calendar: Calendar, entry: CalendarEntry): AddEntryResult
+
+    data class AddEntryResult(
+        val status: Status,
+        val entry: CalendarEntry
+    ) {
+        enum class Status { ALREADY_EXISTS, CREATED, ERROR }
+    }
 }
 
 class CalendarRepositoryImpl(
@@ -19,6 +30,10 @@ class CalendarRepositoryImpl(
 ) : CalendarRepository {
 
     val contentResolver: ContentResolver = androidContext.contentResolver
+
+    private var calenderEntryCached = mutableMapOf<EntryKey, CalendarEntry>()
+
+    private data class EntryKey(val title: String, val start: ZonedDateTime)
 
     companion object {
         val CALENDAR_URI: Uri = CalendarContract.Calendars.CONTENT_URI
@@ -63,8 +78,14 @@ class CalendarRepositoryImpl(
     override suspend fun addEntryToCalendar(
         calendar: Calendar,
         entry: CalendarEntry
-    ) {
+    ): AddEntryResult {
         Log.d("CalendarRepository", "addEntryToCalendar: $calendar, $entry")
+
+        val entryKey = EntryKey(entry.title, entry.start)
+        val cachedEntry = calenderEntryCached[entryKey]
+        if (cachedEntry != null) {
+            return AddEntryResult(Status.ALREADY_EXISTS, entry)
+        }
 
         val values = ContentValues().apply {
             put(CalendarContract.Events.DTSTART, entry.startMillis())
@@ -78,5 +99,13 @@ class CalendarRepositoryImpl(
         Log.d("CalendarRepository", "addEntryToCalendar: $values")
 
         val eventUri: Uri? = contentResolver.insert(EVENT_URI, values)
+
+        if (eventUri != null) {
+            calenderEntryCached.put(entryKey, entry)
+            return AddEntryResult(Status.CREATED, entry)
+        } else {
+            return AddEntryResult(Status.ERROR, entry)
+        }
     }
+
 }
