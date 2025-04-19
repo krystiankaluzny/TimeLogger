@@ -1,6 +1,5 @@
 package org.obywatelgcc.timelogger.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
@@ -10,6 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.obywatelgcc.timelogger.model.calendar.Calendar
+import org.obywatelgcc.timelogger.model.calendar.CalendarEntry
 import org.obywatelgcc.timelogger.model.calendar.CalendarRepository
 import java.time.LocalDate
 import java.time.LocalTime
@@ -21,8 +22,18 @@ class TimeEntryViewModel(
 
     private val tickerDelayMs = 1000L
 
+    private val _uiState = MutableStateFlow(UiState.INITIALIZING)
+    val uiState = _uiState.asStateFlow()
+
     private val _started = MutableStateFlow(false)
     val started = _started.asStateFlow()
+
+    private val timeCalendarState = TimeCalendarState()
+    val availableCalendars = timeCalendarState.availableCalendars.asStateFlow()
+    val selectedCalendar = timeCalendarState.selectedCalendar.asStateFlow()
+
+    private val _taskDescription = MutableStateFlow("")
+    val taskDescription = _taskDescription.asStateFlow()
 
     private val timeRangeState = TimeRangeState(viewModelScope)
     val startDateTime = timeRangeState.startDateTime.asStateFlow()
@@ -43,6 +54,18 @@ class TimeEntryViewModel(
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
+    init {
+        initCalendars()
+    }
+
+    private fun initCalendars() {
+        viewModelScope.launch {
+            _uiState.value = UiState.INITIALIZING
+            timeCalendarState.init(calendarRepository.findAll())
+            _uiState.value = UiState.INITIALIZED
+        }
+    }
+
     fun reset() {
         timeRangeState.reset()
     }
@@ -59,16 +82,37 @@ class TimeEntryViewModel(
     }
 
     fun stop() {
-        _started.value = false
-        timeRangeState.refreshEndDateTime()
+        if (_started.value) {
+            _started.value = false
+            timeRangeState.refreshEndDateTime()
+        }
     }
 
-    fun save(description: String) {
-        Log.d("TimeEntryViewModel", "save: ${timeRangeState.duration.value}")
+    fun save() {
+        selectedCalendar.value?.also { calendar ->
+            viewModelScope.launch {
+                stop()
+                val entry = CalendarEntry(
+                    taskDescription.value,
+                    startDateTime.value,
+                    endDateTime.value
+                )
+                calendarRepository.addEntryToCalendar(calendar, entry)
+            }
+        }
+    }
+
+    fun selectCalendar(calendar: Calendar) = timeCalendarState.select(calendar)
+    fun updateTaskDescription(description: String) {
+        _taskDescription.value = description
     }
 
     fun updateStartDate(localDate: LocalDate) = timeRangeState.updateStartDate(localDate)
     fun updateStartTime(localTime: LocalTime) = timeRangeState.updateStartTime(localTime)
     fun updateEndDate(localDate: LocalDate) = timeRangeState.updateEndDate(localDate)
     fun updateEndTime(localTime: LocalTime) = timeRangeState.updateEndTime(localTime)
+}
+
+enum class UiState {
+    INITIALIZING, INITIALIZED
 }
