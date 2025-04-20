@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
@@ -39,9 +40,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.obywatelgcc.timelogger.model.calendar.Calendar
+import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 import org.obywatelgcc.timelogger.viewmodel.State
 import org.obywatelgcc.timelogger.viewmodel.TimeEntryViewModel
-
+import org.obywatelgcc.timelogger.viewmodel.TimerState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -222,30 +224,61 @@ private fun TimeLoggerButtonsRow(viewModel: TimeEntryViewModel) {
         modifier = Modifier
             .padding(16.dp)
     ) {
+        val timerState = viewModel.timerState.collectAsState().value
+
         val buttonModifier = Modifier
-            .weight(1f)
+            .weight(0.5f)
             .height(50.dp)
+
+        val buttonElevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp)
 
         ElevatedButton(
             modifier = buttonModifier,
-            onClick = { viewModel.reset() }) {
+            onClick = { viewModel.reset() },
+            elevation = buttonElevation,
+            enabled = (timerState == TimerState.READY_TO_START || timerState == TimerState.STOPPED)
+        ) {
             Text(text = "Restart")
         }
 
         Spacer(Modifier.width(16.dp))
 
-        ElevatedButton(
-            modifier = buttonModifier,
-            onClick = { viewModel.start() }) {
-            Text(text = "Start")
-        }
+        when (timerState) {
+            TimerState.READY_TO_START -> ElevatedButton(
+                modifier = buttonModifier,
+                onClick = { viewModel.start() },
+                elevation = buttonElevation,
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = TimeLoggerTheme.colors.timerToStartButton,
+                    contentColor = TimeLoggerTheme.colors.timerButtonContent
+                )
+            ) {
+                Text(text = "Start")
+            }
 
-        Spacer(Modifier.width(16.dp))
+            TimerState.STARTED -> ElevatedButton(
+                modifier = buttonModifier,
+                onClick = { viewModel.stop() },
+                elevation = buttonElevation,
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = TimeLoggerTheme.colors.timerToStopButton,
+                    contentColor = TimeLoggerTheme.colors.timerButtonContent
+                )
+            ) {
+                Text(text = "Stop")
+            }
 
-        ElevatedButton(
-            modifier = buttonModifier,
-            onClick = { viewModel.stop() }) {
-            Text(text = "Stop")
+            TimerState.STOPPED -> ElevatedButton(
+                modifier = buttonModifier,
+                onClick = { viewModel.resume() },
+                elevation = buttonElevation,
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = TimeLoggerTheme.colors.timerToResumeButton,
+                    contentColor = TimeLoggerTheme.colors.timerButtonContent
+                )
+            ) {
+                Text(text = "Resume")
+            }
         }
     }
 }

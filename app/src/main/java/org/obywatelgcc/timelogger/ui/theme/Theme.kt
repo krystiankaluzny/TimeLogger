@@ -1,6 +1,5 @@
 package org.obywatelgcc.timelogger.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,6 +8,10 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -33,6 +36,24 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+
+@Immutable
+data class ExtendedColors(
+    val timerButtonContent: Color,
+    val timerToStartButton: Color,
+    val timerToStopButton: Color,
+    val timerToResumeButton: Color
+)
+
+val LocalExtendedColors = staticCompositionLocalOf {
+    ExtendedColors(
+        timerButtonContent = Color.Unspecified,
+        timerToStartButton = Color.Unspecified,
+        timerToStopButton = Color.Unspecified,
+        timerToResumeButton = Color.Unspecified
+    )
+}
+
 @Composable
 fun TimeLoggerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -50,9 +71,35 @@ fun TimeLoggerTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+
+    val extendedColors =
+        if (darkTheme)
+            ExtendedColors(
+                timerButtonContent = Color(0xC4CCBCBC),
+                timerToStartButton = Color(0xB5476426),
+                timerToStopButton = Color(0xD7811E16),
+                timerToResumeButton = Color(0xD2143F73)
+            )
+        else {
+            ExtendedColors(
+                timerButtonContent = Color(0xCB050559),
+                timerToStartButton = Color(0xB58BC34A),
+                timerToStopButton = Color(0xB0E13325),
+                timerToResumeButton = Color(0xBF13BED3)
+            )
+        }
+
+    CompositionLocalProvider(LocalExtendedColors provides extendedColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
+}
+
+object TimeLoggerTheme {
+    val colors: ExtendedColors
+        @Composable
+        get() = LocalExtendedColors.current
 }

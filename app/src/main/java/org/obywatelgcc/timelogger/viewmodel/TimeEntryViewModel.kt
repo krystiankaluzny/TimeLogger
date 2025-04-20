@@ -27,8 +27,8 @@ class TimeEntryViewModel(
     private val _appName = MutableStateFlow("")
     val appName = _appName.asStateFlow()
 
-    private val _started = MutableStateFlow(false)
-    val started = _started.asStateFlow()
+    private val _timerState = MutableStateFlow(TimerState.READY_TO_START)
+    val timerState = _timerState.asStateFlow()
 
     private val timeCalendarState = TimeCalendarState()
     val calendarState = timeCalendarState.state.asStateFlow()
@@ -78,25 +78,36 @@ class TimeEntryViewModel(
     }
 
     fun reset() {
+        _timerState.value = TimerState.READY_TO_START
         timeRangeState.reset()
     }
 
     fun start() {
-        if (!_started.value) {
-            _started.value = true
-            viewModelScope.launch {
-                while (_started.value) {
-                    timeRangeState.refreshEndDateTime()
-                    delay(tickerDelayMs)
-                }
-            }
+        if (_timerState.value == TimerState.READY_TO_START) {
+            startTimer()
         }
     }
 
     fun stop() {
-        if (_started.value) {
-            _started.value = false
+        if (_timerState.value == TimerState.STARTED) {
+            _timerState.value = TimerState.STOPPED
             timeRangeState.refreshEndDateTime()
+        }
+    }
+
+    fun resume() {
+        if (_timerState.value == TimerState.STOPPED) {
+            startTimer()
+        }
+    }
+
+    private fun startTimer() {
+        _timerState.value = TimerState.STARTED
+        viewModelScope.launch {
+            while (_timerState.value == TimerState.STARTED) {
+                timeRangeState.refreshEndDateTime()
+                delay(tickerDelayMs)
+            }
         }
     }
 
@@ -104,24 +115,51 @@ class TimeEntryViewModel(
         selectedCalendar.value?.also { calendar ->
             viewModelScope.launch {
                 stop()
-                val entry = CalendarEntry.of(
-                    entryTitle.value,
-                    startDateTime.value,
-                    endDateTime.value
-                )
-                val result = calendarRepository.addEntryToCalendar(calendar, entry)
+                val validationResult = checkData()
 
-                when(result.status) {
-                    CalendarRepository.AddEntryResult.Status.ALREADY_EXISTS -> _messageToShow.emit("Already exists")
-                    CalendarRepository.AddEntryResult.Status.CREATED -> _messageToShow.emit("Successfully saved")
-                    CalendarRepository.AddEntryResult.Status.ERROR -> _messageToShow.emit("Saving failed")
+                if (validationResult == ValidationResult.OK) {
+                    val entry = CalendarEntry.of(
+                        entryTitle.value,
+                        startDateTime.value,
+                        endDateTime.value
+                    )
+                    val result = calendarRepository.addEntryToCalendar(calendar, entry)
+
+                    handleSaveResult(result)
+                } else {
+                    handleValidationResult(validationResult)
                 }
-                //NOTE: replace calendarRepository.addEntryToCalendar with this emit,
-                // to call another activity that handle a new entry
-//                _calendarEntryToSave.emit(entry)
             }
         }
     }
+
+    private fun checkData(): ValidationResult {
+        if(entryTitle.value.isEmpty()) {
+            return ValidationResult.EMPTY_TITLE
+        }
+        return ValidationResult.OK
+    }
+
+    private suspend fun handleValidationResult(validationResult: ValidationResult) {
+        when(validationResult) {
+            ValidationResult.OK -> TODO()
+            ValidationResult.EMPTY_TITLE -> _messageToShow.emit("Empty title")
+            ValidationResult.DURATION_TOO_SHORT -> TODO()
+        }
+    }
+
+    private suspend fun handleSaveResult(result: CalendarRepository.AddEntryResult) {
+        when (result.status) {
+            CalendarRepository.AddEntryResult.Status.ALREADY_EXISTS -> _messageToShow.emit("Already exists")
+            CalendarRepository.AddEntryResult.Status.CREATED -> {
+                reset()
+                _messageToShow.emit("Successfully saved")
+            }
+
+            CalendarRepository.AddEntryResult.Status.ERROR -> _messageToShow.emit("Saving failed")
+        }
+    }
+
 
     fun selectCalendar(calendar: Calendar) = timeCalendarState.select(calendar)
     fun updateEntryTitle(description: String) {
@@ -134,3 +172,10 @@ class TimeEntryViewModel(
     fun updateEndTime(localTime: LocalTime) = timeRangeState.updateEndTime(localTime)
 }
 
+enum class TimerState {
+    READY_TO_START, STARTED, STOPPED
+}
+
+enum class ValidationResult {
+    OK, EMPTY_TITLE, DURATION_TOO_SHORT
+}
