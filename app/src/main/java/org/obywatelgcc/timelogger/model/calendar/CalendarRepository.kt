@@ -14,7 +14,7 @@ import java.time.ZonedDateTime
 
 interface CalendarRepository {
 
-    suspend fun findAllClendars(): List<Calendar>
+    suspend fun findAllCalendars(): List<Calendar>
     suspend fun findAllEventColors(): List<CalendarEventColor>
     suspend fun addEventToCalendar(calendar: Calendar, entry: CalendarEvent): AddEventResult
 
@@ -54,6 +54,7 @@ class CalendarRepositoryImpl(
             listOf(
                 CalendarContract.Calendars._ID,
                 CalendarContract.Calendars.ACCOUNT_NAME,
+                CalendarContract.Calendars.ACCOUNT_TYPE,
                 CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
                 CalendarContract.Calendars.OWNER_ACCOUNT
             )
@@ -63,20 +64,17 @@ class CalendarRepositoryImpl(
             listOf(
                 CalendarContract.Colors.COLOR_KEY,
                 CalendarContract.Colors.COLOR,
-                CalendarContract.Colors.COLOR_TYPE
+                CalendarContract.Colors.COLOR_TYPE,
+                CalendarContract.Colors.ACCOUNT_NAME,
+                CalendarContract.Colors.ACCOUNT_TYPE
             )
         )
     }
 
-    override suspend fun findAllClendars(): List<Calendar> {
-        val result = mutableListOf<Calendar>()
+    override suspend fun findAllCalendars(): List<Calendar> {
+        Log.d("CalendarRepository", "findAllCalendars")
 
-        result.add(Calendar(-1, "1", "abc", ""))
-        result.add(Calendar(-2, "2", "abc", ""))
-        result.add(Calendar(-3, "3", "def", ""))
-        result.add(Calendar(-4, "4", "def", ""))
-        result.add(Calendar(-5, "5", "def", ""))
-        result.add(Calendar(-6, "6", "def", ""))
+        val result = mutableListOf<Calendar>()
 
         val calenderCursor: Cursor? =
             contentResolver.query(CALENDAR_URI, calendarsProjection.projection, null, null, null)
@@ -86,6 +84,7 @@ class CalendarRepositoryImpl(
                     Calendar(
                         id = getLong(calendarsProjection.index(CalendarContract.Calendars._ID)),
                         accountName = getString(calendarsProjection.index(CalendarContract.Calendars.ACCOUNT_NAME)),
+                        accountType = getString(calendarsProjection.index(CalendarContract.Calendars.ACCOUNT_TYPE)),
                         displayName = getString(calendarsProjection.index(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME)),
                         ownerName = getString(calendarsProjection.index(CalendarContract.Calendars.OWNER_ACCOUNT))
                     )
@@ -98,21 +97,21 @@ class CalendarRepositoryImpl(
     }
 
     override suspend fun findAllEventColors(): List<CalendarEventColor> {
-        val result = mutableListOf<CalendarEventColor>()
+        Log.d("CalendarRepository", "findAllEventColors")
 
-        result.add(CalendarEventColor("A", "0xFF00FF00", ""))
-        result.add(CalendarEventColor("B", "0xFFFFFF00", ""))
-        result.add(CalendarEventColor("C", "0xFF000FFF", ""))
-        result.add(CalendarEventColor("D", "0xFFF0F0FF", ""))
-        result.add(CalendarEventColor("E", "0xFF0FFFFF", ""))
-        result.add(CalendarEventColor("F", "0xFFDDFF00", ""))
-        result.add(CalendarEventColor("G", "0xFFF0F0F0", ""))
-        result.add(CalendarEventColor("H", "0xFFF1FF0F", ""))
-        result.add(CalendarEventColor("I", "0xFF0F0DDF", ""))
-        result.add(CalendarEventColor("J", "0xFFFF000F", ""))
+        val result = mutableSetOf<CalendarEventColor>()
+
+        val selection = "(${CalendarContract.Colors.COLOR_TYPE} = ?)"
+        val selectionArgs = arrayOf(CalendarContract.Colors.TYPE_EVENT.toString())
 
         val colorCursor: Cursor? =
-            contentResolver.query(COLOR_URI, colorsProjection.projection, null, null, null)
+            contentResolver.query(
+                COLOR_URI,
+                colorsProjection.projection,
+                selection,
+                selectionArgs,
+                null
+            )
         colorCursor?.apply {
             while (moveToNext()) {
                 result.add(
@@ -120,13 +119,17 @@ class CalendarRepositoryImpl(
                         key = getString(colorsProjection.index(CalendarContract.Colors.COLOR_KEY)),
                         color = getString(colorsProjection.index(CalendarContract.Colors.COLOR)),
                         type = getString(colorsProjection.index(CalendarContract.Colors.COLOR_TYPE)),
+                        accountName = getString(colorsProjection.index(CalendarContract.Colors.ACCOUNT_NAME)),
+                        accountType = getString(colorsProjection.index(CalendarContract.Colors.ACCOUNT_TYPE)),
                     )
                 )
             }
             close()
         }
 
-        return result
+        Log.d("CalendarRepository", "findAllEventColors: $result")
+
+        return result.toList()
     }
 
     override suspend fun addEventToCalendar(
@@ -148,7 +151,7 @@ class CalendarRepositoryImpl(
             put(CalendarContract.Events.DESCRIPTION, "")
             put(CalendarContract.Events.CALENDAR_ID, calendar.id)
             put(CalendarContract.Events.EVENT_TIMEZONE, event.zoneIdName())
-            put(CalendarContract.Events.EVENT_COLOR_KEY, "")
+            put(CalendarContract.Events.EVENT_COLOR_KEY, event.color?.key ?: "")
         }
 
         Log.d("CalendarRepository", "addEntryToCalendar: $values")

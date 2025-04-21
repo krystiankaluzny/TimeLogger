@@ -13,6 +13,7 @@ class TimeCalendarEventState {
 
     val eventTitle = MutableStateFlow("")
 
+    val allEventColors = MutableStateFlow(listOf<CalendarEventColor>())
     val availableColors = MutableStateFlow(listOf<CalendarEventColor>())
     val selectedColor = MutableStateFlow<CalendarEventColor?>(null)
 
@@ -20,8 +21,8 @@ class TimeCalendarEventState {
         availableCalendars.value = calendars
         selectedCalendar.value = calendars.getOrNull(0)
 
-        availableColors.value = eventColors
-        selectedColor.value = eventColors.getOrNull(0)
+        allEventColors.value = eventColors
+        selectedCalendar.value?.let { refreshAvailableColorsForCalendar(it) }
 
         state.value =
             if (calendars.isNotEmpty()) State.SUCCESSFULLY_INITIALIZED else State.CALENDARS_NOT_FOUND
@@ -29,6 +30,7 @@ class TimeCalendarEventState {
 
     fun select(calendar: Calendar) {
         selectedCalendar.value = calendar
+        refreshAvailableColorsForCalendar(calendar)
     }
 
     fun selectColor(color: CalendarEventColor) {
@@ -37,6 +39,12 @@ class TimeCalendarEventState {
 
     fun updateTitle(title: String) {
         eventTitle.value = title
+    }
+
+    private fun refreshAvailableColorsForCalendar(calendar: Calendar) {
+        availableColors.value = allEventColors.value
+            .filter { calendar.accountName == it.accountName && calendar.accountType == it.accountType}
+        selectedColor.value = availableColors.value.getOrNull(0)
     }
 }
 

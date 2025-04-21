@@ -8,6 +8,7 @@ import java.time.ZonedDateTime
 data class Calendar(
     val id: Long,
     val accountName: String,
+    val accountType: String,
     val displayName: String,
     val ownerName: String
 ) {
@@ -26,15 +27,16 @@ data class CalendarEvent(
     val title: String,
     val start: ZonedDateTime,
     val end: ZonedDateTime,
+    val color: CalendarEventColor?
 ) {
     companion object {
         fun of(
-            title: String, start: LocalDateTime, end: LocalDateTime
+            title: String, start: LocalDateTime, end: LocalDateTime, color: CalendarEventColor?
         ): CalendarEvent {
             val zoneId = ZoneId.systemDefault()
             val starZoned = start.atZone(zoneId)
             val endZoned = end.atZone(zoneId)
-            return CalendarEvent(title, starZoned, endZoned)
+            return CalendarEvent(title, starZoned, endZoned, color)
         }
     }
 
@@ -46,7 +48,9 @@ data class CalendarEvent(
 data class CalendarEventColor(
     val key: String,
     val color: String,
-    val type: String
+    val type: String,
+    val accountName: String,
+    val accountType: String,
 ) {
     fun colorAsLong(): Long {
         return decode(color)

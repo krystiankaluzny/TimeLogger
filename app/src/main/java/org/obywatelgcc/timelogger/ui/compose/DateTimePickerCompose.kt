@@ -3,6 +3,7 @@ package org.obywatelgcc.timelogger.ui.compose
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +19,6 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -71,9 +71,11 @@ fun DateTimePickerRow(
             modifier = Modifier.padding(start = 10.dp, bottom = 10.dp, end = 10.dp)
         ) {
             TextFiledWithPicker(
-                initDate.format(dateFormatter), trailingIcon = {
+                value = initDate.format(dateFormatter),
+                modifier = Modifier.weight(4f),
+                trailingIcon = {
                     Icon(Icons.Default.DateRange, contentDescription = "Select date")
-                }, modifier = Modifier.weight(1f)
+                },
             ) { onDismiss ->
                 DatePickerDialog(onDateSelected = onDateSelected, onDismiss = onDismiss)
             }
@@ -81,7 +83,11 @@ fun DateTimePickerRow(
             Spacer(Modifier.width(16.dp))
 
             TextFiledWithPicker(
-                initTime.format(timeFormatter), modifier = Modifier.weight(1f)
+                value = initTime.format(timeFormatter),
+                modifier = Modifier.weight(3f),
+                trailingIcon = {
+                    Icon(Icons.Default.Clock, contentDescription = "Select time")
+                },
             ) { onDismiss ->
                 TimePickerDialog(
                     initTime = initTime, onTimeSelected = onTimeSelected, onDismiss = onDismiss
@@ -100,10 +106,11 @@ fun TextFiledWithPicker(
 ) {
     var showPicker by remember { mutableStateOf(false) }
 
-    OutlinedTextField(
+    CustomOutlinedTextField(
         value = value,
         onValueChange = {},
         trailingIcon = trailingIcon,
+        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 0.dp),
         modifier = modifier.pointerInput(value) {
             awaitEachGesture {
                 // Modifier.clickable doesn't work for text fields, so we use Modifier.pointerInput

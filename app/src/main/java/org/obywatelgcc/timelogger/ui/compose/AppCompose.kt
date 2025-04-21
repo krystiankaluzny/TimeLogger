@@ -118,17 +118,18 @@ fun TimeLoggerScreen(viewModel: TimeEventViewModel, innerPadding: PaddingValues)
 
         CalendarDropdown(calendars.value, selectedCalendar.value, { viewModel.selectCalendar(it) })
         TitleAndColorRow(viewModel)
+
         StartDateTimeRow(viewModel)
         EndDateTimeRow(viewModel)
         DurationRow(viewModel)
         TimeLoggerButtonsRow(viewModel)
 
-        Spacer(Modifier.width(20.dp))
+        Spacer(Modifier.height(20.dp))
 
         FilledTonalButton(
             modifier = Modifier
                 .fillMaxWidth(0.4f)
-                .height(50.dp),
+                .height(70.dp),
             onClick = { viewModel.trySave() }) {
             Text(text = "Save")
         }

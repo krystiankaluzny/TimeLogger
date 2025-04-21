@@ -72,7 +72,7 @@ class TimeEventViewModel(
     private fun initCalendars() {
         viewModelScope.launch {
             timeCalendarEventState.init(
-                calendarRepository.findAllClendars(),
+                calendarRepository.findAllCalendars(),
                 calendarRepository.findAllEventColors()
             )
 
@@ -124,12 +124,15 @@ class TimeEventViewModel(
                 val validationResult = checkData()
 
                 if (validationResult == ValidationResult.OK) {
-                    val entry = CalendarEvent.of(
+
+                    val event = CalendarEvent.of(
                         eventTitle.value,
                         startDateTime.value,
-                        endDateTime.value
+                        endDateTime.value,
+                        selectedColor.value
                     )
-                    val result = calendarRepository.addEventToCalendar(calendar, entry)
+
+                    val result = calendarRepository.addEventToCalendar(calendar, event)
 
                     handleSaveResult(result)
                 } else {
@@ -150,7 +153,8 @@ class TimeEventViewModel(
         when (validationResult) {
             ValidationResult.OK -> TODO()
             ValidationResult.EMPTY_TITLE -> _messageToShow.emit("Empty title")
-            ValidationResult.DURATION_TOO_SHORT -> TODO()
+            ValidationResult.DURATION_TOO_SHORT -> _messageToShow.emit("Duration too short")
+            ValidationResult.END_BEFORE_START -> _messageToShow.emit("End before start")
         }
     }
 
@@ -182,5 +186,5 @@ enum class TimerState {
 }
 
 enum class ValidationResult {
-    OK, EMPTY_TITLE, DURATION_TOO_SHORT
+    OK, EMPTY_TITLE, DURATION_TOO_SHORT, END_BEFORE_START
 }
