@@ -19,11 +19,11 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.obywatelgcc.timelogger.ui.compose.App
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
-import org.obywatelgcc.timelogger.viewmodel.TimeEntryViewModel
+import org.obywatelgcc.timelogger.viewmodel.TimeEventViewModel
 
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: TimeEntryViewModel by viewModel()
+    private val viewModel: TimeEventViewModel by viewModel()
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.calendarEntryToSave.collect { calendarEntry ->
+                viewModel.calendarEventToSave.collect { calendarEntry ->
 
                     val intent = Intent(Intent.ACTION_INSERT)
                         .setData(CalendarContract.Events.CONTENT_URI)

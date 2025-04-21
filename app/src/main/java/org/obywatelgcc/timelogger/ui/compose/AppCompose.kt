@@ -1,23 +1,29 @@
 package org.obywatelgcc.timelogger.ui.compose
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuBoxScope
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -37,17 +43,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.obywatelgcc.timelogger.model.calendar.Calendar
+import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 import org.obywatelgcc.timelogger.viewmodel.State
-import org.obywatelgcc.timelogger.viewmodel.TimeEntryViewModel
+import org.obywatelgcc.timelogger.viewmodel.TimeEventViewModel
 import org.obywatelgcc.timelogger.viewmodel.TimerState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun App(viewModel: TimeEntryViewModel) {
+fun App(viewModel: TimeEventViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
     val appName = viewModel.appName.collectAsState()
 
@@ -69,7 +77,7 @@ fun App(viewModel: TimeEntryViewModel) {
 
 @Composable
 private fun AppCalendarState(
-    viewModel: TimeEntryViewModel,
+    viewModel: TimeEventViewModel,
     innerPadding: PaddingValues
 ) {
     val calendarState = viewModel.calendarState.collectAsState()
@@ -99,7 +107,7 @@ private fun AppCalendarState(
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("DefaultLocale")
 @Composable
-fun TimeLoggerScreen(viewModel: TimeEntryViewModel, innerPadding: PaddingValues) {
+fun TimeLoggerScreen(viewModel: TimeEventViewModel, innerPadding: PaddingValues) {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -107,10 +115,9 @@ fun TimeLoggerScreen(viewModel: TimeEntryViewModel, innerPadding: PaddingValues)
     ) {
         val calendars = viewModel.availableCalendars.collectAsState()
         val selectedCalendar = viewModel.selectedCalendar.collectAsState()
-        val entryTitle = viewModel.entryTitle.collectAsState()
 
         CalendarDropdown(calendars.value, selectedCalendar.value, { viewModel.selectCalendar(it) })
-        EntryTitleTextField(entryTitle.value, { viewModel.updateEntryTitle(it) })
+        TitleAndColorRow(viewModel)
         StartDateTimeRow(viewModel)
         EndDateTimeRow(viewModel)
         DurationRow(viewModel)
@@ -176,7 +183,25 @@ private fun CalendarDropdown(
 }
 
 @Composable
-private fun EntryTitleTextField(
+private fun TitleAndColorRow(viewModel: TimeEventViewModel) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .padding(start = 10.dp, bottom = 10.dp, end = 10.dp)
+            .fillMaxWidth()
+    ) {
+        val entryTitle = viewModel.eventTitle.collectAsState()
+        val colors = viewModel.availableColors.collectAsState()
+        val selectedColor = viewModel.selectedColor.collectAsState()
+
+        EntryTitleTextField(entryTitle.value, { viewModel.updateEventTitle(it) })
+
+        ColorDropdown(colors.value, selectedColor.value, { viewModel.selectColor(it) })
+    }
+}
+
+@Composable
+private fun RowScope.EntryTitleTextField(
     initValue: String,
     onValueChange: (String) -> Unit
 ) {
@@ -185,13 +210,114 @@ private fun EntryTitleTextField(
         onValueChange = onValueChange,
         label = { Text(text = "Event title") },
         modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
+            .padding(horizontal = 6.dp)
+            .weight(1.0f)
     )
 }
 
 @Composable
-private fun StartDateTimeRow(viewModel: TimeEntryViewModel) {
+@OptIn(ExperimentalMaterial3Api::class)
+private fun RowScope.ColorDropdown(
+    colors: List<CalendarEventColor>,
+    selectedColor: CalendarEventColor?,
+    onSelect: (CalendarEventColor) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    val mainColorButtonSize = 40.dp
+
+    ExposedDropdownMenuBox(
+        expanded = expanded, onExpandedChange = { expanded = it },
+        modifier = Modifier
+            .padding(horizontal = 10.dp)
+            .width(mainColorButtonSize)
+    ) {
+
+        ColorHolder(
+            color = selectedColor,
+            size = mainColorButtonSize,
+            onClick = { expanded = true },
+            showBorder = false
+        )
+
+        val itemWidth = 55.dp
+        val itemHeight = 40.dp
+        val columnCount = 6
+        val colorButtonSize = itemWidth - 25.dp
+
+        ExposedDropdownMenu(
+            expanded = expanded, onDismissRequest = { expanded = false },
+            modifier = Modifier.width(itemWidth * columnCount)
+        ) {
+            for (rowId in 0..<Math.ceilDiv(colors.size, columnCount)) {
+                Row(
+                    modifier = Modifier
+                ) {
+                    for (columnId in 0..<columnCount) {
+
+                        val index = rowId * columnCount + columnId
+                        if (index < colors.size) {
+                            val c = colors[index]
+                            DropdownMenuItem(
+                                onClick = {
+                                    //handle in Surface.onClick
+                                },
+                                text = {
+
+                                    ColorHolder(
+                                        color = c,
+                                        size = colorButtonSize,
+                                        onClick = {
+                                            onSelect(c)
+                                            expanded = false
+                                        },
+                                        showBorder = c == selectedColor
+                                    )
+                                },
+                                modifier = Modifier
+                                    .width(itemWidth)
+                                    .height(itemHeight)
+                            )
+                        }
+
+                    }
+                } // end row
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExposedDropdownMenuBoxScope.ColorHolder(
+    color: CalendarEventColor?,
+    size: Dp,
+    onClick: () -> Unit,
+    showBorder: Boolean = true
+) {
+    val border = if (showBorder) BorderStroke(
+        1.dp,
+        MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
+    ) else null
+
+    ElevatedButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(size)
+            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+        shape = CircleShape,
+        colors = ButtonDefaults.elevatedButtonColors(
+            containerColor = color?.colorAsLong()?.let { Color(it) } ?: Color.White
+        ),
+        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp),
+        border = border,
+        content = {}
+    )
+}
+
+
+@Composable
+private fun StartDateTimeRow(viewModel: TimeEventViewModel) {
     DateTimePickerRow(
         "Start",
         viewModel.startDateTime.collectAsState().value,
@@ -200,7 +326,7 @@ private fun StartDateTimeRow(viewModel: TimeEntryViewModel) {
 }
 
 @Composable
-private fun EndDateTimeRow(viewModel: TimeEntryViewModel) {
+private fun EndDateTimeRow(viewModel: TimeEventViewModel) {
     DateTimePickerRow(
         "End",
         viewModel.endDateTime.collectAsState().value,
@@ -209,7 +335,7 @@ private fun EndDateTimeRow(viewModel: TimeEntryViewModel) {
 }
 
 @Composable
-private fun DurationRow(viewModel: TimeEntryViewModel) {
+private fun DurationRow(viewModel: TimeEventViewModel) {
     Text(
         text = "Duration: ${viewModel.durationStr.collectAsState().value}",
         modifier = Modifier.padding(16.dp),
@@ -218,7 +344,7 @@ private fun DurationRow(viewModel: TimeEntryViewModel) {
 }
 
 @Composable
-private fun TimeLoggerButtonsRow(viewModel: TimeEntryViewModel) {
+private fun TimeLoggerButtonsRow(viewModel: TimeEventViewModel) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier

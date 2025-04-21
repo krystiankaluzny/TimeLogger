@@ -12,13 +12,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.model.calendar.Calendar
-import org.obywatelgcc.timelogger.model.calendar.CalendarEntry
+import org.obywatelgcc.timelogger.model.calendar.CalendarEvent
+import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
 import org.obywatelgcc.timelogger.model.calendar.CalendarRepository
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.Locale
 
-class TimeEntryViewModel(
+class TimeEventViewModel(
     val calendarRepository: CalendarRepository
 ) : ViewModel() {
 
@@ -30,13 +31,14 @@ class TimeEntryViewModel(
     private val _timerState = MutableStateFlow(TimerState.READY_TO_START)
     val timerState = _timerState.asStateFlow()
 
-    private val timeCalendarState = TimeCalendarState()
-    val calendarState = timeCalendarState.state.asStateFlow()
-    val availableCalendars = timeCalendarState.availableCalendars.asStateFlow()
-    val selectedCalendar = timeCalendarState.selectedCalendar.asStateFlow()
+    private val timeCalendarEventState = TimeCalendarEventState()
+    val calendarState = timeCalendarEventState.state.asStateFlow()
+    val availableCalendars = timeCalendarEventState.availableCalendars.asStateFlow()
+    val selectedCalendar = timeCalendarEventState.selectedCalendar.asStateFlow()
+    val availableColors = timeCalendarEventState.availableColors.asStateFlow()
+    val selectedColor = timeCalendarEventState.selectedColor.asStateFlow()
 
-    private val _entryTitle = MutableStateFlow("")
-    val entryTitle = _entryTitle.asStateFlow()
+    val eventTitle = timeCalendarEventState.eventTitle.asStateFlow()
 
     private val timeRangeState = TimeRangeState(viewModelScope)
     val startDateTime = timeRangeState.startDateTime.asStateFlow()
@@ -57,8 +59,8 @@ class TimeEntryViewModel(
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
-    private val _calendarEntryToSave = MutableSharedFlow<CalendarEntry>()
-    val calendarEntryToSave = _calendarEntryToSave.asSharedFlow()
+    private val _calendarEventToSave = MutableSharedFlow<CalendarEvent>()
+    val calendarEventToSave = _calendarEventToSave.asSharedFlow()
 
     private val _messageToShow = MutableSharedFlow<String>()
     val messageToShow = _messageToShow.asSharedFlow()
@@ -69,7 +71,11 @@ class TimeEntryViewModel(
 
     private fun initCalendars() {
         viewModelScope.launch {
-            timeCalendarState.init(calendarRepository.findAll())
+            timeCalendarEventState.init(
+                calendarRepository.findAllClendars(),
+                calendarRepository.findAllEventColors()
+            )
+
         }
     }
 
@@ -118,12 +124,12 @@ class TimeEntryViewModel(
                 val validationResult = checkData()
 
                 if (validationResult == ValidationResult.OK) {
-                    val entry = CalendarEntry.of(
-                        entryTitle.value,
+                    val entry = CalendarEvent.of(
+                        eventTitle.value,
                         startDateTime.value,
                         endDateTime.value
                     )
-                    val result = calendarRepository.addEntryToCalendar(calendar, entry)
+                    val result = calendarRepository.addEventToCalendar(calendar, entry)
 
                     handleSaveResult(result)
                 } else {
@@ -134,37 +140,36 @@ class TimeEntryViewModel(
     }
 
     private fun checkData(): ValidationResult {
-        if(entryTitle.value.isEmpty()) {
+        if (eventTitle.value.isEmpty()) {
             return ValidationResult.EMPTY_TITLE
         }
         return ValidationResult.OK
     }
 
     private suspend fun handleValidationResult(validationResult: ValidationResult) {
-        when(validationResult) {
+        when (validationResult) {
             ValidationResult.OK -> TODO()
             ValidationResult.EMPTY_TITLE -> _messageToShow.emit("Empty title")
             ValidationResult.DURATION_TOO_SHORT -> TODO()
         }
     }
 
-    private suspend fun handleSaveResult(result: CalendarRepository.AddEntryResult) {
+    private suspend fun handleSaveResult(result: CalendarRepository.AddEventResult) {
         when (result.status) {
-            CalendarRepository.AddEntryResult.Status.ALREADY_EXISTS -> _messageToShow.emit("Already exists")
-            CalendarRepository.AddEntryResult.Status.CREATED -> {
+            CalendarRepository.AddEventResult.Status.ALREADY_EXISTS -> _messageToShow.emit("Already exists")
+            CalendarRepository.AddEventResult.Status.CREATED -> {
                 reset()
                 _messageToShow.emit("Successfully saved")
             }
 
-            CalendarRepository.AddEntryResult.Status.ERROR -> _messageToShow.emit("Saving failed")
+            CalendarRepository.AddEventResult.Status.ERROR -> _messageToShow.emit("Saving failed")
         }
     }
 
 
-    fun selectCalendar(calendar: Calendar) = timeCalendarState.select(calendar)
-    fun updateEntryTitle(description: String) {
-        _entryTitle.value = description
-    }
+    fun selectCalendar(calendar: Calendar) = timeCalendarEventState.select(calendar)
+    fun selectColor(color: CalendarEventColor) = timeCalendarEventState.selectColor(color)
+    fun updateEventTitle(title: String) = timeCalendarEventState.updateTitle(title)
 
     fun updateStartDate(localDate: LocalDate) = timeRangeState.updateStartDate(localDate)
     fun updateStartTime(localTime: LocalTime) = timeRangeState.updateStartTime(localTime)
