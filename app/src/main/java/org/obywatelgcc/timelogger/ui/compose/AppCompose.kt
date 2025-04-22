@@ -268,6 +268,7 @@ private fun CalendarDropdown(
         TextField(
             value = textFieldState,
             onValueChange = { },
+            singleLine = true,
             label = { Text("Calendar") },
             // The `menuAnchor` modifier must be passed to the text field to handle
             // expanding/collapsing the menu on click. A read-only text field has
@@ -322,6 +323,7 @@ private fun RowScope.EntryTitleTextField(
         value = initValue,
         onValueChange = onValueChange,
         label = { Text(text = "Event title") },
+        singleLine = true,
         modifier = Modifier
             .padding(horizontal = 6.dp)
             .weight(1.0f)
