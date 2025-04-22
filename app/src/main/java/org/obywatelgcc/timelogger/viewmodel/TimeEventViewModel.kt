@@ -1,5 +1,6 @@
 package org.obywatelgcc.timelogger.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
@@ -23,7 +24,8 @@ import java.time.LocalTime
 import java.util.Locale
 
 class TimeEventViewModel(
-    val calendarRepository: CalendarRepository
+    savedStateHandle: SavedStateHandle,
+    private val calendarRepository: CalendarRepository
 ) : ViewModel() {
 
     private val tickerDelayMs = 1000L
@@ -39,7 +41,7 @@ class TimeEventViewModel(
     private val _timerState = MutableStateFlow(TimerState.READY_TO_START)
     val timerState = _timerState.asStateFlow()
 
-    private val timeCalendarEventState = TimeCalendarEventState()
+    private val timeCalendarEventState = TimeCalendarEventState(savedStateHandle)
     val calendarState = timeCalendarEventState.state.asStateFlow()
     val availableCalendars = timeCalendarEventState.availableCalendars.asStateFlow()
     val selectedCalendar = timeCalendarEventState.selectedCalendar.asStateFlow()
@@ -48,7 +50,7 @@ class TimeEventViewModel(
 
     val eventTitle = timeCalendarEventState.eventTitle.asStateFlow()
 
-    private val timeRangeState = TimeRangeState(viewModelScope)
+    private val timeRangeState = TimeRangeState(viewModelScope, savedStateHandle)
     val startDateTime = timeRangeState.startDateTime.asStateFlow()
     val endDateTime = timeRangeState.endDateTime.asStateFlow()
 

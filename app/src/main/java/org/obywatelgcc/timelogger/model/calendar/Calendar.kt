@@ -1,17 +1,20 @@
 package org.obywatelgcc.timelogger.model.calendar
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import java.lang.Long.decode
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
+@Parcelize
 data class Calendar(
     val id: Long,
     val accountName: String,
     val accountType: String,
     val displayName: String,
     val ownerName: String
-) {
+) : Parcelable {
     companion object
 
     fun description(): String {
@@ -23,12 +26,13 @@ data class Calendar(
     }
 }
 
+@Parcelize
 data class CalendarEvent(
     val title: String,
     val start: ZonedDateTime,
     val end: ZonedDateTime,
     val color: CalendarEventColor?
-) {
+) : Parcelable {
     companion object {
         fun of(
             title: String, start: LocalDateTime, end: LocalDateTime, color: CalendarEventColor?
@@ -45,13 +49,14 @@ data class CalendarEvent(
     fun zoneIdName(): String = end.zone.id
 }
 
+@Parcelize
 data class CalendarEventColor(
     val key: String,
     val color: String,
     val type: String,
     val accountName: String,
     val accountType: String,
-) {
+) : Parcelable {
     fun colorAsLong(): Long {
         return decode(color)
     }

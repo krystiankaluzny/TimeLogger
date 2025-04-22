@@ -1,10 +1,12 @@
 package org.obywatelgcc.timelogger.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import org.obywatelgcc.timelogger.model.calendar.Calendar
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -12,10 +14,11 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 class TimeRangeState(
-    coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope,
+    savedStateHandle: SavedStateHandle
 ) {
-    val startDateTime = MutableStateFlow(currentLocalDateTime())
-    val endDateTime = MutableStateFlow(startDateTime.value)
+    val startDateTime =  MutableSaveStateFlow(savedStateHandle, "startDateTime", currentLocalDateTime())
+    val endDateTime =  MutableSaveStateFlow(savedStateHandle, "endDateTime", startDateTime.value)
     val duration = combine(startDateTime, endDateTime) { s, e ->
         Duration.between(s, e)
     }.stateIn(coroutineScope, SharingStarted.Eagerly, Duration.ZERO)
