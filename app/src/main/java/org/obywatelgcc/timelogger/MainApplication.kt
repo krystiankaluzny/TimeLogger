@@ -13,6 +13,7 @@ class MainApplication : Application(){
             androidLogger()
             androidContext(this@MainApplication)
             modules(appModule)
+//            modules(testAppModule)
         }
     }
 }

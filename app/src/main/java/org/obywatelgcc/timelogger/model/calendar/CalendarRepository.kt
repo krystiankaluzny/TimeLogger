@@ -7,6 +7,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
+import kotlinx.coroutines.delay
 import org.obywatelgcc.timelogger.model.calendar.CalendarRepository.AddEventResult
 import org.obywatelgcc.timelogger.model.calendar.CalendarRepository.AddEventResult.Status
 import java.time.ZonedDateTime
@@ -16,7 +17,7 @@ interface CalendarRepository {
 
     suspend fun findAllCalendars(): List<Calendar>
     suspend fun findAllEventColors(): List<CalendarEventColor>
-    suspend fun addEventToCalendar(calendar: Calendar, entry: CalendarEvent): AddEventResult
+    suspend fun addEventToCalendar(calendar: Calendar, event: CalendarEvent): AddEventResult
 
     data class AddEventResult(
         val status: Status,
@@ -164,6 +165,70 @@ class CalendarRepositoryImpl(
         } else {
             return AddEventResult(Status.ERROR, event)
         }
+    }
+
+}
+
+class TestCalendarRepositoryImpl : CalendarRepository {
+    private val calendars = listOf(
+        Calendar(1, "abc@gmail.pl", "google.com", "abc@gmail.pl", "abc@gmail.pl"),
+        Calendar(2, "abc@gmail.pl", "test.google.com", "Test calendar", "abc@gmail.pl"),
+        Calendar(3, "Local calendar", "local", "Local calendar", "abc@gmail.pl"),
+    )
+
+    private val calendarEventColors = listOf(
+        CalendarEventColor("1", "#ff445f59", "", calendars[0].accountName, calendars[0].accountType),
+        CalendarEventColor("2", "#ffaacaa3", "", calendars[0].accountName, calendars[0].accountType),
+        CalendarEventColor("3", "#ff660d11", "", calendars[0].accountName, calendars[0].accountType),
+        CalendarEventColor("4", "#ff4b3294", "", calendars[0].accountName, calendars[0].accountType),
+        CalendarEventColor("5", "#ffd67992", "", calendars[0].accountName, calendars[0].accountType),
+        CalendarEventColor("6", "#ff157ca8", "", calendars[0].accountName, calendars[0].accountType),
+        CalendarEventColor("7", "#ffb498d0", "", calendars[0].accountName, calendars[0].accountType),
+        CalendarEventColor("8", "#fffefd4c", "", calendars[0].accountName, calendars[0].accountType),
+        CalendarEventColor("9", "#ff5a3f76", "", calendars[0].accountName, calendars[0].accountType),
+        CalendarEventColor("10", "#fffd08ff", "", calendars[0].accountName, calendars[0].accountType),
+
+        CalendarEventColor("1", "#ff445f59", "", calendars[1].accountName, calendars[1].accountType),
+        CalendarEventColor("2", "#ffaacaa3", "", calendars[1].accountName, calendars[1].accountType),
+        CalendarEventColor("3", "#ff660d11", "", calendars[1].accountName, calendars[1].accountType),
+
+        CalendarEventColor("1", "#ff445f59", "", calendars[2].accountName, calendars[2].accountType),
+        CalendarEventColor("2", "#ffaacaa3", "", calendars[2].accountName, calendars[2].accountType),
+        CalendarEventColor("3", "#ff660d11", "", calendars[2].accountName, calendars[2].accountType),
+        CalendarEventColor("4", "#ff4b3294", "", calendars[2].accountName, calendars[2].accountType),
+        CalendarEventColor("5", "#ffd67992", "", calendars[2].accountName, calendars[2].accountType),
+        CalendarEventColor("6", "#ff157ca8", "", calendars[2].accountName, calendars[2].accountType),
+        CalendarEventColor("7", "#ffb498d0", "", calendars[2].accountName, calendars[2].accountType),
+
+        CalendarEventColor("101", "#ffeade69", "", "otherAccountName", "otherAccountType"),
+        CalendarEventColor("102", "#ffb7ef2d", "", "otherAccountName", "otherAccountType"),
+        CalendarEventColor("103", "#ff066b3b", "", "otherAccountName", "otherAccountType"),
+    )
+
+    private val calendarEvents = mutableMapOf<Calendar, MutableList<CalendarEvent>>()
+
+    override suspend fun findAllCalendars(): List<Calendar> {
+        delay(2_000)
+        return calendars
+    }
+
+    override suspend fun findAllEventColors(): List<CalendarEventColor> {
+        delay(3_000)
+        calendarEventColors.forEach{
+            println("$it - ${it.colorAsLong()}")
+        }
+        return calendarEventColors
+    }
+
+    override suspend fun addEventToCalendar(
+        calendar: Calendar,
+        event: CalendarEvent
+    ): AddEventResult {
+        delay(2_000)
+        calendarEvents.computeIfAbsent(calendar) { c -> mutableListOf() }
+            .add(event)
+
+        return AddEventResult(Status.CREATED, event)
     }
 
 }

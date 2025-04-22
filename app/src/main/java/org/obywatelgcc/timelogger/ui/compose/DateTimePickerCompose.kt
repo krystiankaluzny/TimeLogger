@@ -57,7 +57,7 @@ fun DateTimePickerRow(
 
     ElevatedCard(
         modifier = Modifier
-            .padding(10.dp)
+            .padding(horizontal = 10.dp)
             .fillMaxWidth(1f),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
