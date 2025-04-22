@@ -208,12 +208,12 @@ class TestCalendarRepositoryImpl : CalendarRepository {
     private val calendarEvents = mutableMapOf<Calendar, MutableList<CalendarEvent>>()
 
     override suspend fun findAllCalendars(): List<Calendar> {
-        delay(2_000)
+        delay(1_000)
         return calendars
     }
 
     override suspend fun findAllEventColors(): List<CalendarEventColor> {
-        delay(3_000)
+        delay(1_000)
         calendarEventColors.forEach{
             println("$it - ${it.colorAsLong()}")
         }

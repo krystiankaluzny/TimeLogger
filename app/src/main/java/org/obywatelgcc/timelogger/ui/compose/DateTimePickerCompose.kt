@@ -1,14 +1,18 @@
 package org.obywatelgcc.timelogger.ui.compose
 
+import android.content.res.Configuration
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
@@ -33,7 +37,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -136,23 +142,41 @@ fun DatePickerDialog(
     onDateSelected: (LocalDate) -> Unit, onDismiss: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState()
+    val configuration = LocalConfiguration.current
 
-    DatePickerDialog(onDismissRequest = onDismiss, confirmButton = {
-        TextButton(onClick = {
-            val localDate = Instant.ofEpochMilli(datePickerState.selectedDateMillis ?: 0)
-                .atZone(ZoneId.systemDefault()).toLocalDate()
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                val localDate = Instant.ofEpochMilli(datePickerState.selectedDateMillis ?: 0)
+                    .atZone(ZoneId.systemDefault()).toLocalDate()
 
-            onDateSelected(localDate)
-            onDismiss()
+                onDateSelected(localDate)
+                onDismiss()
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
         }) {
-            Text("OK")
+        when (configuration.orientation) {
+            Configuration.ORIENTATION_PORTRAIT -> {
+                DatePicker(state = datePickerState)
+            }
+
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .weight(weight = 1f, fill = false)
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
         }
-    }, dismissButton = {
-        TextButton(onClick = onDismiss) {
-            Text("Cancel")
-        }
-    }) {
-        DatePicker(state = datePickerState)
     }
 }
 
@@ -169,18 +193,28 @@ fun TimePickerDialog(
         is24Hour = true,
     )
 
-    AlertDialog(onDismissRequest = onDismiss, dismissButton = {
-        TextButton(onClick = onDismiss) {
-            Text("Cancel")
+    val configuration = LocalConfiguration.current
+    val usePlatformDefaultWidth: Boolean = when (configuration.orientation) {
+        Configuration.ORIENTATION_PORTRAIT -> true
+        else -> false
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = usePlatformDefaultWidth),
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }, confirmButton = {
+            TextButton(onClick = {
+                onTimeSelected(LocalTime.of(timePickerState.hour, timePickerState.minute))
+                onDismiss()
+            }) {
+                Text("OK")
+            }
+        }, text = {
+            TimePicker(state = timePickerState)
         }
-    }, confirmButton = {
-        TextButton(onClick = {
-            onTimeSelected(LocalTime.of(timePickerState.hour, timePickerState.minute))
-            onDismiss()
-        }) {
-            Text("OK")
-        }
-    }, text = {
-        TimePicker(state = timePickerState)
-    })
+    )
 }

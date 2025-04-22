@@ -1,6 +1,6 @@
 package org.obywatelgcc.timelogger.ui.compose
 
-import android.annotation.SuppressLint
+import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +34,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,7 +72,7 @@ fun App(viewModel: TimeEventViewModel) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(text = appName) }) },
+        topBar = { TopBar(appName) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     )
     { innerPadding ->
@@ -93,6 +95,21 @@ private fun <T> ObserveAsEvents(flow: Flow<T>, onEvent: suspend (T) -> Unit) {
             flow.collect(onEvent)
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TopBar(appName: String, modifier: Modifier = Modifier) {
+    val configuration = LocalConfiguration.current
+    val expandedHeight = when (configuration.orientation) {
+        Configuration.ORIENTATION_PORTRAIT -> TopAppBarDefaults.TopAppBarExpandedHeight
+        else -> TopAppBarDefaults.TopAppBarExpandedHeight / 2
+    }
+
+    TopAppBar(
+        title = { Text(text = appName) },
+        expandedHeight = expandedHeight
+    )
 }
 
 @Composable
@@ -136,11 +153,17 @@ private fun LoadingScreen(innerPadding: PaddingValues) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("DefaultLocale")
 @Composable
 fun TimeLoggerScreen(viewModel: TimeEventViewModel, innerPadding: PaddingValues) {
+    val configuration = LocalConfiguration.current
+    when (configuration.orientation) {
+        Configuration.ORIENTATION_PORTRAIT -> TimeLoggerPortraitScreen(viewModel, innerPadding)
+        else -> TimeLoggerLandscapeScreen(viewModel, innerPadding)
+    }
+}
 
+@Composable
+fun TimeLoggerPortraitScreen(viewModel: TimeEventViewModel, innerPadding: PaddingValues) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(innerPadding),
@@ -166,6 +189,62 @@ fun TimeLoggerScreen(viewModel: TimeEventViewModel, innerPadding: PaddingValues)
             onClick = { viewModel.trySave() }) {
             Text(text = "Save")
         }
+    }
+}
+
+@Composable
+fun TimeLoggerLandscapeScreen(viewModel: TimeEventViewModel, innerPadding: PaddingValues) {
+
+    Column(
+        modifier = Modifier.padding(innerPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val calendars by viewModel.availableCalendars.collectAsState()
+            val selectedCalendar by viewModel.selectedCalendar.collectAsState()
+
+            Box(modifier = Modifier.weight(1.0f)) {
+                CalendarDropdown(calendars, selectedCalendar, { viewModel.selectCalendar(it) })
+            }
+            Box(modifier = Modifier.weight(1.0f)) {
+                TitleAndColorRow(viewModel)
+            }
+        }
+
+        Row(
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column(
+                modifier = Modifier.weight(1.0f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                StartDateTimeRow(viewModel)
+                Spacer(Modifier.height(10.dp))
+                EndDateTimeRow(viewModel)
+            }
+
+            Column(
+                modifier = Modifier.weight(1.0f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                DurationRow(viewModel)
+                TimeLoggerButtonsRow(viewModel)
+
+                Spacer(Modifier.height(10.dp))
+
+                FilledTonalButton(
+                    modifier = Modifier
+                        .fillMaxWidth(0.4f)
+                        .height(70.dp),
+                    onClick = { viewModel.trySave() }) {
+                    Text(text = "Save")
+                }
+            }
+        }
+
+
     }
 }
 
@@ -382,7 +461,7 @@ private fun TimeLoggerButtonsRow(viewModel: TimeEventViewModel) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         val timerState by viewModel.timerState.collectAsState()
 
