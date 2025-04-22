@@ -2,6 +2,7 @@ package org.obywatelgcc.timelogger.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.model.calendar.Calendar
@@ -68,8 +70,8 @@ class TimeEventViewModel(
     private val _calendarEventToSave = MutableSharedFlow<CalendarEvent>()
     val calendarEventToSave = _calendarEventToSave.asSharedFlow()
 
-    private val _messageToShow = MutableSharedFlow<String>()
-    val messageToShow = _messageToShow.asSharedFlow()
+    private val _messageChannel = Channel<String>()
+    val messageChannelFlow = _messageChannel.receiveAsFlow()
 
     private fun initCalendars() {
         viewModelScope.launch {
@@ -155,21 +157,21 @@ class TimeEventViewModel(
     private suspend fun handleValidationResult(validationResult: ValidationResult) {
         when (validationResult) {
             ValidationResult.OK -> TODO()
-            ValidationResult.EMPTY_TITLE -> _messageToShow.emit("Empty title")
-            ValidationResult.DURATION_TOO_SHORT -> _messageToShow.emit("Duration too short")
-            ValidationResult.END_BEFORE_START -> _messageToShow.emit("End before start")
+            ValidationResult.EMPTY_TITLE -> _messageChannel.send("Empty title")
+            ValidationResult.DURATION_TOO_SHORT -> _messageChannel.send("Duration too short")
+            ValidationResult.END_BEFORE_START -> _messageChannel.send("End before start")
         }
     }
 
     private suspend fun handleSaveResult(result: CalendarRepository.AddEventResult) {
         when (result.status) {
-            CalendarRepository.AddEventResult.Status.ALREADY_EXISTS -> _messageToShow.emit("Already exists")
+            CalendarRepository.AddEventResult.Status.ALREADY_EXISTS -> _messageChannel.send("Already exists")
             CalendarRepository.AddEventResult.Status.CREATED -> {
                 reset()
-                _messageToShow.emit("Successfully saved")
+                _messageChannel.send("Successfully saved")
             }
 
-            CalendarRepository.AddEventResult.Status.ERROR -> _messageToShow.emit("Saving failed")
+            CalendarRepository.AddEventResult.Status.ERROR -> _messageChannel.send("Saving failed")
         }
     }
 

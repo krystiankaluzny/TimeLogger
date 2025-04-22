@@ -47,7 +47,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.flow.Flow
 import org.obywatelgcc.timelogger.model.calendar.Calendar
 import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
@@ -61,10 +65,8 @@ fun App(viewModel: TimeEventViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
     val appName by viewModel.appName.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.messageToShow.collect {
-            snackbarHostState.showSnackbar(it, "OK", duration = SnackbarDuration.Short)
-        }
+    ObserveAsEvents(viewModel.messageChannelFlow) {
+        snackbarHostState.showSnackbar(it, "OK", duration = SnackbarDuration.Short)
     }
 
     Scaffold(
@@ -81,6 +83,16 @@ fun App(viewModel: TimeEventViewModel) {
         }
     }
 
+}
+
+@Composable
+private fun <T> ObserveAsEvents(flow: Flow<T>, onEvent: suspend (T) -> Unit) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(flow, lifecycleOwner.lifecycle) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            flow.collect(onEvent)
+        }
+    }
 }
 
 @Composable
