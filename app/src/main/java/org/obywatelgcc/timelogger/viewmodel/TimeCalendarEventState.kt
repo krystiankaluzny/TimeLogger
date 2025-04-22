@@ -1,5 +1,6 @@
 package org.obywatelgcc.timelogger.viewmodel
 
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.obywatelgcc.timelogger.model.calendar.Calendar
 import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
@@ -18,6 +19,7 @@ class TimeCalendarEventState {
     val selectedColor = MutableStateFlow<CalendarEventColor?>(null)
 
     fun init(calendars: List<Calendar>, eventColors: List<CalendarEventColor>) {
+        Log.d("TimeCalendarEventState", "init: start")
         availableCalendars.value = calendars
         selectedCalendar.value = calendars.getOrNull(0)
 

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.obywatelgcc.timelogger.model.calendar.Calendar
 import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
@@ -57,7 +59,7 @@ import org.obywatelgcc.timelogger.viewmodel.TimerState
 @Composable
 fun App(viewModel: TimeEventViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val appName = viewModel.appName.collectAsState()
+    val appName by viewModel.appName.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.messageToShow.collect {
@@ -66,25 +68,31 @@ fun App(viewModel: TimeEventViewModel) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(text = appName.value) }) },
+        topBar = { TopAppBar(title = { Text(text = appName) }) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     )
     { innerPadding ->
-        AppCalendarState(viewModel, innerPadding)
+        val initialized by viewModel.initialized.collectAsStateWithLifecycle()
+
+        if (initialized) {
+            AppCalendarStateScreen(viewModel, innerPadding)
+        } else {
+            LoadingScreen(innerPadding)
+        }
     }
 
 }
 
 @Composable
-private fun AppCalendarState(
+private fun AppCalendarStateScreen(
     viewModel: TimeEventViewModel,
     innerPadding: PaddingValues
 ) {
-    val calendarState = viewModel.calendarState.collectAsState()
+    val calendarState by viewModel.calendarState.collectAsState()
 
-    when (calendarState.value) {
+    when (calendarState) {
         State.BEFORE_INITIALIZING -> {
-            CircularProgressIndicator()
+            LoadingScreen(innerPadding)
         }
 
         State.SUCCESSFULLY_INITIALIZED -> {
@@ -104,6 +112,18 @@ private fun AppCalendarState(
     }
 }
 
+@Composable
+private fun LoadingScreen(innerPadding: PaddingValues) {
+    Box(
+        modifier = Modifier
+            .padding(innerPadding)
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("DefaultLocale")
 @Composable
@@ -113,13 +133,14 @@ fun TimeLoggerScreen(viewModel: TimeEventViewModel, innerPadding: PaddingValues)
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(innerPadding),
     ) {
-        val calendars = viewModel.availableCalendars.collectAsState()
-        val selectedCalendar = viewModel.selectedCalendar.collectAsState()
+        val calendars by viewModel.availableCalendars.collectAsState()
+        val selectedCalendar by viewModel.selectedCalendar.collectAsState()
 
-        CalendarDropdown(calendars.value, selectedCalendar.value, { viewModel.selectCalendar(it) })
+        CalendarDropdown(calendars, selectedCalendar, { viewModel.selectCalendar(it) })
         TitleAndColorRow(viewModel)
 
         StartDateTimeRow(viewModel)
+        Spacer(Modifier.height(10.dp))
         EndDateTimeRow(viewModel)
         DurationRow(viewModel)
         TimeLoggerButtonsRow(viewModel)
@@ -191,13 +212,13 @@ private fun TitleAndColorRow(viewModel: TimeEventViewModel) {
             .padding(start = 10.dp, bottom = 10.dp, end = 10.dp)
             .fillMaxWidth()
     ) {
-        val entryTitle = viewModel.eventTitle.collectAsState()
-        val colors = viewModel.availableColors.collectAsState()
-        val selectedColor = viewModel.selectedColor.collectAsState()
+        val entryTitle by viewModel.eventTitle.collectAsState()
+        val colors by viewModel.availableColors.collectAsState()
+        val selectedColor by viewModel.selectedColor.collectAsState()
 
-        EntryTitleTextField(entryTitle.value, { viewModel.updateEventTitle(it) })
+        EntryTitleTextField(entryTitle, { viewModel.updateEventTitle(it) })
 
-        ColorDropdown(colors.value, selectedColor.value, { viewModel.selectColor(it) })
+        ColorDropdown(colors, selectedColor, { viewModel.selectColor(it) })
     }
 }
 
@@ -349,9 +370,9 @@ private fun TimeLoggerButtonsRow(viewModel: TimeEventViewModel) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        val timerState = viewModel.timerState.collectAsState().value
+        val timerState by viewModel.timerState.collectAsState()
 
         val buttonModifier = Modifier
             .weight(0.5f)

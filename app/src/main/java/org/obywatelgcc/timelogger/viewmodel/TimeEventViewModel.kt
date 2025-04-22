@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.model.calendar.Calendar
@@ -24,6 +25,11 @@ class TimeEventViewModel(
 ) : ViewModel() {
 
     private val tickerDelayMs = 1000L
+
+    private val _initialized = MutableStateFlow(false)
+    val initialized = _initialized
+        .onStart { initCalendars() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val _appName = MutableStateFlow("")
     val appName = _appName.asStateFlow()
@@ -65,10 +71,6 @@ class TimeEventViewModel(
     private val _messageToShow = MutableSharedFlow<String>()
     val messageToShow = _messageToShow.asSharedFlow()
 
-    init {
-        initCalendars()
-    }
-
     private fun initCalendars() {
         viewModelScope.launch {
             timeCalendarEventState.init(
@@ -76,6 +78,7 @@ class TimeEventViewModel(
                 calendarRepository.findAllEventColors()
             )
 
+            _initialized.value = true
         }
     }
 
