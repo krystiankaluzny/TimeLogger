@@ -10,29 +10,41 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
+import org.obywatelgcc.timelogger.model.LocalDateSerializer
+import org.obywatelgcc.timelogger.model.LocalTimeSerializer
 import org.obywatelgcc.timelogger.model.calendar.Calendar
 import org.obywatelgcc.timelogger.model.calendar.CalendarEvent
 import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
 import org.obywatelgcc.timelogger.model.calendar.CalendarRepository
+import org.obywatelgcc.timelogger.model.calendar.DataStoreManager
+import org.obywatelgcc.timelogger.model.ZonedDateTimeSerializer
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZonedDateTime
 import java.util.Locale
+import kotlin.reflect.typeOf
 
 class TimeEventViewModel(
     savedStateHandle: SavedStateHandle,
+    private val dataSoreManager: DataStoreManager,
     private val calendarRepository: CalendarRepository
 ) : ViewModel() {
 
     private val tickerDelayMs = 1000L
+    private var timerPreferencesKey = "timerEventPreferences"
+    private lateinit var timerEventPreferences: TimerEventPreferences
 
     private val _initialized = MutableStateFlow(false)
     val initialized = _initialized
-        .onStart { initCalendars() }
+        .onStart { initData() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val _appName = MutableStateFlow("")
@@ -41,7 +53,8 @@ class TimeEventViewModel(
     private val _timerState = MutableStateFlow(TimerState.READY_TO_START)
     val timerState = _timerState.asStateFlow()
 
-    private val timeCalendarEventState = TimeCalendarEventState(savedStateHandle)
+    private val timeCalendarEventState =
+        TimeCalendarEventState(viewModelScope, savedStateHandle, dataSoreManager)
     val calendarState = timeCalendarEventState.state.asStateFlow()
     val availableCalendars = timeCalendarEventState.availableCalendars.asStateFlow()
     val selectedCalendar = timeCalendarEventState.selectedCalendar.asStateFlow()
@@ -75,6 +88,12 @@ class TimeEventViewModel(
     private val _messageChannel = Channel<String>()
     val messageChannelFlow = _messageChannel.receiveAsFlow()
 
+    private fun initData() {
+        loadTimerPreferences()
+        initCalendars()
+        updateDataFromPreferences()
+    }
+
     private fun initCalendars() {
         viewModelScope.launch {
             timeCalendarEventState.init(
@@ -105,6 +124,9 @@ class TimeEventViewModel(
         if (_timerState.value == TimerState.STARTED) {
             _timerState.value = TimerState.STOPPED
             timeRangeState.refreshEndDateTime()
+            timerEventPreferences.isRunning = false
+
+            saveTimerPreferences()
         }
     }
 
@@ -122,6 +144,8 @@ class TimeEventViewModel(
                 delay(tickerDelayMs)
             }
         }
+        timerEventPreferences.isRunning = true
+        saveTimerPreferences()
     }
 
     fun trySave() {
@@ -177,13 +201,60 @@ class TimeEventViewModel(
         }
     }
 
+    private fun updateDataFromPreferences() {
+        if (timerEventPreferences.title.isNotEmpty()) {
+            timeCalendarEventState.updateTitle(timerEventPreferences.title)
+        }
+        timeRangeState.updateStartDate(timerEventPreferences.startDate)
+        timeRangeState.updateStartTime(timerEventPreferences.startTime)
+
+        if (timerEventPreferences.isRunning) {
+            start()
+        }
+    }
+
+    private fun loadTimerPreferences() {
+        runBlocking {
+            timerEventPreferences = dataSoreManager.getFromJson<TimerEventPreferences>(
+                timerPreferencesKey,
+                typeOf<TimerEventPreferences>()
+            ).first() ?: TimerEventPreferences()
+        }
+    }
+
+    private fun saveTimerPreferences() {
+        viewModelScope.launch {
+            dataSoreManager.saveAsJson(
+                timerPreferencesKey,
+                timerEventPreferences,
+                typeOf<TimerEventPreferences>()
+            )
+        }
+    }
+
 
     fun selectCalendar(calendar: Calendar) = timeCalendarEventState.select(calendar)
     fun selectColor(color: CalendarEventColor) = timeCalendarEventState.selectColor(color)
-    fun updateEventTitle(title: String) = timeCalendarEventState.updateTitle(title)
+    fun updateEventTitle(title: String) {
+        timeCalendarEventState.updateTitle(title)
+        timerEventPreferences.title = title
 
-    fun updateStartDate(localDate: LocalDate) = timeRangeState.updateStartDate(localDate)
-    fun updateStartTime(localTime: LocalTime) = timeRangeState.updateStartTime(localTime)
+        saveTimerPreferences()
+    }
+
+    fun updateStartDate(localDate: LocalDate) {
+        timeRangeState.updateStartDate(localDate)
+        timerEventPreferences.startDate = localDate
+
+        saveTimerPreferences()
+    }
+    fun updateStartTime(localTime: LocalTime) {
+        timeRangeState.updateStartTime(localTime)
+        timerEventPreferences.startTime = localTime
+
+        saveTimerPreferences()
+    }
+
     fun updateEndDate(localDate: LocalDate) = timeRangeState.updateEndDate(localDate)
     fun updateEndTime(localTime: LocalTime) = timeRangeState.updateEndTime(localTime)
 }
@@ -195,3 +266,13 @@ enum class TimerState {
 enum class ValidationResult {
     OK, EMPTY_TITLE, DURATION_TOO_SHORT, END_BEFORE_START
 }
+
+@Serializable
+class TimerEventPreferences(
+    var title: String = "",
+    @Serializable(LocalDateSerializer::class)
+    var startDate: LocalDate = LocalDate.now(),
+    @Serializable(LocalTimeSerializer::class)
+    var startTime: LocalTime = LocalTime.now(),
+    var isRunning: Boolean = false
+)

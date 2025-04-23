@@ -2,12 +2,22 @@ package org.obywatelgcc.timelogger.model.calendar
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import org.obywatelgcc.timelogger.model.ZonedDateTimeSerializer
 import java.lang.Long.decode
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 @Parcelize
+@Serializable
 data class Calendar(
     val id: Long,
     val accountName: String,
@@ -15,7 +25,6 @@ data class Calendar(
     val displayName: String,
     val ownerName: String
 ) : Parcelable {
-    companion object
 
     fun description(): String {
         if (accountName == displayName) {
@@ -27,9 +36,12 @@ data class Calendar(
 }
 
 @Parcelize
+@Serializable
 data class CalendarEvent(
     val title: String,
+    @Serializable(ZonedDateTimeSerializer::class)
     val start: ZonedDateTime,
+    @Serializable(ZonedDateTimeSerializer::class)
     val end: ZonedDateTime,
     val color: CalendarEventColor?
 ) : Parcelable {
@@ -50,6 +62,7 @@ data class CalendarEvent(
 }
 
 @Parcelize
+@Serializable
 data class CalendarEventColor(
     val key: String,
     val color: String,
@@ -61,3 +74,5 @@ data class CalendarEventColor(
         return decode(color)
     }
 }
+
+

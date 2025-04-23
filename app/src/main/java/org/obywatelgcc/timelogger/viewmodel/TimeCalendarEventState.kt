@@ -1,14 +1,26 @@
 package org.obywatelgcc.timelogger.viewmodel
 
-import android.os.Parcelable
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.parcelize.Parcelize
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
 import org.obywatelgcc.timelogger.model.calendar.Calendar
 import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
+import org.obywatelgcc.timelogger.model.calendar.DataStoreManager
+import kotlin.reflect.typeOf
 
-class TimeCalendarEventState(private val savedStateHandle: SavedStateHandle) {
+class TimeCalendarEventState(
+    private val coroutineScope: CoroutineScope,
+    private val savedStateHandle: SavedStateHandle,
+    private val dataSoreManager: DataStoreManager
+) {
+
+    private val calendarPreferencesKey = "calendarPreferences"
+    private lateinit var calendarPreferences: CalendarPreferences
 
     val state = MutableStateFlow(State.BEFORE_INITIALIZING)
 
@@ -19,10 +31,6 @@ class TimeCalendarEventState(private val savedStateHandle: SavedStateHandle) {
 
     val eventTitle = MutableSaveStateFlow(savedStateHandle, "eventTitle", "")
 
-    val calenderColorMap = mutableMapOf<Calendar, CalendarColorsData>()
-
-    val allEventColors =
-        MutableSaveStateFlow(savedStateHandle, "allEventColors", listOf<CalendarEventColor>())
     val availableColors =
         MutableSaveStateFlow(savedStateHandle, "availableColors", listOf<CalendarEventColor>())
     val selectedColor =
@@ -30,37 +38,34 @@ class TimeCalendarEventState(private val savedStateHandle: SavedStateHandle) {
 
     fun init(calendars: List<Calendar>, eventColors: List<CalendarEventColor>) {
 
-        Log.d("TimeCalendarEventState", "init: before: ${savedStateHandle.keys()}")
-        Log.d("TimeCalendarEventState", "init: before: ${availableCalendars.value}")
-        Log.d("TimeCalendarEventState", "init: before: ${selectedCalendar.value}")
-        Log.d("TimeCalendarEventState", "init: before: ${eventTitle.value}")
-        Log.d("TimeCalendarEventState", "init: before: ${selectedColor.value}")
+        updateDataFromPreferences(calendars, eventColors)
+
+        Log.d("TimeCalendarEventState", "init: before: $calendarPreferences")
 
         Log.d("TimeCalendarEventState", "init: start")
         availableCalendars.value = calendars
+        selectedCalendar.value = calendarPreferences.selectedCalendar
 
-        if (selectedCalendar.value == null || !calendars.contains(selectedCalendar.value)) {
-            selectedCalendar.value = calendars.getOrNull(0)
-        }
-
-        allEventColors.value = eventColors
-        selectedCalendar.value?.let {
+        calendarPreferences.selectedCalendar?.let {
             val colorsData = getColorsData(it)
             availableColors.value = colorsData.colors
-            if (selectedColor.value == null || !colorsData.colors.contains(selectedColor.value)) {
-                selectedColor.value = colorsData.selectedColor
-            } else {
-                colorsData.selectedColor = selectedColor.value
-            }
+            selectedColor.value = colorsData.selectedColor
         }
 
         state.value =
             if (calendars.isNotEmpty()) State.SUCCESSFULLY_INITIALIZED else State.CALENDARS_NOT_FOUND
     }
 
+
     fun select(calendar: Calendar) {
         selectedCalendar.value = calendar
-        refreshAvailableColorsForCalendar(calendar)
+        calendarPreferences.selectedCalendar = calendar
+
+        val colorsData = getColorsData(calendar)
+        availableColors.value = colorsData.colors
+        selectedColor.value = colorsData.selectedColor
+
+        saveCalendarPreferences()
     }
 
     fun selectColor(color: CalendarEventColor) {
@@ -68,28 +73,69 @@ class TimeCalendarEventState(private val savedStateHandle: SavedStateHandle) {
         selectedCalendar.value?.let {
             getColorsData(it).selectedColor = color
         }
+
+        saveCalendarPreferences()
     }
 
     fun updateTitle(title: String) {
         eventTitle.value = title
     }
 
-    private fun refreshAvailableColorsForCalendar(calendar: Calendar) {
-        val colorsData = getColorsData(calendar)
-        availableColors.value = colorsData.colors
-        selectedColor.value = colorsData.selectedColor
-    }
+    private fun updateDataFromPreferences(
+        calendars: List<Calendar>,
+        eventColors: List<CalendarEventColor>
+    ) {
+        loadCalendarPreferences()
 
-    private fun getColorsData(calendar: Calendar): CalendarColorsData {
-        return calenderColorMap.getOrPut(calendar) {
-            val availableColors = allEventColors.value
+        if (calendarPreferences.selectedCalendar == null || !calendars.contains(calendarPreferences.selectedCalendar)) {
+            calendarPreferences.selectedCalendar = calendars.getOrNull(0)
+        }
+
+        val dataMap = calendarPreferences.dataMap
+        val calendarIds = calendars.map { it.id }
+        dataMap.entries.removeIf { !calendarIds.contains(it.key) }
+
+        calendars.forEach { calendar ->
+            val availableColors = eventColors
                 .filter {
                     calendar.accountName == it.accountName
                             && calendar.accountType == it.accountType
                 }
 
-            CalendarColorsData(
-                calendar, availableColors, availableColors.getOrNull(0)
+            val data = dataMap.getOrPut(calendar.id) {
+                CalendarColorsData(
+                    calendar,
+                    availableColors,
+                    null
+                )
+            }
+
+            if (data.selectedColor == null || !availableColors.contains(data.selectedColor)) {
+                data.selectedColor = availableColors.getOrNull(0)
+            }
+        }
+
+        saveCalendarPreferences()
+    }
+
+    private fun getColorsData(calendar: Calendar): CalendarColorsData =
+        calendarPreferences.dataMap.getValue(calendar.id)
+
+    private fun loadCalendarPreferences() {
+        runBlocking {
+            calendarPreferences = dataSoreManager.getFromJson<CalendarPreferences>(
+                calendarPreferencesKey,
+                typeOf<CalendarPreferences>()
+            ).first() ?: CalendarPreferences()
+        }
+    }
+
+    private fun saveCalendarPreferences() {
+        coroutineScope.launch {
+            dataSoreManager.saveAsJson(
+                calendarPreferencesKey,
+                calendarPreferences,
+                typeOf<CalendarPreferences>()
             )
         }
     }
@@ -99,10 +145,15 @@ enum class State {
     BEFORE_INITIALIZING, SUCCESSFULLY_INITIALIZED, CALENDARS_NOT_FOUND
 }
 
+@Serializable
+private data class CalendarPreferences(
+    val dataMap: MutableMap<Long, CalendarColorsData> = mutableMapOf<Long, CalendarColorsData>(),
+    var selectedCalendar: Calendar? = null
+)
 
-@Parcelize
-class CalendarColorsData(
+@Serializable
+private class CalendarColorsData(
     val calendar: Calendar,
     val colors: List<CalendarEventColor>,
     var selectedColor: CalendarEventColor?
-) : Parcelable
+)
