@@ -6,18 +6,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.obywatelgcc.timelogger.model.calendar.Calendar
 import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
-import org.obywatelgcc.timelogger.model.calendar.DataStoreManager
+import org.obywatelgcc.timelogger.model.DataStoreManager
+import org.obywatelgcc.timelogger.viewmodel.flow.MutableSaveStateFlow
 import kotlin.reflect.typeOf
 
 class TimeCalendarEventState(
-    private val coroutineScope: CoroutineScope,
-    private val savedStateHandle: SavedStateHandle,
-    private val dataSoreManager: DataStoreManager
-) {
+    coroutineScope: CoroutineScope,
+    savedStateHandle: SavedStateHandle,
+    dataStoreManager: DataStoreManager
+) : BaseState(coroutineScope, savedStateHandle, dataStoreManager) {
 
     private val calendarPreferencesKey = "calendarPreferences"
     private lateinit var calendarPreferences: CalendarPreferences
@@ -29,20 +29,17 @@ class TimeCalendarEventState(
     val selectedCalendar =
         MutableSaveStateFlow<Calendar?>(savedStateHandle, "selectedCalendar", null)
 
-    val eventTitle = MutableSaveStateFlow(savedStateHandle, "eventTitle", "")
-
     val availableColors =
         MutableSaveStateFlow(savedStateHandle, "availableColors", listOf<CalendarEventColor>())
     val selectedColor =
         MutableSaveStateFlow<CalendarEventColor?>(savedStateHandle, "selectedColor", null)
 
-    fun init(calendars: List<Calendar>, eventColors: List<CalendarEventColor>) {
+    suspend fun init(calendars: List<Calendar>, eventColors: List<CalendarEventColor>) {
+        Log.d("TimeCalendarEventState", "init")
 
+        loadCalendarPreferences()
         updateDataFromPreferences(calendars, eventColors)
 
-        Log.d("TimeCalendarEventState", "init: before: $calendarPreferences")
-
-        Log.d("TimeCalendarEventState", "init: start")
         availableCalendars.value = calendars
         selectedCalendar.value = calendarPreferences.selectedCalendar
 
@@ -55,7 +52,6 @@ class TimeCalendarEventState(
         state.value =
             if (calendars.isNotEmpty()) State.SUCCESSFULLY_INITIALIZED else State.CALENDARS_NOT_FOUND
     }
-
 
     fun select(calendar: Calendar) {
         selectedCalendar.value = calendar
@@ -77,16 +73,10 @@ class TimeCalendarEventState(
         saveCalendarPreferences()
     }
 
-    fun updateTitle(title: String) {
-        eventTitle.value = title
-    }
-
     private fun updateDataFromPreferences(
         calendars: List<Calendar>,
         eventColors: List<CalendarEventColor>
     ) {
-        loadCalendarPreferences()
-
         if (calendarPreferences.selectedCalendar == null || !calendars.contains(calendarPreferences.selectedCalendar)) {
             calendarPreferences.selectedCalendar = calendars.getOrNull(0)
         }
@@ -121,18 +111,16 @@ class TimeCalendarEventState(
     private fun getColorsData(calendar: Calendar): CalendarColorsData =
         calendarPreferences.dataMap.getValue(calendar.id)
 
-    private fun loadCalendarPreferences() {
-        runBlocking {
-            calendarPreferences = dataSoreManager.getFromJson<CalendarPreferences>(
+    private suspend fun loadCalendarPreferences() {
+            calendarPreferences = dataStoreManager.getFromJson<CalendarPreferences>(
                 calendarPreferencesKey,
                 typeOf<CalendarPreferences>()
             ).first() ?: CalendarPreferences()
-        }
     }
 
     private fun saveCalendarPreferences() {
         coroutineScope.launch {
-            dataSoreManager.saveAsJson(
+            dataStoreManager.saveAsJson(
                 calendarPreferencesKey,
                 calendarPreferences,
                 typeOf<CalendarPreferences>()

@@ -1,46 +1,34 @@
 package org.obywatelgcc.timelogger.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.Serializable
-import org.obywatelgcc.timelogger.model.LocalDateSerializer
-import org.obywatelgcc.timelogger.model.LocalTimeSerializer
+import org.obywatelgcc.timelogger.model.DataStoreManager
 import org.obywatelgcc.timelogger.model.calendar.Calendar
 import org.obywatelgcc.timelogger.model.calendar.CalendarEvent
 import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
 import org.obywatelgcc.timelogger.model.calendar.CalendarRepository
-import org.obywatelgcc.timelogger.model.calendar.DataStoreManager
-import org.obywatelgcc.timelogger.model.ZonedDateTimeSerializer
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.ZonedDateTime
 import java.util.Locale
-import kotlin.reflect.typeOf
 
 class TimeEventViewModel(
     savedStateHandle: SavedStateHandle,
     private val dataSoreManager: DataStoreManager,
     private val calendarRepository: CalendarRepository
 ) : ViewModel() {
-
-    private val tickerDelayMs = 1000L
-    private var timerPreferencesKey = "timerEventPreferences"
-    private lateinit var timerEventPreferences: TimerEventPreferences
 
     private val _initialized = MutableStateFlow(false)
     val initialized = _initialized
@@ -50,8 +38,6 @@ class TimeEventViewModel(
     private val _appName = MutableStateFlow("")
     val appName = _appName.asStateFlow()
 
-    private val _timerState = MutableStateFlow(TimerState.READY_TO_START)
-    val timerState = _timerState.asStateFlow()
 
     private val timeCalendarEventState =
         TimeCalendarEventState(viewModelScope, savedStateHandle, dataSoreManager)
@@ -61,13 +47,15 @@ class TimeEventViewModel(
     val availableColors = timeCalendarEventState.availableColors.asStateFlow()
     val selectedColor = timeCalendarEventState.selectedColor.asStateFlow()
 
-    val eventTitle = timeCalendarEventState.eventTitle.asStateFlow()
 
-    private val timeRangeState = TimeRangeState(viewModelScope, savedStateHandle)
-    val startDateTime = timeRangeState.startDateTime.asStateFlow()
-    val endDateTime = timeRangeState.endDateTime.asStateFlow()
+    private val timeEventState = TimerEventState(viewModelScope, savedStateHandle, dataSoreManager)
 
-    val durationStr = timeRangeState.duration.map {
+    val timerState = timeEventState.timerState.asStateFlow()
+    val eventTitle = timeEventState.eventTitle.asStateFlow()
+    val startDateTime = timeEventState.startDateTime.asStateFlow()
+    val endDateTime = timeEventState.endDateTime.asStateFlow()
+
+    val durationStr = timeEventState.duration.map {
         val durationSeconds = it.seconds
         val hoursPart = durationSeconds / 3600
         val minutesPart = (durationSeconds / 60) % 60
@@ -88,64 +76,24 @@ class TimeEventViewModel(
     private val _messageChannel = Channel<String>()
     val messageChannelFlow = _messageChannel.receiveAsFlow()
 
-    private fun initData() {
-        loadTimerPreferences()
+    private suspend fun initData() {
+        Log.d("TimeEventViewModel", "initData")
+
         initCalendars()
-        updateDataFromPreferences()
+        timeEventState.init()
+
+        _initialized.value = true
     }
 
-    private fun initCalendars() {
-        viewModelScope.launch {
-            timeCalendarEventState.init(
-                calendarRepository.findAllCalendars(),
-                calendarRepository.findAllEventColors()
-            )
-
-            _initialized.value = true
-        }
+    private suspend fun initCalendars() {
+        timeCalendarEventState.init(
+            calendarRepository.findAllCalendars(),
+            calendarRepository.findAllEventColors()
+        )
     }
 
     fun setAppName(appName: String) {
         _appName.value = appName
-    }
-
-    fun reset() {
-        _timerState.value = TimerState.READY_TO_START
-        timeRangeState.reset()
-    }
-
-    fun start() {
-        if (_timerState.value == TimerState.READY_TO_START) {
-            startTimer()
-        }
-    }
-
-    fun stop() {
-        if (_timerState.value == TimerState.STARTED) {
-            _timerState.value = TimerState.STOPPED
-            timeRangeState.refreshEndDateTime()
-            timerEventPreferences.isRunning = false
-
-            saveTimerPreferences()
-        }
-    }
-
-    fun resume() {
-        if (_timerState.value == TimerState.STOPPED) {
-            startTimer()
-        }
-    }
-
-    private fun startTimer() {
-        _timerState.value = TimerState.STARTED
-        viewModelScope.launch {
-            while (_timerState.value == TimerState.STARTED) {
-                timeRangeState.refreshEndDateTime()
-                delay(tickerDelayMs)
-            }
-        }
-        timerEventPreferences.isRunning = true
-        saveTimerPreferences()
     }
 
     fun trySave() {
@@ -201,78 +149,21 @@ class TimeEventViewModel(
         }
     }
 
-    private fun updateDataFromPreferences() {
-        if (timerEventPreferences.title.isNotEmpty()) {
-            timeCalendarEventState.updateTitle(timerEventPreferences.title)
-        }
-        timeRangeState.updateStartDate(timerEventPreferences.startDate)
-        timeRangeState.updateStartTime(timerEventPreferences.startTime)
-
-        if (timerEventPreferences.isRunning) {
-            start()
-        }
-    }
-
-    private fun loadTimerPreferences() {
-        runBlocking {
-            timerEventPreferences = dataSoreManager.getFromJson<TimerEventPreferences>(
-                timerPreferencesKey,
-                typeOf<TimerEventPreferences>()
-            ).first() ?: TimerEventPreferences()
-        }
-    }
-
-    private fun saveTimerPreferences() {
-        viewModelScope.launch {
-            dataSoreManager.saveAsJson(
-                timerPreferencesKey,
-                timerEventPreferences,
-                typeOf<TimerEventPreferences>()
-            )
-        }
-    }
-
-
     fun selectCalendar(calendar: Calendar) = timeCalendarEventState.select(calendar)
     fun selectColor(color: CalendarEventColor) = timeCalendarEventState.selectColor(color)
-    fun updateEventTitle(title: String) {
-        timeCalendarEventState.updateTitle(title)
-        timerEventPreferences.title = title
 
-        saveTimerPreferences()
-    }
+    fun updateEventTitle(title: String) = timeEventState.updateTitle(title)
+    fun updateStartDate(localDate: LocalDate) = timeEventState.updateStartDate(localDate)
+    fun updateStartTime(localTime: LocalTime) = timeEventState.updateStartTime(localTime)
+    fun updateEndDate(localDate: LocalDate) = timeEventState.updateEndDate(localDate)
+    fun updateEndTime(localTime: LocalTime) = timeEventState.updateEndTime(localTime)
 
-    fun updateStartDate(localDate: LocalDate) {
-        timeRangeState.updateStartDate(localDate)
-        timerEventPreferences.startDate = localDate
-
-        saveTimerPreferences()
-    }
-    fun updateStartTime(localTime: LocalTime) {
-        timeRangeState.updateStartTime(localTime)
-        timerEventPreferences.startTime = localTime
-
-        saveTimerPreferences()
-    }
-
-    fun updateEndDate(localDate: LocalDate) = timeRangeState.updateEndDate(localDate)
-    fun updateEndTime(localTime: LocalTime) = timeRangeState.updateEndTime(localTime)
-}
-
-enum class TimerState {
-    READY_TO_START, STARTED, STOPPED
+    fun reset() = timeEventState.reset()
+    fun start() = timeEventState.start()
+    fun stop() = timeEventState.stop()
+    fun resume() = timeEventState.resume()
 }
 
 enum class ValidationResult {
     OK, EMPTY_TITLE, DURATION_TOO_SHORT, END_BEFORE_START
 }
-
-@Serializable
-class TimerEventPreferences(
-    var title: String = "",
-    @Serializable(LocalDateSerializer::class)
-    var startDate: LocalDate = LocalDate.now(),
-    @Serializable(LocalTimeSerializer::class)
-    var startTime: LocalTime = LocalTime.now(),
-    var isRunning: Boolean = false
-)
