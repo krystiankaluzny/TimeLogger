@@ -1,25 +1,22 @@
 package org.obywatelgcc.timelogger.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.obywatelgcc.timelogger.model.DataStoreManager
 import org.obywatelgcc.timelogger.model.LocalDateTimeSerializer
+import org.obywatelgcc.timelogger.utils.logInfo
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
-import kotlin.reflect.typeOf
 
 class TimerEventState(
     coroutineScope: CoroutineScope,
@@ -44,7 +41,7 @@ class TimerEventState(
     }.stateIn(coroutineScope, SharingStarted.Eagerly, Duration.ZERO)
 
     suspend fun init() {
-        Log.d("TimerEventState", "init")
+        logInfo("init")
         eventTitle.loadFormDataStore()
         timerEventPreferences.loadFormDataStore()
 

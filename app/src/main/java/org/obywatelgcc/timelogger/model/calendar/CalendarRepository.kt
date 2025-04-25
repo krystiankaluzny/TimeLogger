@@ -6,10 +6,10 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.provider.CalendarContract
-import android.util.Log
 import kotlinx.coroutines.delay
 import org.obywatelgcc.timelogger.model.calendar.CalendarRepository.AddEventResult
 import org.obywatelgcc.timelogger.model.calendar.CalendarRepository.AddEventResult.Status
+import org.obywatelgcc.timelogger.utils.logDebug
 import java.time.ZonedDateTime
 
 
@@ -73,7 +73,7 @@ class CalendarRepositoryImpl(
     }
 
     override suspend fun findAllCalendars(): List<Calendar> {
-        Log.d("CalendarRepository", "findAllCalendars")
+        logDebug("findAllCalendars")
 
         val result = mutableListOf<Calendar>()
 
@@ -98,7 +98,7 @@ class CalendarRepositoryImpl(
     }
 
     override suspend fun findAllEventColors(): List<CalendarEventColor> {
-        Log.d("CalendarRepository", "findAllEventColors")
+        logDebug("findAllEventColors")
 
         val result = mutableSetOf<CalendarEventColor>()
 
@@ -128,7 +128,7 @@ class CalendarRepositoryImpl(
             close()
         }
 
-        Log.d("CalendarRepository", "findAllEventColors: $result")
+        logDebug("findAllEventColors: $result")
 
         return result.toList()
     }
@@ -137,7 +137,8 @@ class CalendarRepositoryImpl(
         calendar: Calendar,
         event: CalendarEvent
     ): AddEventResult {
-        Log.d("CalendarRepository", "addEventToCalendar: $calendar, $event")
+
+        logDebug("addEventToCalendar: $calendar, $event")
 
         val entryKey = EntryKey(event.title, event.start)
         val cachedEntry = calenderEntryCached[entryKey]
@@ -155,7 +156,7 @@ class CalendarRepositoryImpl(
             put(CalendarContract.Events.EVENT_COLOR_KEY, event.color?.key ?: "")
         }
 
-        Log.d("CalendarRepository", "addEntryToCalendar: $values")
+        logDebug("addEventToCalendar: $values")
 
         val savedEventUri: Uri? = contentResolver.insert(EVENT_URI, values)
 
@@ -177,28 +178,148 @@ class TestCalendarRepositoryImpl : CalendarRepository {
     )
 
     private val calendarEventColors = listOf(
-        CalendarEventColor("1", "#ff445f59", "", calendars[0].accountName, calendars[0].accountType),
-        CalendarEventColor("2", "#ffaacaa3", "", calendars[0].accountName, calendars[0].accountType),
-        CalendarEventColor("3", "#ff660d11", "", calendars[0].accountName, calendars[0].accountType),
-        CalendarEventColor("4", "#ff4b3294", "", calendars[0].accountName, calendars[0].accountType),
-        CalendarEventColor("5", "#ffd67992", "", calendars[0].accountName, calendars[0].accountType),
-        CalendarEventColor("6", "#ff157ca8", "", calendars[0].accountName, calendars[0].accountType),
-        CalendarEventColor("7", "#ffb498d0", "", calendars[0].accountName, calendars[0].accountType),
-        CalendarEventColor("8", "#fffefd4c", "", calendars[0].accountName, calendars[0].accountType),
-        CalendarEventColor("9", "#ff5a3f76", "", calendars[0].accountName, calendars[0].accountType),
-        CalendarEventColor("10", "#fffd08ff", "", calendars[0].accountName, calendars[0].accountType),
+        CalendarEventColor(
+            "1",
+            "#ff445f59",
+            "",
+            calendars[0].accountName,
+            calendars[0].accountType
+        ),
+        CalendarEventColor(
+            "2",
+            "#ffaacaa3",
+            "",
+            calendars[0].accountName,
+            calendars[0].accountType
+        ),
+        CalendarEventColor(
+            "3",
+            "#ff660d11",
+            "",
+            calendars[0].accountName,
+            calendars[0].accountType
+        ),
+        CalendarEventColor(
+            "4",
+            "#ff4b3294",
+            "",
+            calendars[0].accountName,
+            calendars[0].accountType
+        ),
+        CalendarEventColor(
+            "5",
+            "#ffd67992",
+            "",
+            calendars[0].accountName,
+            calendars[0].accountType
+        ),
+        CalendarEventColor(
+            "6",
+            "#ff157ca8",
+            "",
+            calendars[0].accountName,
+            calendars[0].accountType
+        ),
+        CalendarEventColor(
+            "7",
+            "#ffb498d0",
+            "",
+            calendars[0].accountName,
+            calendars[0].accountType
+        ),
+        CalendarEventColor(
+            "8",
+            "#fffefd4c",
+            "",
+            calendars[0].accountName,
+            calendars[0].accountType
+        ),
+        CalendarEventColor(
+            "9",
+            "#ff5a3f76",
+            "",
+            calendars[0].accountName,
+            calendars[0].accountType
+        ),
+        CalendarEventColor(
+            "10",
+            "#fffd08ff",
+            "",
+            calendars[0].accountName,
+            calendars[0].accountType
+        ),
 
-        CalendarEventColor("1", "#ff445f59", "", calendars[1].accountName, calendars[1].accountType),
-        CalendarEventColor("2", "#ffaacaa3", "", calendars[1].accountName, calendars[1].accountType),
-        CalendarEventColor("3", "#ff660d11", "", calendars[1].accountName, calendars[1].accountType),
+        CalendarEventColor(
+            "1",
+            "#ff445f59",
+            "",
+            calendars[1].accountName,
+            calendars[1].accountType
+        ),
+        CalendarEventColor(
+            "2",
+            "#ffaacaa3",
+            "",
+            calendars[1].accountName,
+            calendars[1].accountType
+        ),
+        CalendarEventColor(
+            "3",
+            "#ff660d11",
+            "",
+            calendars[1].accountName,
+            calendars[1].accountType
+        ),
 
-        CalendarEventColor("1", "#ff445f59", "", calendars[2].accountName, calendars[2].accountType),
-        CalendarEventColor("2", "#ffaacaa3", "", calendars[2].accountName, calendars[2].accountType),
-        CalendarEventColor("3", "#ff660d11", "", calendars[2].accountName, calendars[2].accountType),
-        CalendarEventColor("4", "#ff4b3294", "", calendars[2].accountName, calendars[2].accountType),
-        CalendarEventColor("5", "#ffd67992", "", calendars[2].accountName, calendars[2].accountType),
-        CalendarEventColor("6", "#ff157ca8", "", calendars[2].accountName, calendars[2].accountType),
-        CalendarEventColor("7", "#ffb498d0", "", calendars[2].accountName, calendars[2].accountType),
+        CalendarEventColor(
+            "1",
+            "#ff445f59",
+            "",
+            calendars[2].accountName,
+            calendars[2].accountType
+        ),
+        CalendarEventColor(
+            "2",
+            "#ffaacaa3",
+            "",
+            calendars[2].accountName,
+            calendars[2].accountType
+        ),
+        CalendarEventColor(
+            "3",
+            "#ff660d11",
+            "",
+            calendars[2].accountName,
+            calendars[2].accountType
+        ),
+        CalendarEventColor(
+            "4",
+            "#ff4b3294",
+            "",
+            calendars[2].accountName,
+            calendars[2].accountType
+        ),
+        CalendarEventColor(
+            "5",
+            "#ffd67992",
+            "",
+            calendars[2].accountName,
+            calendars[2].accountType
+        ),
+        CalendarEventColor(
+            "6",
+            "#ff157ca8",
+            "",
+            calendars[2].accountName,
+            calendars[2].accountType
+        ),
+        CalendarEventColor(
+            "7",
+            "#ffb498d0",
+            "",
+            calendars[2].accountName,
+            calendars[2].accountType
+        ),
 
         CalendarEventColor("101", "#ffeade69", "", "otherAccountName", "otherAccountType"),
         CalendarEventColor("102", "#ffb7ef2d", "", "otherAccountName", "otherAccountType"),
@@ -214,7 +335,7 @@ class TestCalendarRepositoryImpl : CalendarRepository {
 
     override suspend fun findAllEventColors(): List<CalendarEventColor> {
         delay(1_000)
-        calendarEventColors.forEach{
+        calendarEventColors.forEach {
             println("$it - ${it.colorAsLong()}")
         }
         return calendarEventColors

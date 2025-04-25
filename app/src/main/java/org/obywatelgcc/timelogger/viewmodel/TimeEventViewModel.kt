@@ -1,6 +1,5 @@
 package org.obywatelgcc.timelogger.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +19,7 @@ import org.obywatelgcc.timelogger.model.calendar.Calendar
 import org.obywatelgcc.timelogger.model.calendar.CalendarEvent
 import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
 import org.obywatelgcc.timelogger.model.calendar.CalendarRepository
+import org.obywatelgcc.timelogger.utils.logInfo
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.Locale
@@ -77,7 +77,7 @@ class TimeEventViewModel(
     val messageChannelFlow = _messageChannel.receiveAsFlow()
 
     private suspend fun initData() {
-        Log.d("TimeEventViewModel", "initData")
+        logInfo("initData")
 
         initCalendars()
         timeEventState.init()

@@ -1,15 +1,15 @@
 package org.obywatelgcc.timelogger.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.obywatelgcc.timelogger.model.DataStoreManager
 import org.obywatelgcc.timelogger.model.calendar.Calendar
 import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
-import org.obywatelgcc.timelogger.model.DataStoreManager
+import org.obywatelgcc.timelogger.utils.logInfo
 import org.obywatelgcc.timelogger.viewmodel.flow.MutableSaveStateFlow
 import kotlin.reflect.typeOf
 
@@ -35,7 +35,7 @@ class TimeCalendarEventState(
         MutableSaveStateFlow<CalendarEventColor?>(savedStateHandle, "selectedColor", null)
 
     suspend fun init(calendars: List<Calendar>, eventColors: List<CalendarEventColor>) {
-        Log.d("TimeCalendarEventState", "init")
+        logInfo("init")
 
         loadCalendarPreferences()
         updateDataFromPreferences(calendars, eventColors)
@@ -112,10 +112,10 @@ class TimeCalendarEventState(
         calendarPreferences.dataMap.getValue(calendar.id)
 
     private suspend fun loadCalendarPreferences() {
-            calendarPreferences = dataStoreManager.getFromJson<CalendarPreferences>(
-                calendarPreferencesKey,
-                typeOf<CalendarPreferences>()
-            ).first() ?: CalendarPreferences()
+        calendarPreferences = dataStoreManager.getFromJson<CalendarPreferences>(
+            calendarPreferencesKey,
+            typeOf<CalendarPreferences>()
+        ).first() ?: CalendarPreferences()
     }
 
     private fun saveCalendarPreferences() {
