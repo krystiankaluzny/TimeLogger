@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.viewmodel
+package org.obywatelgcc.timelogger.timer.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import org.obywatelgcc.timelogger.model.DataStoreManager
-import org.obywatelgcc.timelogger.model.LocalDateTimeSerializer
+import org.obywatelgcc.timelogger.core.data.DataStoreManager
+import org.obywatelgcc.timelogger.core.data.LocalDateTimeSerializer
 import org.obywatelgcc.timelogger.utils.logInfo
 import java.time.Duration
 import java.time.LocalDate

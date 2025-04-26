@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.viewmodel.flow
+package org.obywatelgcc.timelogger.core.flow
 
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.flow.Flow

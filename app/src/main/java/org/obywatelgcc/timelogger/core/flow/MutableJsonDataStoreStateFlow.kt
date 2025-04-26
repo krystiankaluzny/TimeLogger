@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.viewmodel.flow
+package org.obywatelgcc.timelogger.core.flow
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import org.obywatelgcc.timelogger.model.DataStoreManager
+import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import kotlin.reflect.KType
 
 class MutableJsonDataStoreStateFlow<T>(

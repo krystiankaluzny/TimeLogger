@@ -1,20 +1,13 @@
-package org.obywatelgcc.timelogger.model.calendar
+package org.obywatelgcc.timelogger.timer.model.calendar
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import org.obywatelgcc.timelogger.model.ZonedDateTimeSerializer
+import org.obywatelgcc.timelogger.core.data.ZonedDateTimeSerializer
 import java.lang.Long.decode
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 @Parcelize
 @Serializable

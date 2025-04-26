@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.ui.compose
+package org.obywatelgcc.timelogger.timer.compose
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.Color

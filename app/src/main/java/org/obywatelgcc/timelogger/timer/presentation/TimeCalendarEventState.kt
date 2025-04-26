@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.viewmodel
+package org.obywatelgcc.timelogger.timer.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
@@ -6,11 +6,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import org.obywatelgcc.timelogger.model.DataStoreManager
-import org.obywatelgcc.timelogger.model.calendar.Calendar
-import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
+import org.obywatelgcc.timelogger.core.data.DataStoreManager
+import org.obywatelgcc.timelogger.timer.model.calendar.Calendar
+import org.obywatelgcc.timelogger.timer.model.calendar.CalendarEventColor
 import org.obywatelgcc.timelogger.utils.logInfo
-import org.obywatelgcc.timelogger.viewmodel.flow.MutableSaveStateFlow
+import org.obywatelgcc.timelogger.core.flow.MutableSaveStateFlow
 import kotlin.reflect.typeOf
 
 class TimeCalendarEventState(

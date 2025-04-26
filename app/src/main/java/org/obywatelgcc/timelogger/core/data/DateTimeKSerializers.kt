@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.model
+package org.obywatelgcc.timelogger.core.data
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind

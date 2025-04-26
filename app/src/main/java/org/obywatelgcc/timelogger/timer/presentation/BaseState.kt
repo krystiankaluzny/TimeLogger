@@ -1,11 +1,11 @@
-package org.obywatelgcc.timelogger.viewmodel
+package org.obywatelgcc.timelogger.timer.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
-import org.obywatelgcc.timelogger.model.DataStoreManager
-import org.obywatelgcc.timelogger.viewmodel.flow.MutableJsonDataStoreStateFlow
-import org.obywatelgcc.timelogger.viewmodel.flow.MutableSaveStateFlow
-import org.obywatelgcc.timelogger.viewmodel.flow.MutableStringDataStoreStateFlow
+import org.obywatelgcc.timelogger.core.data.DataStoreManager
+import org.obywatelgcc.timelogger.core.flow.MutableJsonDataStoreStateFlow
+import org.obywatelgcc.timelogger.core.flow.MutableSaveStateFlow
+import org.obywatelgcc.timelogger.core.flow.MutableStringDataStoreStateFlow
 import kotlin.reflect.typeOf
 
 open class BaseState(

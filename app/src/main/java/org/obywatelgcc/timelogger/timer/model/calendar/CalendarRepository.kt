@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.model.calendar
+package org.obywatelgcc.timelogger.timer.model.calendar
 
 import android.content.ContentResolver
 import android.content.ContentValues
@@ -7,8 +7,8 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.CalendarContract
 import kotlinx.coroutines.delay
-import org.obywatelgcc.timelogger.model.calendar.CalendarRepository.AddEventResult
-import org.obywatelgcc.timelogger.model.calendar.CalendarRepository.AddEventResult.Status
+import org.obywatelgcc.timelogger.timer.model.calendar.CalendarRepository.AddEventResult
+import org.obywatelgcc.timelogger.timer.model.calendar.CalendarRepository.AddEventResult.Status
 import org.obywatelgcc.timelogger.utils.logDebug
 import java.time.ZonedDateTime
 

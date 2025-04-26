@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.viewmodel.flow
+package org.obywatelgcc.timelogger.core.flow
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.obywatelgcc.timelogger.model.DataStoreManager
+import org.obywatelgcc.timelogger.core.data.DataStoreManager
 
 class MutableStringDataStoreStateFlow(
     private val coroutineScope: CoroutineScope,

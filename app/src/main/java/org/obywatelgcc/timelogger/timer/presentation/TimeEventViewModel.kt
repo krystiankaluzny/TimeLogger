@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.viewmodel
+package org.obywatelgcc.timelogger.timer.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -14,11 +14,11 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import org.obywatelgcc.timelogger.model.DataStoreManager
-import org.obywatelgcc.timelogger.model.calendar.Calendar
-import org.obywatelgcc.timelogger.model.calendar.CalendarEvent
-import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
-import org.obywatelgcc.timelogger.model.calendar.CalendarRepository
+import org.obywatelgcc.timelogger.core.data.DataStoreManager
+import org.obywatelgcc.timelogger.timer.model.calendar.Calendar
+import org.obywatelgcc.timelogger.timer.model.calendar.CalendarEvent
+import org.obywatelgcc.timelogger.timer.model.calendar.CalendarEventColor
+import org.obywatelgcc.timelogger.timer.model.calendar.CalendarRepository
 import org.obywatelgcc.timelogger.utils.logInfo
 import java.time.LocalDate
 import java.time.LocalTime

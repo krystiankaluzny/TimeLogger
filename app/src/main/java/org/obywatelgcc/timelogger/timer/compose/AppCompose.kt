@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.ui.compose
+package org.obywatelgcc.timelogger.timer.compose
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
@@ -54,12 +54,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.Flow
-import org.obywatelgcc.timelogger.model.calendar.Calendar
-import org.obywatelgcc.timelogger.model.calendar.CalendarEventColor
+import org.obywatelgcc.timelogger.timer.model.calendar.Calendar
+import org.obywatelgcc.timelogger.timer.model.calendar.CalendarEventColor
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
-import org.obywatelgcc.timelogger.viewmodel.State
-import org.obywatelgcc.timelogger.viewmodel.TimeEventViewModel
-import org.obywatelgcc.timelogger.viewmodel.TimerState
+import org.obywatelgcc.timelogger.timer.presentation.State
+import org.obywatelgcc.timelogger.timer.presentation.TimeEventViewModel
+import org.obywatelgcc.timelogger.timer.presentation.TimerState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

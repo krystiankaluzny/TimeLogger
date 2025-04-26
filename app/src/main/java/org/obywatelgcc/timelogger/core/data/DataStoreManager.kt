@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.model
+package org.obywatelgcc.timelogger.core.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore

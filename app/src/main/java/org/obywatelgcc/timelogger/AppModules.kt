@@ -4,11 +4,11 @@ import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
-import org.obywatelgcc.timelogger.model.calendar.CalendarRepository
-import org.obywatelgcc.timelogger.model.calendar.CalendarRepositoryImpl
-import org.obywatelgcc.timelogger.model.DataStoreManager
-import org.obywatelgcc.timelogger.model.calendar.TestCalendarRepositoryImpl
-import org.obywatelgcc.timelogger.viewmodel.TimeEventViewModel
+import org.obywatelgcc.timelogger.timer.model.calendar.CalendarRepository
+import org.obywatelgcc.timelogger.timer.model.calendar.CalendarRepositoryImpl
+import org.obywatelgcc.timelogger.core.data.DataStoreManager
+import org.obywatelgcc.timelogger.timer.model.calendar.TestCalendarRepositoryImpl
+import org.obywatelgcc.timelogger.timer.presentation.TimeEventViewModel
 
 val appModule = module {
     singleOf(::DataStoreManager)

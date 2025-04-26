@@ -17,9 +17,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.obywatelgcc.timelogger.ui.compose.App
+import org.obywatelgcc.timelogger.timer.compose.App
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
-import org.obywatelgcc.timelogger.viewmodel.TimeEventViewModel
+import org.obywatelgcc.timelogger.timer.presentation.TimeEventViewModel
 
 class MainActivity : ComponentActivity() {
 

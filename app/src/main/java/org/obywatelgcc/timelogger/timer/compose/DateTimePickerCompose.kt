@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.ui.compose
+package org.obywatelgcc.timelogger.timer.compose
 
 import android.content.res.Configuration
 import androidx.compose.foundation.gestures.awaitEachGesture
