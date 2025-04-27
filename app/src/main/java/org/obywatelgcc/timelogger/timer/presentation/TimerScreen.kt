@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.timer.compose
+package org.obywatelgcc.timelogger.timer.presentation
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
@@ -37,7 +37,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,32 +53,49 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.Flow
-import org.obywatelgcc.timelogger.timer.model.calendar.Calendar
-import org.obywatelgcc.timelogger.timer.model.calendar.CalendarEventColor
+import org.obywatelgcc.timelogger.timer.model.Calendar
+import org.obywatelgcc.timelogger.timer.model.CalendarEventColor
+import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
+import org.obywatelgcc.timelogger.timer.presentation.components.DateTimePickerRow
+import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
-import org.obywatelgcc.timelogger.timer.presentation.State
-import org.obywatelgcc.timelogger.timer.presentation.TimeEventViewModel
-import org.obywatelgcc.timelogger.timer.presentation.TimerState
+import java.time.LocalDateTime
+
+typealias OnAction = (TimerAction) -> Unit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun App(viewModel: TimeEventViewModel) {
+fun RootTimerScreen(viewModel: TimerViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val appName by viewModel.appName.collectAsState()
+    val appName by viewModel.appName.collectAsStateWithLifecycle()
+    val calenderState by viewModel.calendarState.collectAsStateWithLifecycle()
+    val timerState by viewModel.timerState.collectAsStateWithLifecycle()
 
-    ObserveAsEvents(viewModel.messageChannelFlow) {
-        snackbarHostState.showSnackbar(it, "OK", duration = SnackbarDuration.Short)
+    ObserveAsEvents(viewModel.effectsFlow) {
+        when (it) {
+            is TimerEffect.ValidationError -> snackbarHostState.showSnackbar(
+                it.message,
+                "OK",
+                duration = SnackbarDuration.Short
+            )
+
+            is TimerEffect.SavingMessage -> snackbarHostState.showSnackbar(
+                it.message,
+                "OK",
+                duration = SnackbarDuration.Short
+            )
+        }
+
     }
 
     Scaffold(
         topBar = { TopBar(appName) },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    )
-    { innerPadding ->
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
         val initialized by viewModel.initialized.collectAsStateWithLifecycle()
 
         if (initialized) {
-            AppCalendarStateScreen(viewModel, innerPadding)
+            TimeLoggerScreen(calenderState, timerState, innerPadding, viewModel::onAction)
         } else {
             LoadingScreen(innerPadding)
         }
@@ -113,35 +129,6 @@ private fun TopBar(appName: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun AppCalendarStateScreen(
-    viewModel: TimeEventViewModel,
-    innerPadding: PaddingValues
-) {
-    val calendarState by viewModel.calendarState.collectAsState()
-
-    when (calendarState) {
-        State.BEFORE_INITIALIZING -> {
-            LoadingScreen(innerPadding)
-        }
-
-        State.SUCCESSFULLY_INITIALIZED -> {
-            TimeLoggerScreen(viewModel, innerPadding)
-        }
-
-        State.CALENDARS_NOT_FOUND -> {
-            Box(modifier = Modifier.padding(innerPadding)) {
-                Text(
-                    text = "Sorry, but no calendars found",
-                    color = Color.Red,
-                    modifier = Modifier.padding(16.dp),
-                    fontSize = 30.sp
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun LoadingScreen(innerPadding: PaddingValues) {
     Box(
         modifier = Modifier
@@ -154,31 +141,47 @@ private fun LoadingScreen(innerPadding: PaddingValues) {
 }
 
 @Composable
-fun TimeLoggerScreen(viewModel: TimeEventViewModel, innerPadding: PaddingValues) {
+fun TimeLoggerScreen(
+    calendarState: CalendarState,
+    timerState: TimerState,
+    innerPadding: PaddingValues,
+    onAction: OnAction
+) {
     val configuration = LocalConfiguration.current
     when (configuration.orientation) {
-        Configuration.ORIENTATION_PORTRAIT -> TimeLoggerPortraitScreen(viewModel, innerPadding)
-        else -> TimeLoggerLandscapeScreen(viewModel, innerPadding)
+        Configuration.ORIENTATION_PORTRAIT -> TimeLoggerPortraitScreen(
+            calendarState,
+            timerState,
+            innerPadding,
+            onAction
+        )
+
+        else -> TimeLoggerLandscapeScreen(calendarState, timerState, innerPadding, onAction)
     }
 }
 
 @Composable
-fun TimeLoggerPortraitScreen(viewModel: TimeEventViewModel, innerPadding: PaddingValues) {
+fun TimeLoggerPortraitScreen(
+    calendarState: CalendarState,
+    timerState: TimerState,
+    innerPadding: PaddingValues,
+    onAction: OnAction
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(innerPadding),
     ) {
-        val calendars by viewModel.availableCalendars.collectAsState()
-        val selectedCalendar by viewModel.selectedCalendar.collectAsState()
+        val calendars = calendarState.availableCalendars
+        val selectedCalendar = calendarState.selectedCalendar
 
-        CalendarDropdown(calendars, selectedCalendar, { viewModel.selectCalendar(it) })
-        TitleAndColorRow(viewModel)
+        CalendarDropdown(calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
+        TitleAndColorRow(timerState.eventTitle, calendarState.availableColors, calendarState.selectedColor, onAction)
 
-        StartDateTimeRow(viewModel)
+        StartDateTimeRow(timerState.startDateTime, onAction)
         Spacer(Modifier.height(10.dp))
-        EndDateTimeRow(viewModel)
-        DurationRow(viewModel)
-        TimeLoggerButtonsRow(viewModel)
+        EndDateTimeRow(timerState.endDateTime, onAction)
+        DurationRow(timerState.durationStr)
+        TimeLoggerButtonsRow(timerState.runningState, onAction)
 
         Spacer(Modifier.height(20.dp))
 
@@ -186,14 +189,19 @@ fun TimeLoggerPortraitScreen(viewModel: TimeEventViewModel, innerPadding: Paddin
             modifier = Modifier
                 .fillMaxWidth(0.4f)
                 .height(70.dp),
-            onClick = { viewModel.trySave() }) {
+            onClick = { onAction(TimerAction.TrySave) }) {
             Text(text = "Save")
         }
     }
 }
 
 @Composable
-fun TimeLoggerLandscapeScreen(viewModel: TimeEventViewModel, innerPadding: PaddingValues) {
+fun TimeLoggerLandscapeScreen(
+    calendarState: CalendarState,
+    timerState: TimerState,
+    innerPadding: PaddingValues,
+    onAction: OnAction
+) {
 
     Column(
         modifier = Modifier.padding(innerPadding),
@@ -202,14 +210,19 @@ fun TimeLoggerLandscapeScreen(viewModel: TimeEventViewModel, innerPadding: Paddi
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val calendars by viewModel.availableCalendars.collectAsState()
-            val selectedCalendar by viewModel.selectedCalendar.collectAsState()
+            val calendars = calendarState.availableCalendars
+            val selectedCalendar = calendarState.selectedCalendar
 
             Box(modifier = Modifier.weight(1.0f)) {
-                CalendarDropdown(calendars, selectedCalendar, { viewModel.selectCalendar(it) })
+                CalendarDropdown(calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
             }
             Box(modifier = Modifier.weight(1.0f)) {
-                TitleAndColorRow(viewModel)
+                TitleAndColorRow(
+                    timerState.eventTitle,
+                    calendarState.availableColors,
+                    calendarState.selectedColor,
+                    onAction
+                )
             }
         }
 
@@ -220,17 +233,17 @@ fun TimeLoggerLandscapeScreen(viewModel: TimeEventViewModel, innerPadding: Paddi
                 modifier = Modifier.weight(1.0f),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                StartDateTimeRow(viewModel)
+                StartDateTimeRow(timerState.startDateTime, onAction)
                 Spacer(Modifier.height(10.dp))
-                EndDateTimeRow(viewModel)
+                EndDateTimeRow(timerState.endDateTime, onAction)
             }
 
             Column(
                 modifier = Modifier.weight(1.0f),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                DurationRow(viewModel)
-                TimeLoggerButtonsRow(viewModel)
+                DurationRow(timerState.durationStr)
+                TimeLoggerButtonsRow(timerState.runningState, onAction)
 
                 Spacer(Modifier.height(10.dp))
 
@@ -238,7 +251,7 @@ fun TimeLoggerLandscapeScreen(viewModel: TimeEventViewModel, innerPadding: Paddi
                     modifier = Modifier
                         .fillMaxWidth(0.4f)
                         .height(70.dp),
-                    onClick = { viewModel.trySave() }) {
+                    onClick = { onAction(TimerAction.TrySave) }) {
                     Text(text = "Save")
                 }
             }
@@ -297,20 +310,20 @@ private fun CalendarDropdown(
 }
 
 @Composable
-private fun TitleAndColorRow(viewModel: TimeEventViewModel) {
+private fun TitleAndColorRow(
+    eventTitle: String,
+    colors: List<CalendarEventColor>,
+    selectedColor: CalendarEventColor,
+    onAction: OnAction
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .padding(start = 10.dp, bottom = 10.dp, end = 10.dp)
             .fillMaxWidth()
     ) {
-        val entryTitle by viewModel.eventTitle.collectAsState()
-        val colors by viewModel.availableColors.collectAsState()
-        val selectedColor by viewModel.selectedColor.collectAsState()
-
-        EntryTitleTextField(entryTitle, { viewModel.updateEventTitle(it) })
-
-        ColorDropdown(colors, selectedColor, { viewModel.selectColor(it) })
+        EntryTitleTextField(eventTitle, { onAction(TimerAction.UpdateTitle(it)) })
+        ColorDropdown(colors, selectedColor, { onAction(TimerAction.SelectColor(it)) })
     }
 }
 
@@ -432,40 +445,39 @@ private fun ExposedDropdownMenuBoxScope.ColorHolder(
 
 
 @Composable
-private fun StartDateTimeRow(viewModel: TimeEventViewModel) {
+private fun StartDateTimeRow(startDateTime: LocalDateTime, onAction: OnAction) {
     DateTimePickerRow(
         "Start",
-        viewModel.startDateTime.collectAsState().value,
-        { localDate -> viewModel.updateStartDate(localDate) },
-        { localTime -> viewModel.updateStartTime(localTime) })
+        startDateTime,
+        { localDate -> onAction(TimerAction.UpdateStartDate(localDate)) },
+        { localTime -> onAction(TimerAction.UpdateStartTime(localTime)) })
 }
 
 @Composable
-private fun EndDateTimeRow(viewModel: TimeEventViewModel) {
+private fun EndDateTimeRow(endDateTime: LocalDateTime, onAction: OnAction) {
     DateTimePickerRow(
         "End",
-        viewModel.endDateTime.collectAsState().value,
-        { localDate -> viewModel.updateEndDate(localDate) },
-        { localTime -> viewModel.updateEndTime(localTime) })
+        endDateTime,
+        { localDate -> onAction(TimerAction.UpdateEndDate(localDate)) },
+        { localTime -> onAction(TimerAction.UpdateEndTime(localTime)) })
 }
 
 @Composable
-private fun DurationRow(viewModel: TimeEventViewModel) {
+private fun DurationRow(durationStr: String) {
     Text(
-        text = "Duration: ${viewModel.durationStr.collectAsState().value}",
+        text = "Duration: $durationStr",
         modifier = Modifier.padding(16.dp),
         fontSize = 20.sp
     )
 }
 
 @Composable
-private fun TimeLoggerButtonsRow(viewModel: TimeEventViewModel) {
+private fun TimeLoggerButtonsRow(timerRunningState: TimerState.RunningState, onAction: OnAction) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        val timerState by viewModel.timerState.collectAsState()
 
         val buttonModifier = Modifier
             .weight(0.5f)
@@ -475,19 +487,19 @@ private fun TimeLoggerButtonsRow(viewModel: TimeEventViewModel) {
 
         ElevatedButton(
             modifier = buttonModifier,
-            onClick = { viewModel.reset() },
+            onClick = { onAction(TimerAction.RestartTimer) },
             elevation = buttonElevation,
-            enabled = (timerState == TimerState.READY_TO_START || timerState == TimerState.STOPPED)
+            enabled = (timerRunningState == TimerState.RunningState.READY_TO_START || timerRunningState == TimerState.RunningState.STOPPED)
         ) {
             Text(text = "Restart")
         }
 
         Spacer(Modifier.width(16.dp))
 
-        when (timerState) {
-            TimerState.READY_TO_START -> ElevatedButton(
+        when (timerRunningState) {
+            TimerState.RunningState.READY_TO_START -> ElevatedButton(
                 modifier = buttonModifier,
-                onClick = { viewModel.start() },
+                onClick = { onAction(TimerAction.StartTimer) },
                 elevation = buttonElevation,
                 colors = ButtonDefaults.elevatedButtonColors(
                     containerColor = TimeLoggerTheme.colors.timerToStartButton,
@@ -497,9 +509,9 @@ private fun TimeLoggerButtonsRow(viewModel: TimeEventViewModel) {
                 Text(text = "Start")
             }
 
-            TimerState.STARTED -> ElevatedButton(
+            TimerState.RunningState.STARTED -> ElevatedButton(
                 modifier = buttonModifier,
-                onClick = { viewModel.stop() },
+                onClick = { onAction(TimerAction.StopTimer) },
                 elevation = buttonElevation,
                 colors = ButtonDefaults.elevatedButtonColors(
                     containerColor = TimeLoggerTheme.colors.timerToStopButton,
@@ -509,9 +521,9 @@ private fun TimeLoggerButtonsRow(viewModel: TimeEventViewModel) {
                 Text(text = "Stop")
             }
 
-            TimerState.STOPPED -> ElevatedButton(
+            TimerState.RunningState.STOPPED -> ElevatedButton(
                 modifier = buttonModifier,
-                onClick = { viewModel.resume() },
+                onClick = { onAction(TimerAction.ResumeTimer) },
                 elevation = buttonElevation,
                 colors = ButtonDefaults.elevatedButtonColors(
                     containerColor = TimeLoggerTheme.colors.timerToResumeButton,

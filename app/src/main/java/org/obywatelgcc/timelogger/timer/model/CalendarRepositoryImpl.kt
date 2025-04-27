@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.timer.model.calendar
+package org.obywatelgcc.timelogger.timer.model
 
 import android.content.ContentResolver
 import android.content.ContentValues
@@ -7,25 +7,9 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.CalendarContract
 import kotlinx.coroutines.delay
-import org.obywatelgcc.timelogger.timer.model.calendar.CalendarRepository.AddEventResult
-import org.obywatelgcc.timelogger.timer.model.calendar.CalendarRepository.AddEventResult.Status
 import org.obywatelgcc.timelogger.utils.logDebug
 import java.time.ZonedDateTime
 
-
-interface CalendarRepository {
-
-    suspend fun findAllCalendars(): List<Calendar>
-    suspend fun findAllEventColors(): List<CalendarEventColor>
-    suspend fun addEventToCalendar(calendar: Calendar, event: CalendarEvent): AddEventResult
-
-    data class AddEventResult(
-        val status: Status,
-        val entry: CalendarEvent
-    ) {
-        enum class Status { ALREADY_EXISTS, CREATED, ERROR }
-    }
-}
 
 class CalendarRepositoryImpl(
     androidContext: Context
@@ -136,14 +120,14 @@ class CalendarRepositoryImpl(
     override suspend fun addEventToCalendar(
         calendar: Calendar,
         event: CalendarEvent
-    ): AddEventResult {
+    ): CalendarRepository.AddEventResult {
 
         logDebug("addEventToCalendar: $calendar, $event")
 
         val entryKey = EntryKey(event.title, event.start)
         val cachedEntry = calenderEntryCached[entryKey]
         if (cachedEntry != null) {
-            return AddEventResult(Status.ALREADY_EXISTS, event)
+            return CalendarRepository.AddEventResult(CalendarRepository.AddEventResult.Status.ALREADY_EXISTS, event)
         }
 
         val values = ContentValues().apply {
@@ -162,9 +146,9 @@ class CalendarRepositoryImpl(
 
         if (savedEventUri != null) {
             calenderEntryCached.put(entryKey, event)
-            return AddEventResult(Status.CREATED, event)
+            return CalendarRepository.AddEventResult(CalendarRepository.AddEventResult.Status.CREATED, event)
         } else {
-            return AddEventResult(Status.ERROR, event)
+            return CalendarRepository.AddEventResult(CalendarRepository.AddEventResult.Status.ERROR, event)
         }
     }
 
@@ -344,12 +328,12 @@ class TestCalendarRepositoryImpl : CalendarRepository {
     override suspend fun addEventToCalendar(
         calendar: Calendar,
         event: CalendarEvent
-    ): AddEventResult {
+    ): CalendarRepository.AddEventResult {
         delay(2_000)
         calendarEvents.computeIfAbsent(calendar) { c -> mutableListOf() }
             .add(event)
 
-        return AddEventResult(Status.CREATED, event)
+        return CalendarRepository.AddEventResult(CalendarRepository.AddEventResult.Status.CREATED, event)
     }
 
 }

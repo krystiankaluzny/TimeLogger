@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.timer.compose
+package org.obywatelgcc.timelogger.timer.presentation.components
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState

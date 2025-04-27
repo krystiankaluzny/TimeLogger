@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.timer.model.calendar
+package org.obywatelgcc.timelogger.timer.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
@@ -18,6 +18,16 @@ data class Calendar(
     val displayName: String,
     val ownerName: String
 ) : Parcelable {
+
+    companion object {
+        val Empty = Calendar(
+            id = Long.MIN_VALUE,
+            accountName = "",
+            accountType = "",
+            displayName = "",
+            ownerName = ""
+        )
+    }
 
     fun description(): String {
         if (accountName == displayName) {
@@ -63,6 +73,18 @@ data class CalendarEventColor(
     val accountName: String,
     val accountType: String,
 ) : Parcelable {
+
+    companion object {
+        val Empty = CalendarEventColor(
+            key = "empty",
+            color = "#00000000",
+            type = "empty",
+            accountName = "",
+            accountType = ""
+        )
+    }
+
+
     fun colorAsLong(): Long {
         return decode(color)
     }
