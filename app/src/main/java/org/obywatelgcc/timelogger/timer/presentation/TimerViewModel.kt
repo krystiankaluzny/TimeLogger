@@ -23,7 +23,7 @@ import org.obywatelgcc.timelogger.timer.presentation.timer.TimerStateManager
 
 class TimerViewModel(
     savedStateHandle: SavedStateHandle,
-    private val dataSoreManager: DataStoreManager,
+    dataSoreManager: DataStoreManager,
     private val calendarRepository: CalendarRepository
 ) : ViewModel() {
 
@@ -37,19 +37,11 @@ class TimerViewModel(
         .onStart { initData() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    private val _appName = MutableStateFlow("")
-    val appName = _appName.asStateFlow()
-
     val calendarState = calendarStateManager.state.asStateFlow()
     val timerState = timerStateManager.state.asStateFlow()
 
     private val _effectsChannel = Channel<TimerEffect>()
     val effectsFlow = _effectsChannel.receiveAsFlow()
-
-
-    fun setAppName(appName: String) {
-        _appName.value = appName
-    }
 
     fun onAction(action: TimerAction) =
         when (action) {

@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.koin.androidx.compose)
     implementation(libs.datastore.preferences)
+    implementation(libs.compose.date.picker)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

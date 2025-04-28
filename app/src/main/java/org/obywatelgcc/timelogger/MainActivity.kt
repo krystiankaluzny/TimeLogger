@@ -22,12 +22,10 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val callbackId = 42;
+        val callbackId = 42
         checkPermission(
             callbackId, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR
         )
-
-        viewModel.setAppName(getString(R.string.app_name))
 
         enableEdgeToEdge()
         setContent {

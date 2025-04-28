@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -24,6 +26,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuBoxScope
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -45,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,13 +57,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.Flow
+import org.obywatelgcc.timelogger.R
 import org.obywatelgcc.timelogger.timer.model.Calendar
 import org.obywatelgcc.timelogger.timer.model.CalendarEventColor
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
-import org.obywatelgcc.timelogger.timer.presentation.components.DateTimePickerRow
+import org.obywatelgcc.timelogger.timer.presentation.components.DateTimePickersView
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
-import java.time.LocalDateTime
 
 typealias OnAction = (TimerAction) -> Unit
 
@@ -67,7 +71,7 @@ typealias OnAction = (TimerAction) -> Unit
 @Composable
 fun RootTimerScreen(viewModel: TimerViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val appName by viewModel.appName.collectAsStateWithLifecycle()
+    val appName = stringResource(id = R.string.app_name)
     val calenderState by viewModel.calendarState.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
 
@@ -89,7 +93,7 @@ fun RootTimerScreen(viewModel: TimerViewModel) {
     }
 
     Scaffold(
-        topBar = { TopBar(appName) },
+        topBar = { TopBarView(appName) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         val initialized by viewModel.initialized.collectAsStateWithLifecycle()
@@ -115,7 +119,7 @@ private fun <T> ObserveAsEvents(flow: Flow<T>, onEvent: suspend (T) -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopBar(appName: String, modifier: Modifier = Modifier) {
+private fun TopBarView(appName: String) {
     val configuration = LocalConfiguration.current
     val expandedHeight = when (configuration.orientation) {
         Configuration.ORIENTATION_PORTRAIT -> TopAppBarDefaults.TopAppBarExpandedHeight
@@ -175,13 +179,28 @@ fun TimeLoggerPortraitScreen(
         val selectedCalendar = calendarState.selectedCalendar
 
         CalendarDropdown(calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
-        TitleAndColorRow(timerState.eventTitle, calendarState.availableColors, calendarState.selectedColor, onAction)
+        TitleAndColorView(timerState.eventTitle, calendarState.availableColors, calendarState.selectedColor, onAction)
 
-        StartDateTimeRow(timerState.startDateTime, onAction)
-        Spacer(Modifier.height(10.dp))
-        EndDateTimeRow(timerState.endDateTime, onAction)
-        DurationRow(timerState.durationStr)
-        TimeLoggerButtonsRow(timerState.runningState, onAction)
+        HorizontalDivider()
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .weight(weight = 1f, fill = false)
+        ) {
+            DateTimePickersView(
+                timerState.startDateTime,
+                timerState.endDateTime,
+                timerState.runningState != TimerState.RunningState.STARTED,
+                onAction
+            )
+            HorizontalDivider()
+            DurationView(timerState.durationStr)
+        }
+
+        HorizontalDivider()
+        TimeLoggerButtonsView(timerState.runningState, onAction)
 
         Spacer(Modifier.height(20.dp))
 
@@ -217,7 +236,7 @@ fun TimeLoggerLandscapeScreen(
                 CalendarDropdown(calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
             }
             Box(modifier = Modifier.weight(1.0f)) {
-                TitleAndColorRow(
+                TitleAndColorView(
                     timerState.eventTitle,
                     calendarState.availableColors,
                     calendarState.selectedColor,
@@ -225,25 +244,33 @@ fun TimeLoggerLandscapeScreen(
                 )
             }
         }
+        HorizontalDivider()
 
         Row(
             verticalAlignment = Alignment.Top,
         ) {
             Column(
-                modifier = Modifier.weight(1.0f),
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .weight(weight = 1f, fill = false),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                StartDateTimeRow(timerState.startDateTime, onAction)
-                Spacer(Modifier.height(10.dp))
-                EndDateTimeRow(timerState.endDateTime, onAction)
+                DateTimePickersView(
+                    timerState.startDateTime,
+                    timerState.endDateTime,
+                    timerState.runningState != TimerState.RunningState.STARTED,
+                    onAction
+                )
+                HorizontalDivider()
+                DurationView(timerState.durationStr)
             }
 
             Column(
                 modifier = Modifier.weight(1.0f),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                DurationRow(timerState.durationStr)
-                TimeLoggerButtonsRow(timerState.runningState, onAction)
+                Spacer(Modifier.height(10.dp))
+                TimeLoggerButtonsView(timerState.runningState, onAction)
 
                 Spacer(Modifier.height(10.dp))
 
@@ -310,7 +337,7 @@ private fun CalendarDropdown(
 }
 
 @Composable
-private fun TitleAndColorRow(
+private fun TitleAndColorView(
     eventTitle: String,
     colors: List<CalendarEventColor>,
     selectedColor: CalendarEventColor,
@@ -443,27 +470,8 @@ private fun ExposedDropdownMenuBoxScope.ColorHolder(
     )
 }
 
-
 @Composable
-private fun StartDateTimeRow(startDateTime: LocalDateTime, onAction: OnAction) {
-    DateTimePickerRow(
-        "Start",
-        startDateTime,
-        { localDate -> onAction(TimerAction.UpdateStartDate(localDate)) },
-        { localTime -> onAction(TimerAction.UpdateStartTime(localTime)) })
-}
-
-@Composable
-private fun EndDateTimeRow(endDateTime: LocalDateTime, onAction: OnAction) {
-    DateTimePickerRow(
-        "End",
-        endDateTime,
-        { localDate -> onAction(TimerAction.UpdateEndDate(localDate)) },
-        { localTime -> onAction(TimerAction.UpdateEndTime(localTime)) })
-}
-
-@Composable
-private fun DurationRow(durationStr: String) {
+private fun DurationView(durationStr: String) {
     Text(
         text = "Duration: $durationStr",
         modifier = Modifier.padding(16.dp),
@@ -472,7 +480,7 @@ private fun DurationRow(durationStr: String) {
 }
 
 @Composable
-private fun TimeLoggerButtonsRow(timerRunningState: TimerState.RunningState, onAction: OnAction) {
+private fun TimeLoggerButtonsView(timerRunningState: TimerState.RunningState, onAction: OnAction) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier

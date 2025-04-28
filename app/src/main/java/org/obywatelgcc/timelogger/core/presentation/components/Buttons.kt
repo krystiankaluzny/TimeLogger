@@ -73,8 +73,6 @@ fun Button(
     val contentColor = colors.contentColor(enabled)
     val shadowElevation = 0.dp
 
-
-
     CompositionLocalProvider(
         LocalMinimumInteractiveComponentSize provides CustomButtonDefaults.minimumInteractiveComponentSize,
     ) {
