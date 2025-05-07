@@ -52,6 +52,7 @@ class TimerStateManager(
 
     fun updateTitle(title: String) {
         state.update { it.copy(eventTitle = title) }
+        eventTitle.value = title
     }
 
     fun start() {
