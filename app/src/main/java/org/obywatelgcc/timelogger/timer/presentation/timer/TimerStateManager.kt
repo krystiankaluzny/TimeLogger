@@ -23,6 +23,7 @@ class TimerStateManager(
     initialState: TimerState
 ) : BaseStateManager<TimerState>(coroutineScope, savedStateHandle, dataStoreManager, initialState) {
 
+
     private val tickerDelayMs = 1000L
 
     private val timerEventPreferences =
@@ -37,15 +38,24 @@ class TimerStateManager(
         eventTitle.loadFormDataStore()
         timerEventPreferences.loadFormDataStore()
 
+        if (timerEventPreferences.value.endDateTime < timerEventPreferences.value.startDateTime) {
+            timerEventPreferences.edit { preferences ->
+                preferences.copy(
+                    endDateTime = timerEventPreferences.value.startDateTime
+                )
+            }
+        }
+
         state.update {
             it.copy(
                 eventTitle = eventTitle.value,
                 startDateTime = timerEventPreferences.value.startDateTime,
+                endDateTime = timerEventPreferences.value.endDateTime,
                 runningState = timerEventPreferences.value.timerRunningState
             )
         }
 
-        if(timerEventPreferences.value.timerRunningState == RunningState.STARTED) {
+        if (timerEventPreferences.value.timerRunningState == RunningState.STARTED) {
             startTimer()
         }
     }
@@ -63,14 +73,20 @@ class TimerStateManager(
 
     fun stop() {
         if (state.value.runningState == RunningState.STARTED) {
+            val now = currentLocalDateTime()
             state.update {
                 it.copy(
                     runningState = RunningState.STOPPED,
-                    endDateTime = currentLocalDateTime()
+                    endDateTime = now
                 )
             }
 
-            timerEventPreferences.edit { preferences -> preferences.copy(timerRunningState = RunningState.STOPPED) }
+            timerEventPreferences.edit { preferences ->
+                preferences.copy(
+                    timerRunningState = RunningState.STOPPED,
+                    endDateTime = now
+                )
+            }
         }
     }
 
@@ -90,7 +106,12 @@ class TimerStateManager(
             )
         }
 
-        timerEventPreferences.edit { preferences -> preferences.copy(startDateTime = now) }
+        timerEventPreferences.edit { preferences ->
+            preferences.copy(
+                startDateTime = state.value.startDateTime,
+                endDateTime = state.value.endDateTime
+            )
+        }
     }
 
     private fun startTimer() {
@@ -117,14 +138,17 @@ class TimerStateManager(
 
     fun updateEndDate(localDate: LocalDate) {
         state.update { it.copy(endDateTime = LocalDateTime.of(localDate, it.endDateTime.toLocalTime())) }
+        timerEventPreferences.edit { preferences -> preferences.copy(endDateTime = state.value.endDateTime) }
     }
 
     fun updateEndTime(localTime: LocalTime) {
         state.update { it.copy(endDateTime = LocalDateTime.of(it.endDateTime.toLocalDate(), localTime)) }
+        timerEventPreferences.edit { preferences -> preferences.copy(endDateTime = state.value.endDateTime) }
     }
 
     private fun refreshEndDateTime() {
         state.update { it.copy(endDateTime = currentLocalDateTime()) }
+        timerEventPreferences.edit { preferences -> preferences.copy(endDateTime = state.value.endDateTime) }
     }
 
     private fun currentLocalDateTime(): LocalDateTime {
@@ -137,6 +161,12 @@ class TimerStateManager(
 data class TimerEventPreferences(
     var title: String = "",
     @Serializable(LocalDateTimeSerializer::class)
-    var startDateTime: LocalDateTime = LocalDateTime.MIN,
+    var startDateTime: LocalDateTime = MIN,
+    @Serializable(LocalDateTimeSerializer::class)
+    var endDateTime: LocalDateTime = MIN,
     var timerRunningState: RunningState = RunningState.READY_TO_START
-)
+) {
+    companion object {
+        private val MIN = LocalDateTime.of(2000, 1, 1, 12, 0)
+    }
+}
