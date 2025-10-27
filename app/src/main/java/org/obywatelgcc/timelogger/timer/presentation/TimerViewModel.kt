@@ -18,6 +18,8 @@ import org.obywatelgcc.timelogger.timer.model.CalendarEvent
 import org.obywatelgcc.timelogger.timer.model.CalendarRepository
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarStateManager
+import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
+import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsStateManager
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerStateManager
 
@@ -31,6 +33,8 @@ class TimerViewModel(
         CalendarStateManager(viewModelScope, savedStateHandle, dataSoreManager, CalendarState())
     private val timerStateManager =
         TimerStateManager(viewModelScope, savedStateHandle, dataSoreManager, TimerState())
+    private val settingsStateManager =
+        SettingsStateManager(viewModelScope, savedStateHandle, dataSoreManager, SettingsState())
 
     private val _initialized = MutableStateFlow(false)
     val initialized = _initialized
@@ -39,6 +43,7 @@ class TimerViewModel(
 
     val calendarState = calendarStateManager.state.asStateFlow()
     val timerState = timerStateManager.state.asStateFlow()
+    val settingsState = settingsStateManager.state.asStateFlow()
 
     private val _effectsChannel = Channel<TimerEffect>()
     val effectsFlow = _effectsChannel.receiveAsFlow()
@@ -56,6 +61,7 @@ class TimerViewModel(
             is TimerAction.UpdateStartTime -> timerStateManager.updateStartTime(action.time)
             is TimerAction.UpdateEndDate -> timerStateManager.updateEndDate(action.date)
             is TimerAction.UpdateEndTime -> timerStateManager.updateEndTime(action.time)
+            is TimerAction.UpdateSavingType -> settingsStateManager.updateSavingType(action.newSavingType)
             TimerAction.TrySave -> trySave()
         }
 
@@ -65,6 +71,7 @@ class TimerViewModel(
             calendarRepository.findAllEventColors()
         )
         timerStateManager.init()
+        settingsStateManager.init()
         _initialized.update { true }
     }
 
@@ -113,7 +120,25 @@ class TimerViewModel(
         when (result.status) {
             CalendarRepository.AddEventResult.Status.ALREADY_EXISTS -> _effectsChannel.send(TimerEffect.SavingMessage("Already exists"))
             CalendarRepository.AddEventResult.Status.CREATED -> {
-                timerStateManager.reset()
+                when (settingsState.value.savingType) {
+                    SettingsState.SavingType.SAVE_ONLY -> {
+                        timerStateManager.reset()
+                    }
+
+                    SettingsState.SavingType.SAVE_AND_START -> {
+                        timerStateManager.reset()
+                        timerStateManager.clearTitle()
+                        timerStateManager.start()
+                    }
+
+                    SettingsState.SavingType.SAVE_START_AND_CHANGE_COLOR -> {
+                        timerStateManager.reset()
+                        timerStateManager.clearTitle()
+                        timerStateManager.start()
+                        calendarStateManager.shiftColor()
+                    }
+                }
+
                 _effectsChannel.send(TimerEffect.SavingMessage("Successfully saved"))
             }
 

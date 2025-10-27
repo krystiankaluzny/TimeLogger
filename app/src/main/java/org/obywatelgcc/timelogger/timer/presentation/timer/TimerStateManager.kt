@@ -65,6 +65,11 @@ class TimerStateManager(
         eventTitle.value = title
     }
 
+    fun clearTitle() {
+        state.update { it.copy(eventTitle = "") }
+        eventTitle.value = ""
+    }
+
     fun start() {
         if (state.value.runningState == RunningState.READY_TO_START) {
             startTimer()

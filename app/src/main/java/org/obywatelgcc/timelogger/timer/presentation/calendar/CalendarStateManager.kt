@@ -35,15 +35,15 @@ class CalendarStateManager(
         calendarPreferences.loadFormDataStore()
         updatePreferences(calendars, eventColors)
 
-        val colorsData = calendarPreferences.value.selectedCalendar?.let { getColorsData(it) }
+        val colorsData = calendarPreferences.value.selectedCalendar.let { getColorsData(it) }
 
-        val availableColors = colorsData?.colors ?: emptyList()
-        val selectedColor = colorsData?.selectedColor ?: CalendarEventColor.Empty
+        val availableColors = colorsData.colors
+        val selectedColor = colorsData.selectedColor
 
         state.update {
             it.copy(
                 availableCalendars = calendars,
-                selectedCalendar = calendarPreferences.value.selectedCalendar ?: Calendar.Empty,
+                selectedCalendar = calendarPreferences.value.selectedCalendar,
                 availableColors = availableColors,
                 selectedColor = selectedColor
             )
@@ -81,6 +81,19 @@ class CalendarStateManager(
         }
     }
 
+    fun shiftColor() {
+        val colorsData = calendarPreferences.value.selectedCalendar.let { getColorsData(it) }
+        val currentColorIndex = colorsData.colors.indexOf(colorsData.selectedColor)
+
+        if (currentColorIndex != -1) {
+            if (currentColorIndex == colorsData.colors.lastIndex) {
+                selectColor(colorsData.colors.first())
+            } else {
+                selectColor(colorsData.colors[currentColorIndex + 1])
+            }
+        }
+    }
+
     private fun updatePreferences(
         calendars: List<Calendar>,
         eventColors: List<CalendarEventColor>
@@ -110,11 +123,11 @@ class CalendarStateManager(
                 }
 
                 if (!availableColors.contains(data.selectedColor)) {
-                    data.selectedColor = availableColors.getOrElse(0, { CalendarEventColor.Empty })
+                    data.selectedColor = availableColors.getOrElse(0) { CalendarEventColor.Empty }
                 }
             }
 
-            if(pref.selectedCalendar == Calendar.Empty) {
+            if (pref.selectedCalendar == Calendar.Empty) {
                 dataMap.getOrPut(Calendar.Empty.id) {
                     CalendarColorsData(
                         Calendar.Empty,

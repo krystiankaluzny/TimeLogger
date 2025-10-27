@@ -6,7 +6,6 @@ import java.util.Locale
 
 data class TimerState(
     val runningState: RunningState = RunningState.READY_TO_START,
-    val savingType: SavingType = SavingType.SAVE_ONLY,
     val eventTitle: String = "",
     val startDateTime: LocalDateTime = LocalDateTime.MIN,
     val endDateTime: LocalDateTime = LocalDateTime.MIN,
@@ -30,9 +29,4 @@ data class TimerState(
     enum class RunningState {
         READY_TO_START, STARTED, STOPPED
     }
-
-    enum class SavingType {
-        SAVE_ONLY, SAVE_AND_START, SAVE_START_AND_CHANGE_COLOR
-    }
-
 }
