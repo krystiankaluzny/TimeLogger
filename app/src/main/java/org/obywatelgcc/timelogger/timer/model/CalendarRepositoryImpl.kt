@@ -6,9 +6,12 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.provider.CalendarContract
+import androidx.core.database.getStringOrNull
 import kotlinx.coroutines.delay
 import org.obywatelgcc.timelogger.utils.logDebug
+import java.time.Instant
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 
 
 class CalendarRepositoryImpl(
@@ -18,6 +21,8 @@ class CalendarRepositoryImpl(
     val contentResolver: ContentResolver = androidContext.contentResolver
 
     private var calenderEntryCached = mutableMapOf<EntryKey, CalendarEvent>()
+    private var lastLoadedCalendars = listOf<Calendar>()
+    private var lastLoadedColors = setOf<CalendarEventColor>()
 
     private data class EntryKey(val title: String, val start: ZonedDateTime)
 
@@ -54,6 +59,17 @@ class CalendarRepositoryImpl(
                 CalendarContract.Colors.ACCOUNT_TYPE
             )
         )
+        private val eventsProjection: Projection = Projection(
+            listOf(
+                CalendarContract.Events.DTSTART,
+                CalendarContract.Events.DTEND,
+                CalendarContract.Events.TITLE,
+                CalendarContract.Events.DESCRIPTION,
+                CalendarContract.Events.CALENDAR_ID,
+                CalendarContract.Events.EVENT_TIMEZONE,
+                CalendarContract.Events.EVENT_COLOR_KEY
+            )
+        )
     }
 
     override suspend fun findAllCalendars(): List<Calendar> {
@@ -78,6 +94,7 @@ class CalendarRepositoryImpl(
             close()
         }
 
+        lastLoadedCalendars = result as List<Calendar>
         return result
     }
 
@@ -113,6 +130,8 @@ class CalendarRepositoryImpl(
         }
 
         logDebug("findAllEventColors: $result")
+
+        lastLoadedColors = result as Set<CalendarEventColor>
 
         return result.toList()
     }
@@ -152,6 +171,60 @@ class CalendarRepositoryImpl(
         }
     }
 
+    override suspend fun findEventsContainsTitle(
+        title: String
+    ): List<CalendarEvent> {
+        val result = mutableListOf<CalendarEvent>()
+
+        val from = Instant.now().minus(100, ChronoUnit.DAYS).toEpochMilli()
+
+        val selection = "( ${CalendarContract.Events.DTSTART} >= ? AND ${CalendarContract.Events.TITLE} LIKE '%$title%' )"
+        val selectionArgs = arrayOf(from.toString())
+
+        val eventCursor: Cursor? =
+            contentResolver.query(
+                EVENT_URI,
+                eventsProjection.projection,
+                selection,
+                selectionArgs,
+                null
+            )
+        eventCursor?.apply {
+            while (moveToNext()) {
+                val calendarId = getLong(eventsProjection.index(CalendarContract.Events.CALENDAR_ID))
+                val eventColorKey = getString(eventsProjection.index(CalendarContract.Events.EVENT_COLOR_KEY))
+
+                val color = lastLoadedCalendars.firstOrNull { it.id == calendarId }
+                    ?.let { calendar ->
+                        lastLoadedColors.firstOrNull {
+                            it.accountName == calendar.accountName
+                                    && it.accountType == calendar.accountType
+                                    && it.key == eventColorKey
+                        }
+                    }
+                result.add(
+                    CalendarEvent.of(
+                        getStringOrNull(eventsProjection.index(CalendarContract.Events.TITLE)) ?: "",
+                        getLong(eventsProjection.index(CalendarContract.Events.DTSTART)),
+                        getLong(eventsProjection.index(CalendarContract.Events.DTEND)),
+                        getStringOrNull(eventsProjection.index(CalendarContract.Events.EVENT_TIMEZONE)) ?: "UTC",
+                        color
+                    )
+                )
+            }
+            close()
+        }
+
+        logDebug("findEventsContainsTitle: size: ${result.size} - $result")
+
+        if (result.isEmpty()) {
+            result.addAll(calenderEntryCached.values.filter { e -> e.title.contains(title, true) })
+
+            logDebug("findEventsContainsTitle: cache: size: ${result.size} - $result")
+        }
+
+        return result
+    }
 }
 
 class TestCalendarRepositoryImpl : CalendarRepository {
@@ -336,4 +409,9 @@ class TestCalendarRepositoryImpl : CalendarRepository {
         return CalendarRepository.AddEventResult(CalendarRepository.AddEventResult.Status.CREATED, event)
     }
 
+    override suspend fun findEventsContainsTitle(
+        title: String
+    ): List<CalendarEvent> {
+        return calendarEvents.values.flatten().filter { it.title.contains(title, true) }
+    }
 }

@@ -6,7 +6,6 @@ import java.util.Locale
 
 data class TimerState(
     val runningState: RunningState = RunningState.READY_TO_START,
-    val eventTitle: String = "",
     val startDateTime: LocalDateTime = LocalDateTime.MIN,
     val endDateTime: LocalDateTime = LocalDateTime.MIN,
 ) {

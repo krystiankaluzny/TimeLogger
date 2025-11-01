@@ -5,6 +5,7 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.obywatelgcc.timelogger.core.data.ZonedDateTimeSerializer
 import java.lang.Long.decode
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -55,6 +56,16 @@ data class CalendarEvent(
             val zoneId = ZoneId.systemDefault()
             val starZoned = start.atZone(zoneId)
             val endZoned = end.atZone(zoneId)
+            return CalendarEvent(title, starZoned, endZoned, color)
+        }
+
+        fun of(
+            title: String, startMillis: Long, endMillis: Long, zoneIdName: String, color: CalendarEventColor?
+        ): CalendarEvent {
+            val zoneId = ZoneId.of(zoneIdName)
+
+            val starZoned = ZonedDateTime.ofInstant(Instant.ofEpochMilli(startMillis), zoneId)
+            val endZoned = ZonedDateTime.ofInstant(Instant.ofEpochMilli(endMillis), zoneId)
             return CalendarEvent(title, starZoned, endZoned, color)
         }
     }

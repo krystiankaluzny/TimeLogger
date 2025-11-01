@@ -66,6 +66,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -85,6 +86,7 @@ import org.obywatelgcc.timelogger.timer.presentation.components.DateTimePickersV
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState.SavingType
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
+import org.obywatelgcc.timelogger.timer.presentation.title.TitleState
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 typealias OnAction = (TimerAction) -> Unit
@@ -98,6 +100,7 @@ fun RootTimerScreen(viewModel: TimerViewModel) {
     val appName = stringResource(id = R.string.app_name)
     val calenderState by viewModel.calendarState.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
+    val titleState by viewModel.titleState.collectAsStateWithLifecycle()
     val settingsState by viewModel.settingsState.collectAsStateWithLifecycle()
 
     ObserveAsEvents(viewModel.effectsFlow) {
@@ -130,7 +133,14 @@ fun RootTimerScreen(viewModel: TimerViewModel) {
             val initialized by viewModel.initialized.collectAsStateWithLifecycle()
 
             if (initialized) {
-                TimeLoggerScreen(calenderState, timerState, settingsState, innerPadding, viewModel::onAction)
+                TimeLoggerScreen(
+                    calenderState,
+                    timerState,
+                    titleState,
+                    settingsState,
+                    innerPadding,
+                    viewModel::onAction
+                )
             } else {
                 LoadingScreen(innerPadding)
             }
@@ -284,6 +294,7 @@ private fun LoadingScreen(innerPadding: PaddingValues) {
 fun TimeLoggerScreen(
     calendarState: CalendarState,
     timerState: TimerState,
+    titleState: TitleState,
     settingsState: SettingsState,
     innerPadding: PaddingValues,
     onAction: OnAction
@@ -293,12 +304,13 @@ fun TimeLoggerScreen(
         Configuration.ORIENTATION_PORTRAIT -> TimeLoggerPortraitScreen(
             calendarState,
             timerState,
+            titleState,
             settingsState,
             innerPadding,
             onAction
         )
 
-        else -> TimeLoggerLandscapeScreen(calendarState, timerState, settingsState, innerPadding, onAction)
+        else -> TimeLoggerLandscapeScreen(calendarState, timerState, titleState, settingsState, innerPadding, onAction)
     }
 }
 
@@ -306,6 +318,7 @@ fun TimeLoggerScreen(
 fun TimeLoggerPortraitScreen(
     calendarState: CalendarState,
     timerState: TimerState,
+    titleState: TitleState,
     settingsState: SettingsState,
     innerPadding: PaddingValues,
     onAction: OnAction
@@ -318,7 +331,12 @@ fun TimeLoggerPortraitScreen(
         val selectedCalendar = calendarState.selectedCalendar
 
         CalendarDropdown(calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
-        TitleAndColorView(timerState.eventTitle, calendarState.availableColors, calendarState.selectedColor, onAction)
+        TitleAndColorView(
+            titleState,
+            calendarState.availableColors,
+            calendarState.selectedColor,
+            onAction
+        )
 
         HorizontalDivider()
 
@@ -365,6 +383,7 @@ fun TimeLoggerPortraitScreen(
 fun TimeLoggerLandscapeScreen(
     calendarState: CalendarState,
     timerState: TimerState,
+    titleState: TitleState,
     settingsState: SettingsState,
     innerPadding: PaddingValues,
     onAction: OnAction
@@ -385,7 +404,7 @@ fun TimeLoggerLandscapeScreen(
             }
             Box(modifier = Modifier.weight(1.0f)) {
                 TitleAndColorView(
-                    timerState.eventTitle,
+                    titleState,
                     calendarState.availableColors,
                     calendarState.selectedColor,
                     onAction
@@ -492,7 +511,7 @@ private fun CalendarDropdown(
 
 @Composable
 private fun TitleAndColorView(
-    eventTitle: String,
+    titleState: TitleState,
     colors: List<CalendarEventColor>,
     selectedColor: CalendarEventColor,
     onAction: OnAction
@@ -503,25 +522,63 @@ private fun TitleAndColorView(
             .padding(start = 10.dp, bottom = 10.dp, end = 10.dp)
             .fillMaxWidth()
     ) {
-        EntryTitleTextField(eventTitle, { onAction(TimerAction.UpdateTitle(it)) })
+        EventTitleTextField(titleState, onAction)
         ColorDropdown(colors, selectedColor, { onAction(TimerAction.SelectColor(it)) })
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RowScope.EntryTitleTextField(
-    initValue: String,
-    onValueChange: (String) -> Unit
+private fun RowScope.EventTitleTextField(
+    titleState: TitleState,
+    onAction: OnAction
 ) {
-    OutlinedTextField(
-        value = initValue,
-        onValueChange = onValueChange,
-        label = { Text(text = "Event title") },
-        singleLine = true,
+    val eventTitle = titleState.eventTitle
+    val titleSuggestions = titleState.suggestions
+
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded, onExpandedChange = {
+            expanded = it
+        },
         modifier = Modifier
             .padding(horizontal = 6.dp)
             .weight(1.0f)
-    )
+    ) {
+        OutlinedTextField(
+            value = eventTitle,
+            onValueChange = {
+                onAction(TimerAction.UpdateTitle(it))
+                expanded = true
+            },
+            label = { Text(text = "Event title") },
+            singleLine = true,
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable)
+        )
+
+        if (titleSuggestions.isNotEmpty()) {
+            ExposedDropdownMenu(
+                expanded = expanded, onDismissRequest = { }
+            ) {
+                titleSuggestions.forEach { suggestion ->
+                    DropdownMenuItem(
+                        onClick = {
+                            onAction(TimerAction.SelectSuggestion(suggestion))
+                        },
+                        text = {
+                            Row {
+                                Text(text = suggestion.prefix)
+                                Text(text = suggestion.match, fontWeight = FontWeight.ExtraBold)
+                                Text(text = suggestion.suffix)
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+
 }
 
 @Composable

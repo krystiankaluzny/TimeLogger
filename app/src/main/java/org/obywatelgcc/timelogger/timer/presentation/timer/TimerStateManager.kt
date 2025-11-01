@@ -26,16 +26,13 @@ class TimerStateManager(
 
     private val tickerDelayMs = 1000L
 
-    private val timerEventPreferences =
-        jsonDataStoreStateFlow("timerEventPreferences_v3", TimerEventPreferences())
-    private val eventTitle = stringDataStoreStateFlow("eventTitle", "")
+    private val timerEventPreferences = jsonDataStoreStateFlow("timerEventPreferences_v4", TimerEventPreferences())
 
     suspend fun init() {
         logInfo("init")
         val now = currentLocalDateTime()
         state.update { it.copy(startDateTime = now, endDateTime = now) }
 
-        eventTitle.loadFormDataStore()
         timerEventPreferences.loadFormDataStore()
 
         if (timerEventPreferences.value.endDateTime < timerEventPreferences.value.startDateTime) {
@@ -48,7 +45,6 @@ class TimerStateManager(
 
         state.update {
             it.copy(
-                eventTitle = eventTitle.value,
                 startDateTime = timerEventPreferences.value.startDateTime,
                 endDateTime = timerEventPreferences.value.endDateTime,
                 runningState = timerEventPreferences.value.timerRunningState
@@ -58,16 +54,6 @@ class TimerStateManager(
         if (timerEventPreferences.value.timerRunningState == RunningState.STARTED) {
             startTimer()
         }
-    }
-
-    fun updateTitle(title: String) {
-        state.update { it.copy(eventTitle = title) }
-        eventTitle.value = title
-    }
-
-    fun clearTitle() {
-        state.update { it.copy(eventTitle = "") }
-        eventTitle.value = ""
     }
 
     fun start() {
@@ -164,7 +150,6 @@ class TimerStateManager(
 
 @Serializable
 data class TimerEventPreferences(
-    var title: String = "",
     @Serializable(LocalDateTimeSerializer::class)
     var startDateTime: LocalDateTime = MIN,
     @Serializable(LocalDateTimeSerializer::class)

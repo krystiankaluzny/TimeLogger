@@ -22,6 +22,8 @@ import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsStateManager
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerStateManager
+import org.obywatelgcc.timelogger.timer.presentation.title.TitleState
+import org.obywatelgcc.timelogger.timer.presentation.title.TitleStateManager
 
 class TimerViewModel(
     savedStateHandle: SavedStateHandle,
@@ -33,6 +35,8 @@ class TimerViewModel(
         CalendarStateManager(viewModelScope, savedStateHandle, dataSoreManager, CalendarState())
     private val timerStateManager =
         TimerStateManager(viewModelScope, savedStateHandle, dataSoreManager, TimerState())
+    private val titleStateManager =
+        TitleStateManager(viewModelScope, savedStateHandle, dataSoreManager, TitleState(), calendarRepository)
     private val settingsStateManager =
         SettingsStateManager(viewModelScope, savedStateHandle, dataSoreManager, SettingsState())
 
@@ -43,6 +47,7 @@ class TimerViewModel(
 
     val calendarState = calendarStateManager.state.asStateFlow()
     val timerState = timerStateManager.state.asStateFlow()
+    val titleState = titleStateManager.state.asStateFlow()
     val settingsState = settingsStateManager.state.asStateFlow()
 
     private val _effectsChannel = Channel<TimerEffect>()
@@ -52,7 +57,8 @@ class TimerViewModel(
         when (action) {
             is TimerAction.SelectCalendar -> calendarStateManager.selectCalendar(action.calendar)
             is TimerAction.SelectColor -> calendarStateManager.selectColor(action.color)
-            is TimerAction.UpdateTitle -> timerStateManager.updateTitle(action.title)
+            is TimerAction.UpdateTitle -> titleStateManager.updateTitle(action.title)
+            is TimerAction.SelectSuggestion -> titleStateManager.selectSuggestion(action.suggestion)
             TimerAction.StartTimer -> timerStateManager.start()
             TimerAction.StopTimer -> timerStateManager.stop()
             TimerAction.ResumeTimer -> timerStateManager.resume()
@@ -71,6 +77,7 @@ class TimerViewModel(
             calendarRepository.findAllEventColors()
         )
         timerStateManager.init()
+        titleStateManager.init()
         settingsStateManager.init()
         _initialized.update { true }
     }
@@ -91,9 +98,10 @@ class TimerViewModel(
 
                     val localCalendarState = calendarState.value
                     val localTimerState = timerState.value
+                    val localTitleState = titleState.value
 
                     val event = CalendarEvent.of(
-                        localTimerState.eventTitle,
+                        localTitleState.eventTitleTrim,
                         localTimerState.startDateTime,
                         localTimerState.endDateTime,
                         localCalendarState.selectedColor
@@ -110,7 +118,7 @@ class TimerViewModel(
     }
 
     private fun checkData(): ValidationResult {
-        if (timerState.value.eventTitle.isEmpty()) {
+        if (titleState.value.eventTitle.isBlank()) {
             return ValidationResult.EMPTY_TITLE
         }
         return ValidationResult.OK
@@ -127,13 +135,13 @@ class TimerViewModel(
 
                     SettingsState.SavingType.SAVE_AND_START -> {
                         timerStateManager.reset()
-                        timerStateManager.clearTitle()
+                        titleStateManager.clearTitle()
                         timerStateManager.start()
                     }
 
                     SettingsState.SavingType.SAVE_START_AND_CHANGE_COLOR -> {
                         timerStateManager.reset()
-                        timerStateManager.clearTitle()
+                        titleStateManager.clearTitle()
                         timerStateManager.start()
                         calendarStateManager.shiftColor()
                     }
