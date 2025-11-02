@@ -48,41 +48,6 @@ class TitleStateManager(
         state.update { it.copy(eventTitle = suggestion.value, suggestions = listOf()) }
     }
 
-    private fun loadSuggestions2() {
-        coroutineScope.launch {
-            delay(1000L)
-
-            val title = state.value.eventTitle
-            var suggestions = mutableListOf<Suggestion>()
-            (1..2).forEach { i ->
-                suggestions.add(
-                    Suggestion(
-                        "$title $i", "", title, " $i"
-                    )
-                )
-            }
-
-            (1..2).forEach { i ->
-                suggestions.add(
-                    Suggestion(
-                        "abc $title $i", "abc ", title, " $i"
-                    )
-                )
-            }
-
-
-            (1..2).forEach { i ->
-                suggestions.add(
-                    Suggestion(
-                        "abc $title $i", "dd$i ", title, ""
-                    )
-                )
-            }
-
-            state.update { it.copy(suggestions = suggestions) }
-        }
-    }
-
     private fun loadSuggestions() {
         coroutineScope.launch {
             val search = state.value.eventTitle.trim()
@@ -99,7 +64,7 @@ class TitleStateManager(
                     val match = it.title.substring(startIndex, startIndex + search.length)
                     val suffix = it.title.substring(startIndex + search.length)
 
-                    Suggestion(it.title, prefix, match, suffix)
+                    Suggestion(it.title, it.color, prefix, match, suffix)
                 }
 
             state.update { it.copy(suggestions = suggestions) }

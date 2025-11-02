@@ -58,7 +58,10 @@ class TimerViewModel(
             is TimerAction.SelectCalendar -> calendarStateManager.selectCalendar(action.calendar)
             is TimerAction.SelectColor -> calendarStateManager.selectColor(action.color)
             is TimerAction.UpdateTitle -> titleStateManager.updateTitle(action.title)
-            is TimerAction.SelectSuggestion -> titleStateManager.selectSuggestion(action.suggestion)
+            is TimerAction.SelectSuggestion -> {
+                titleStateManager.selectSuggestion(action.suggestion)
+                calendarStateManager.selectSuggestedColor(action.suggestion.color)
+            }
             TimerAction.StartTimer -> timerStateManager.start()
             TimerAction.StopTimer -> timerStateManager.stop()
             TimerAction.ResumeTimer -> timerStateManager.resume()

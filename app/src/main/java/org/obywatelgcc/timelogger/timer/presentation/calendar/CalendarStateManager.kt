@@ -81,6 +81,13 @@ class CalendarStateManager(
         }
     }
 
+    fun selectSuggestedColor(color: CalendarEventColor?) {
+        val colorsData = calendarPreferences.value.selectedCalendar.let { getColorsData(it) }
+        if(colorsData.colors.contains(color)) {
+            color?.let { selectColor(color) }
+        }
+    }
+
     fun shiftColor() {
         val colorsData = calendarPreferences.value.selectedCalendar.let { getColorsData(it) }
         val currentColorIndex = colorsData.colors.indexOf(colorsData.selectedColor)

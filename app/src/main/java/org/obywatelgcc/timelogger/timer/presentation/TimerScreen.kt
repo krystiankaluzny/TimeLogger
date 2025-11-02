@@ -567,10 +567,26 @@ private fun RowScope.EventTitleTextField(
                             onAction(TimerAction.SelectSuggestion(suggestion))
                         },
                         text = {
-                            Row {
-                                Text(text = suggestion.prefix)
-                                Text(text = suggestion.match, fontWeight = FontWeight.ExtraBold)
-                                Text(text = suggestion.suffix)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .weight(1.0f)
+                                ) {
+                                    Text(text = suggestion.prefix)
+                                    Text(text = suggestion.match, fontWeight = FontWeight.ExtraBold)
+                                    Text(text = suggestion.suffix)
+                                }
+
+                                ColorHolder(
+                                    color = suggestion.color,
+                                    size = 30.dp,
+                                    onClick = {},
+                                    showBorder = false
+                                )
                             }
                         }
                     )
