@@ -66,8 +66,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -572,14 +575,18 @@ private fun RowScope.EventTitleTextField(
                                 modifier = Modifier
                                     .fillMaxWidth()
                             ) {
-                                Row(
+
+                                Text(
+                                    text = buildAnnotatedString {
+                                        append(suggestion.prefix)
+                                        withStyle (SpanStyle(fontWeight = FontWeight.Black)) {
+                                            append(suggestion.match)
+                                        }
+                                        append(suggestion.suffix)
+                                    },
                                     modifier = Modifier
                                         .weight(1.0f)
-                                ) {
-                                    Text(text = suggestion.prefix)
-                                    Text(text = suggestion.match, fontWeight = FontWeight.ExtraBold)
-                                    Text(text = suggestion.suffix)
-                                }
+                                )
 
                                 ColorHolder(
                                     color = suggestion.color,
