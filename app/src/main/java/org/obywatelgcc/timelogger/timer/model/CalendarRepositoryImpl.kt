@@ -176,10 +176,13 @@ class CalendarRepositoryImpl(
     ): List<CalendarEvent> {
         val result = mutableListOf<CalendarEvent>()
 
+        val now = Instant.now().toEpochMilli()
         val from = Instant.now().minus(100, ChronoUnit.DAYS).toEpochMilli()
 
-        val selection = "( ${CalendarContract.Events.DTSTART} >= ? AND ${CalendarContract.Events.TITLE} LIKE '%$title%' )"
-        val selectionArgs = arrayOf(from.toString())
+        val selection = "( ${CalendarContract.Events.DTSTART} >= ? " +
+                "AND ${CalendarContract.Events.DTSTART} <= ? " +
+                "AND ${CalendarContract.Events.TITLE} LIKE '%$title%' )"
+        val selectionArgs = arrayOf(from.toString(), now.toString())
 
         val eventCursor: Cursor? =
             contentResolver.query(
