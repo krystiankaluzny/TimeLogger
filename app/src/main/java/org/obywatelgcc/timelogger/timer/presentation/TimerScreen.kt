@@ -66,8 +66,10 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
@@ -90,6 +92,7 @@ import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState.Savi
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
 import org.obywatelgcc.timelogger.timer.presentation.title.TitleState
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
+import org.obywatelgcc.timelogger.utils.logDebug
 
 typealias OnAction = (TimerAction) -> Unit
 
@@ -538,8 +541,20 @@ private fun RowScope.EventTitleTextField(
     val eventTitle = titleState.eventTitle
     val titleSuggestions = titleState.suggestions
 
+    var titleFieldValue by remember {
+        mutableStateOf(
+            TextFieldValue(
+                eventTitle,
+                selection = TextRange(eventTitle.length)
+            )
+        )
+    }
     var expanded by remember { mutableStateOf(false) }
 
+    if(eventTitle != titleFieldValue.text) {
+        //restore cursor position
+        titleFieldValue = TextFieldValue(eventTitle, selection = TextRange(eventTitle.length))
+    }
     ExposedDropdownMenuBox(
         expanded = expanded, onExpandedChange = {
             expanded = it
@@ -549,9 +564,10 @@ private fun RowScope.EventTitleTextField(
             .weight(1.0f)
     ) {
         OutlinedTextField(
-            value = eventTitle,
+            value = titleFieldValue,
             onValueChange = {
-                onAction(TimerAction.UpdateTitle(it))
+                titleFieldValue = it
+                onAction(TimerAction.UpdateTitle(it.text))
                 expanded = true
             },
             label = { Text(text = "Event title") },

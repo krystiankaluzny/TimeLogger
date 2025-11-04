@@ -47,6 +47,7 @@ class TitleStateManager(
 
     fun selectSuggestion(suggestion: Suggestion) {
         state.update { it.copy(eventTitle = suggestion.value, suggestions = listOf()) }
+        eventTitle.value = suggestion.value
     }
 
     private fun loadSuggestions() {
