@@ -2,7 +2,9 @@ package org.obywatelgcc.timelogger.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -13,6 +15,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -56,6 +60,17 @@ val LocalExtendedColors = staticCompositionLocalOf {
     )
 }
 
+@Immutable
+data class ExtendedValues(
+    val selectedColorBorder: Dp,
+)
+
+val LocalExtendedValues = staticCompositionLocalOf {
+    ExtendedValues(
+        selectedColorBorder = 0.dp
+    )
+}
+
 @Composable
 fun TimeLoggerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -93,17 +108,43 @@ fun TimeLoggerTheme(
             )
         }
 
-    CompositionLocalProvider(LocalExtendedColors provides extendedColors) {
+    val extendedValues =
+        if (darkTheme)
+            ExtendedValues(
+                selectedColorBorder = 3.dp,
+            )
+        else {
+            ExtendedValues(
+                selectedColorBorder = 1.dp,
+            )
+        }
+
+    CompositionLocalProvider(
+        LocalExtendedColors provides extendedColors,
+        LocalExtendedValues provides extendedValues
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = Typography,
+            typography = BaseTypography,
             content = content
         )
     }
 }
 
 object TimeLoggerTheme {
-    val colors: ExtendedColors
+    val typography: Typography
+        @Composable
+        get() = MaterialTheme.typography
+
+    val colorScheme: ColorScheme
+        @Composable
+        get() = MaterialTheme.colorScheme
+
+    val extendedColors: ExtendedColors
         @Composable
         get() = LocalExtendedColors.current
+
+    val values: ExtendedValues
+        @Composable
+        get() = LocalExtendedValues.current
 }

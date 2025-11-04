@@ -37,7 +37,6 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -182,7 +181,7 @@ private fun ModalDrawerView(
                         else drawerState.close()
                     }
                 }),
-            style = MaterialTheme.typography.titleLarge
+            style = TimeLoggerTheme.typography.titleLarge
         )
         HorizontalDivider()
 
@@ -581,7 +580,7 @@ private fun RowScope.EventTitleTextField(
                                         append(suggestion.prefix)
                                         withStyle(
                                             SpanStyle(
-                                                color = TimeLoggerTheme.colors.suggestionMatch,
+                                                color = TimeLoggerTheme.extendedColors.suggestionMatch,
                                                 fontWeight = FontWeight.Bold
                                             )
                                         ) {
@@ -690,8 +689,8 @@ private fun ExposedDropdownMenuBoxScope.ColorHolder(
     showBorder: Boolean = true
 ) {
     val border = if (showBorder) BorderStroke(
-        1.dp,
-        MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
+        TimeLoggerTheme.values.selectedColorBorder,
+        TimeLoggerTheme.colorScheme.secondary.copy(alpha = 1f)
     ) else null
 
     ElevatedButton(
@@ -749,8 +748,8 @@ private fun TimeLoggerButtonsView(timerRunningState: TimerState.RunningState, on
                 onClick = { onAction(TimerAction.StartTimer) },
                 elevation = buttonElevation,
                 colors = ButtonDefaults.elevatedButtonColors(
-                    containerColor = TimeLoggerTheme.colors.timerToStartButton,
-                    contentColor = TimeLoggerTheme.colors.timerButtonContent
+                    containerColor = TimeLoggerTheme.extendedColors.timerToStartButton,
+                    contentColor = TimeLoggerTheme.extendedColors.timerButtonContent
                 )
             ) {
                 Text(text = "Start")
@@ -761,8 +760,8 @@ private fun TimeLoggerButtonsView(timerRunningState: TimerState.RunningState, on
                 onClick = { onAction(TimerAction.StopTimer) },
                 elevation = buttonElevation,
                 colors = ButtonDefaults.elevatedButtonColors(
-                    containerColor = TimeLoggerTheme.colors.timerToStopButton,
-                    contentColor = TimeLoggerTheme.colors.timerButtonContent
+                    containerColor = TimeLoggerTheme.extendedColors.timerToStopButton,
+                    contentColor = TimeLoggerTheme.extendedColors.timerButtonContent
                 )
             ) {
                 Text(text = "Stop")
@@ -773,8 +772,8 @@ private fun TimeLoggerButtonsView(timerRunningState: TimerState.RunningState, on
                 onClick = { onAction(TimerAction.ResumeTimer) },
                 elevation = buttonElevation,
                 colors = ButtonDefaults.elevatedButtonColors(
-                    containerColor = TimeLoggerTheme.colors.timerToResumeButton,
-                    contentColor = TimeLoggerTheme.colors.timerButtonContent
+                    containerColor = TimeLoggerTheme.extendedColors.timerToResumeButton,
+                    contentColor = TimeLoggerTheme.extendedColors.timerButtonContent
                 )
             ) {
                 Text(text = "Resume")

@@ -13,7 +13,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -28,6 +27,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 object CustomButtonDefaults {
 
@@ -89,7 +89,7 @@ fun Button(
         ) {
             ProvideContentColorTextStyle(
                 contentColor = contentColor,
-                textStyle = MaterialTheme.typography.labelLarge
+                textStyle = TimeLoggerTheme.typography.labelLarge
             ) {
                 Row(
                     contentModifier,

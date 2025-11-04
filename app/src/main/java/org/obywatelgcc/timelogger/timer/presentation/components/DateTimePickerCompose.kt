@@ -11,7 +11,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +35,7 @@ import io.github.rexmtorres.android.composedatepicker.timepicker.ui.model.TimePi
 import org.obywatelgcc.timelogger.core.presentation.components.CustomButtonDefaults.textButtonContentModifier
 import org.obywatelgcc.timelogger.core.presentation.components.TextButton
 import org.obywatelgcc.timelogger.timer.presentation.TimerAction
+import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -122,40 +122,40 @@ fun DateTimePickersView(
             .numberOfMonthYearRowsDisplayed(5)
             .headerTextStyle(
                 DefaultDatePickerConfig.headerTextStyle
-                    .copy(color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f))
+                    .copy(color = TimeLoggerTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f))
             )
             .monthYearTextStyle(
                 DefaultDatePickerConfig.monthYearTextStyle
-                    .copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    .copy(color = TimeLoggerTheme.colorScheme.onSecondaryContainer)
             )
             .selectedMonthYearTextStyle(
                 DefaultDatePickerConfig.selectedMonthYearTextStyle
-                    .copy(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    .copy(color = TimeLoggerTheme.colorScheme.onPrimaryContainer)
             )
             .dateTextStyle(
                 DefaultDatePickerConfig.dateTextStyle
-                    .copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    .copy(color = TimeLoggerTheme.colorScheme.onSecondaryContainer)
             )
             .selectedDateTextStyle(
                 DefaultDatePickerConfig.selectedDateTextStyle
-                    .copy(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    .copy(color = TimeLoggerTheme.colorScheme.onPrimaryContainer)
             )
-            .selectedMonthYearAreaColor(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
-            .selectedDateBackgroundColor(color = MaterialTheme.colorScheme.primaryContainer)
+            .selectedMonthYearAreaColor(TimeLoggerTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+            .selectedDateBackgroundColor(color = TimeLoggerTheme.colorScheme.primaryContainer)
             .build()
 
         val timePickerConfig = TimePickerConfiguration.Builder()
             .height(150.dp)
             .numberOfTimeRowsDisplayed(count = 5)
             .selectedTimeScaleFactor(scaleFactor = 1.4f)
-            .selectedTimeAreaColor(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+            .selectedTimeAreaColor(TimeLoggerTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
             .timeTextStyle(
                 DefaultTimePickerConfig.timeTextStyle
-                    .copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    .copy(color = TimeLoggerTheme.colorScheme.onSecondaryContainer)
             )
             .selectedTimeTextStyle(
                 DefaultTimePickerConfig.selectedTimeTextStyle
-                    .copy(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    .copy(color = TimeLoggerTheme.colorScheme.onPrimaryContainer)
             )
             .build()
 
@@ -248,8 +248,8 @@ fun LocalDateTime.toDatePickerDate(): DatePickerDate = DatePickerDate(year, mont
 
 @Composable
 fun CheckableTextButton(checked: Boolean, text: String, onClick: () -> Unit) {
-    val contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val containerColor = if (checked) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+    val contentColor = TimeLoggerTheme.colorScheme.onSurfaceVariant
+    val containerColor = if (checked) TimeLoggerTheme.colorScheme.primaryContainer else Color.Transparent
 
     TextButton(
         modifier = Modifier.padding(2.dp),
