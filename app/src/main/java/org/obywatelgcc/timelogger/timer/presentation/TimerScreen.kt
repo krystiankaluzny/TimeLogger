@@ -579,7 +579,12 @@ private fun RowScope.EventTitleTextField(
                                 Text(
                                     text = buildAnnotatedString {
                                         append(suggestion.prefix)
-                                        withStyle (SpanStyle(fontWeight = FontWeight.Black)) {
+                                        withStyle(
+                                            SpanStyle(
+                                                color = TimeLoggerTheme.colors.suggestionMatch,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        ) {
                                             append(suggestion.match)
                                         }
                                         append(suggestion.suffix)

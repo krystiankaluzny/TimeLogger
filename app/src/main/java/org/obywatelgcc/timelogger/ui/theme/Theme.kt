@@ -42,7 +42,8 @@ data class ExtendedColors(
     val timerButtonContent: Color,
     val timerToStartButton: Color,
     val timerToStopButton: Color,
-    val timerToResumeButton: Color
+    val timerToResumeButton: Color,
+    val suggestionMatch: Color
 )
 
 val LocalExtendedColors = staticCompositionLocalOf {
@@ -50,7 +51,8 @@ val LocalExtendedColors = staticCompositionLocalOf {
         timerButtonContent = Color.Unspecified,
         timerToStartButton = Color.Unspecified,
         timerToStopButton = Color.Unspecified,
-        timerToResumeButton = Color.Unspecified
+        timerToResumeButton = Color.Unspecified,
+        suggestionMatch = Color.Unspecified
     )
 }
 
@@ -78,14 +80,16 @@ fun TimeLoggerTheme(
                 timerButtonContent = Color(0xC4CCBCBC),
                 timerToStartButton = Color(0xB5476426),
                 timerToStopButton = Color(0xD7811E16),
-                timerToResumeButton = Color(0xD2143F73)
+                timerToResumeButton = Color(0xD2143F73),
+                suggestionMatch = Color(0xFFE07727)
             )
         else {
             ExtendedColors(
                 timerButtonContent = Color(0xCB050559),
                 timerToStartButton = Color(0xB58BC34A),
                 timerToStopButton = Color(0xB0E13325),
-                timerToResumeButton = Color(0xBF13BED3)
+                timerToResumeButton = Color(0xBF13BED3),
+                suggestionMatch = Color(0xFF086AB2)
             )
         }
 
