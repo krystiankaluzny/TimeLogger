@@ -129,7 +129,7 @@ fun RootTimerScreen(viewModel: TimerViewModel) {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerView(appName, drawerState)
-        },
+        }
     ) {
         Scaffold(
             topBar = { TopBarView(settingsState, appName, drawerState, viewModel::onAction) },
@@ -239,14 +239,8 @@ private fun TopBarView(settingsState: SettingsState, appName: String, drawerStat
                 expanded = expandedMenu,
                 onDismissRequest = { expandedMenu = false }
             ) {
-                SavingTypeMenuItem(currentSavingType, SavingType.SAVE_ONLY, "Save only", onAction)
-                SavingTypeMenuItem(currentSavingType, SavingType.SAVE_AND_START, "Save and start new event", onAction)
-                SavingTypeMenuItem(
-                    currentSavingType,
-                    SavingType.SAVE_START_AND_CHANGE_COLOR,
-                    "Save, start and change change event color",
-                    onAction
-                )
+                SavingTypeMenuItem(currentSavingType, SavingType.SaveOnly, onAction)
+                SavingTypeMenuItem(currentSavingType, SavingType.SaveAndStartNew, onAction)
             }
         }
     )
@@ -256,7 +250,6 @@ private fun TopBarView(settingsState: SettingsState, appName: String, drawerStat
 private fun SavingTypeMenuItem(
     currentSavingType: SavingType,
     savingType: SavingType,
-    text: String,
     onAction: OnAction
 ) {
     val selected = (currentSavingType == savingType)
@@ -276,7 +269,7 @@ private fun SavingTypeMenuItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(selected = selected, onClick = null)
-                Text(text = text, modifier = Modifier.padding(start = 10.dp))
+                Text(text = savingType.description, modifier = Modifier.padding(start = 10.dp))
             }
         },
         onClick = { }
@@ -373,11 +366,7 @@ fun TimeLoggerPortraitScreen(
             onClick = { onAction(TimerAction.TrySave) }
         ) {
             Text(
-                text = when (settingsState.savingType) {
-                    SavingType.SAVE_ONLY -> "Save"
-                    SavingType.SAVE_AND_START -> "Save and start"
-                    SavingType.SAVE_START_AND_CHANGE_COLOR -> "Save, start and change color"
-                },
+                text = settingsState.savingType.description,
                 textAlign = TextAlign.Center
             )
         }
@@ -453,11 +442,7 @@ fun TimeLoggerLandscapeScreen(
                     onClick = { onAction(TimerAction.TrySave) }
                 ) {
                     Text(
-                        text = when (settingsState.savingType) {
-                            SavingType.SAVE_ONLY -> "Save"
-                            SavingType.SAVE_AND_START -> "Save and start"
-                            SavingType.SAVE_START_AND_CHANGE_COLOR -> "Save, start and change color"
-                        },
+                        text = settingsState.savingType.description,
                         textAlign = TextAlign.Center
                     )
                 }

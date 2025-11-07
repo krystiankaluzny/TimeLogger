@@ -137,17 +137,11 @@ class TimerViewModel(
             CalendarRepository.AddEventResult.Status.ALREADY_EXISTS -> _effectsChannel.send(TimerEffect.SavingMessage("Already exists"))
             CalendarRepository.AddEventResult.Status.CREATED -> {
                 when (settingsState.value.savingType) {
-                    SettingsState.SavingType.SAVE_ONLY -> {
+                    SettingsState.SavingType.SaveOnly -> {
                         timerStateManager.reset()
                     }
 
-                    SettingsState.SavingType.SAVE_AND_START -> {
-                        timerStateManager.reset()
-                        titleStateManager.clearTitle()
-                        timerStateManager.start()
-                    }
-
-                    SettingsState.SavingType.SAVE_START_AND_CHANGE_COLOR -> {
+                    SettingsState.SavingType.SaveAndStartNew -> {
                         timerStateManager.reset()
                         titleStateManager.clearTitle()
                         timerStateManager.start()

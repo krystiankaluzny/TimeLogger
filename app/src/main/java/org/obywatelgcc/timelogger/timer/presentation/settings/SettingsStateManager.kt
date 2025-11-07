@@ -17,7 +17,7 @@ class SettingsStateManager(
 ) : BaseStateManager<SettingsState>(coroutineScope, savedStateHandle, dataStoreManager, initialState) {
 
     private val settingsPreferences =
-        jsonDataStoreStateFlow("SettingsPreferences_v1", SettingsPreferences())
+        jsonDataStoreStateFlow("SettingsPreferences_v2", SettingsPreferences())
 
     suspend fun init() {
         logInfo("init")
@@ -42,5 +42,5 @@ class SettingsStateManager(
 
 @Serializable
 data class SettingsPreferences(
-    var savingType: SavingType = SavingType.SAVE_ONLY
+    var savingType: SavingType = SavingType.SaveOnly
 )
