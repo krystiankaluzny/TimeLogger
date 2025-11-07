@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
+import org.obywatelgcc.timelogger.timer.model.Calendar
 import org.obywatelgcc.timelogger.timer.model.CalendarRepository
 import org.obywatelgcc.timelogger.timer.presentation.title.TitleState.Suggestion
 import org.obywatelgcc.timelogger.utils.logDebug
@@ -34,10 +35,10 @@ class TitleStateManager(
         }
     }
 
-    fun updateTitle(title: String) {
+    fun updateTitle(title: String, selectedCalendar: Calendar) {
         state.update { it.copy(eventTitle = title) }
         eventTitle.value = title
-        loadSuggestions()
+        loadSuggestions(selectedCalendar)
     }
 
     fun clearTitle() {
@@ -50,7 +51,7 @@ class TitleStateManager(
         eventTitle.value = suggestion.value
     }
 
-    private fun loadSuggestions() {
+    private fun loadSuggestions(selectedCalendar: Calendar) {
         coroutineScope.launch {
             val search = state.value.eventTitle.trim()
             if (search.length < 2) {
@@ -58,7 +59,7 @@ class TitleStateManager(
                 return@launch
             }
 
-            val events = calendarRepository.findEventsContainsTitle(search)
+            val events = calendarRepository.findEventsContainsTitle(selectedCalendar, search)
                 .filter { it.title.contains(search, true) }
                 .groupBy { it.title.trim() }
                 .values
