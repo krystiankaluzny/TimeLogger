@@ -1,12 +1,12 @@
 package org.obywatelgcc.timelogger.core.model
 
-
 interface CalendarRepository {
 
     suspend fun findAllCalendars(): List<Calendar>
     suspend fun findAllEventColors(): List<CalendarEventColor>
     suspend fun addEventToCalendar(calendar: Calendar, event: CalendarEvent): AddEventResult
     suspend fun findEventsContainsTitle(calendar: Calendar, title: String): List<CalendarEvent>
+    suspend fun findEventsInTimeRange(calendar: Calendar, timeRange: ZonedDateTimeRange): List<CalendarEvent>
 
     data class AddEventResult(
         val status: Status,

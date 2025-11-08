@@ -43,36 +43,52 @@ data class Calendar(
 @Serializable
 data class CalendarEvent(
     val title: String,
-    @Serializable(ZonedDateTimeSerializer::class)
-    val start: ZonedDateTime,
-    @Serializable(ZonedDateTimeSerializer::class)
-    val end: ZonedDateTime,
+    val timeRange: ZonedDateTimeRange,
     val color: CalendarEventColor?
 ) : Parcelable {
     companion object {
         fun of(
             title: String, start: LocalDateTime, end: LocalDateTime, color: CalendarEventColor?
         ): CalendarEvent {
-            val zoneId = ZoneId.systemDefault()
-            val starZoned = start.atZone(zoneId)
-            val endZoned = end.atZone(zoneId)
-            return CalendarEvent(title, starZoned, endZoned, color)
+            return CalendarEvent(title, ZonedDateTimeRange.of(start, end), color)
         }
 
         fun of(
             title: String, startMillis: Long, endMillis: Long, zoneIdName: String, color: CalendarEventColor?
         ): CalendarEvent {
-            val zoneId = ZoneId.of(zoneIdName)
-
-            val starZoned = ZonedDateTime.ofInstant(Instant.ofEpochMilli(startMillis), zoneId)
-            val endZoned = ZonedDateTime.ofInstant(Instant.ofEpochMilli(endMillis), zoneId)
-            return CalendarEvent(title, starZoned, endZoned, color)
+            return CalendarEvent(title, ZonedDateTimeRange.of(startMillis, endMillis, zoneIdName), color)
         }
     }
 
-    fun startMillis() = start.toEpochSecond() * 1000
-    fun endMillis() = end.toEpochSecond() * 1000
-    fun zoneIdName(): String = end.zone.id
+}
+
+@Parcelize
+@Serializable
+data class ZonedDateTimeRange(
+    @Serializable(ZonedDateTimeSerializer::class)
+    val from: ZonedDateTime,
+    @Serializable(ZonedDateTimeSerializer::class)
+    val to: ZonedDateTime
+) : Parcelable {
+    companion object {
+        fun of(from: LocalDateTime, to: LocalDateTime): ZonedDateTimeRange {
+            val zoneId = ZoneId.systemDefault()
+            val fromZoned = from.atZone(zoneId)
+            val toZoned = to.atZone(zoneId)
+            return ZonedDateTimeRange(fromZoned, toZoned)
+        }
+
+        fun of(startMillis: Long, endMillis: Long, zoneIdName: String): ZonedDateTimeRange {
+            val zoneId = ZoneId.of(zoneIdName)
+            val fromZoned = ZonedDateTime.ofInstant(Instant.ofEpochMilli(startMillis), zoneId)
+            val toZoned = ZonedDateTime.ofInstant(Instant.ofEpochMilli(endMillis), zoneId)
+            return ZonedDateTimeRange(fromZoned, toZoned)
+        }
+    }
+
+    fun fromMillis() = from.toEpochSecond() * 1000
+    fun toMillis() = to.toEpochSecond() * 1000
+    fun zoneIdName(): String = to.zone.id
 }
 
 @Parcelize

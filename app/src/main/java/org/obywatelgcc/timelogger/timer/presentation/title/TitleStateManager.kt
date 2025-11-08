@@ -63,8 +63,8 @@ class TitleStateManager(
                 .filter { it.title.contains(search, true) }
                 .groupBy { it.title.trim() }
                 .values
-                .map { it.maxBy { it.start } }
-                .sortedByDescending { it.start }
+                .map { it.maxBy { it.timeRange.from } }
+                .sortedByDescending { it.timeRange.from }
 
             logDebug("loadSuggestions, $events")
 

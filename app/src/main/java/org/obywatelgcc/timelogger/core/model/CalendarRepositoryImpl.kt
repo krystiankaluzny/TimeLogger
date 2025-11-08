@@ -142,19 +142,20 @@ class CalendarRepositoryImpl(
 
         logDebug("addEventToCalendar: $calendar, $event")
 
-        val entryKey = EntryKey(calendar.id, event.title, event.start)
+        val eventTimeRange = event.timeRange
+        val entryKey = EntryKey(calendar.id, event.title, eventTimeRange.from)
         val cachedEntry = calenderEntryCached[entryKey]
         if (cachedEntry != null) {
             return CalendarRepository.AddEventResult(CalendarRepository.AddEventResult.Status.ALREADY_EXISTS, event)
         }
 
         val values = ContentValues().apply {
-            put(CalendarContract.Events.DTSTART, event.startMillis())
-            put(CalendarContract.Events.DTEND, event.endMillis())
+            put(CalendarContract.Events.DTSTART, eventTimeRange.fromMillis())
+            put(CalendarContract.Events.DTEND, eventTimeRange.toMillis())
             put(CalendarContract.Events.TITLE, event.title)
             put(CalendarContract.Events.DESCRIPTION, "")
             put(CalendarContract.Events.CALENDAR_ID, calendar.id)
-            put(CalendarContract.Events.EVENT_TIMEZONE, event.zoneIdName())
+            put(CalendarContract.Events.EVENT_TIMEZONE, eventTimeRange.zoneIdName())
             put(CalendarContract.Events.EVENT_COLOR_KEY, event.color?.key ?: "")
         }
 
@@ -174,7 +175,7 @@ class CalendarRepositoryImpl(
         calendar: Calendar,
         title: String
     ): List<CalendarEvent> {
-        val result = mutableListOf<CalendarEvent>()
+
 
         val now = Instant.now().toEpochMilli()
         val from = Instant.now().minus(100, ChronoUnit.DAYS).toEpochMilli()
@@ -188,14 +189,47 @@ class CalendarRepositoryImpl(
                 | )""".trimMargin()
         val selectionArgs = arrayOf(calendar.id.toString(), from.toString(), now.toString())
 
+        var result = queryEvents(calendar, selection, selectionArgs)
+
+        logDebug("findEventsContainsTitle: size: ${result.size} - $result")
+
+        if (result.isEmpty()) {
+            result = calenderEntryCached.entries
+                .filter { e -> e.key.calendarId == calendar.id && e.value.title.contains(title, true) }
+                .map { e -> e.value }
+
+            logDebug("findEventsContainsTitle: cache: size: ${result.size} - $result")
+        }
+
+        return result
+    }
+
+
+    override suspend fun findEventsInTimeRange(
+        calendar: Calendar,
+        timeRange: ZonedDateTimeRange
+    ): List<CalendarEvent> {
+
+
+        val from = timeRange.fromMillis()
+        val to = timeRange.toMillis()
+
+        val selection =
+            """(
+                | ${CalendarContract.Events.CALENDAR_ID} = ?
+                | AND ${CalendarContract.Events.DTSTART} <= ?
+                | AND ${CalendarContract.Events.DTEND} >= ? 
+                | )""".trimMargin()
+        val selectionArgs = arrayOf(calendar.id.toString(), to.toString(), from.toString())
+
+        return queryEvents(calendar, selection, selectionArgs)
+    }
+
+    private fun queryEvents(calendar: Calendar, selection: String, selectionArgs: Array<String>): List<CalendarEvent> {
+        val result = mutableListOf<CalendarEvent>()
+
         val eventCursor: Cursor? =
-            contentResolver.query(
-                EVENT_URI,
-                eventsProjection.projection,
-                selection,
-                selectionArgs,
-                null
-            )
+            contentResolver.query(EVENT_URI, eventsProjection.projection, selection, selectionArgs, null)
         eventCursor?.apply {
             while (moveToNext()) {
                 val eventColorKey = getString(eventsProjection.index(CalendarContract.Events.EVENT_COLOR_KEY))
@@ -218,19 +252,6 @@ class CalendarRepositoryImpl(
                 )
             }
             close()
-        }
-
-        logDebug("findEventsContainsTitle: size: ${result.size} - $result")
-
-        if (result.isEmpty()) {
-            calenderEntryCached.entries
-                .filter { e -> e.key.calendarId == calendar.id && e.value.title.contains(title, true) }
-                .map { e -> e.value }
-                .let {
-                    result.addAll(it)
-                }
-
-            logDebug("findEventsContainsTitle: cache: size: ${result.size} - $result")
         }
 
         return result

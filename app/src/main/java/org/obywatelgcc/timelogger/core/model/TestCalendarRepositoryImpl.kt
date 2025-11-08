@@ -191,4 +191,12 @@ class TestCalendarRepositoryImpl : CalendarRepository {
         return calendarEvents.computeIfAbsent(calendar) { c -> mutableListOf() }
             .filter { it.title.contains(title, true) }
     }
+
+    override suspend fun findEventsInTimeRange(
+        calendar: Calendar,
+        timeRange: ZonedDateTimeRange
+    ): List<CalendarEvent> {
+        return calendarEvents.computeIfAbsent(calendar) { c -> mutableListOf() }
+            .filter { it.timeRange.from <= timeRange.to && it.timeRange.to >= timeRange.from }
+    }
 }
