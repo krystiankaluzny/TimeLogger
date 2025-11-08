@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "org.obywatelgcc.timelogger"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "org.obywatelgcc.timelogger"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.datastore.preferences)
     implementation(libs.compose.date.picker)
+    implementation(libs.compose.charts)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
