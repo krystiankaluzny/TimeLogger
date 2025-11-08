@@ -1,6 +1,6 @@
 package org.obywatelgcc.timelogger.timer.presentation.title
 
-import org.obywatelgcc.timelogger.timer.model.CalendarEventColor
+import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 
 data class TitleState(
     val eventTitle: String = "",

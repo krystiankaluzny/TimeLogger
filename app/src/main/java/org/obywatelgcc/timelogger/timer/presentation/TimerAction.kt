@@ -1,7 +1,7 @@
 package org.obywatelgcc.timelogger.timer.presentation
 
-import org.obywatelgcc.timelogger.timer.model.Calendar
-import org.obywatelgcc.timelogger.timer.model.CalendarEventColor
+import org.obywatelgcc.timelogger.core.model.Calendar
+import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState.SavingType
 import org.obywatelgcc.timelogger.timer.presentation.title.TitleState.Suggestion
 import java.time.LocalDate

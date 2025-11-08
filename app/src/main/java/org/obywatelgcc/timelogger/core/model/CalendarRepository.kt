@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.timer.model
+package org.obywatelgcc.timelogger.core.model
 
 
 interface CalendarRepository {

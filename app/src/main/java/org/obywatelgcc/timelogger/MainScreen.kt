@@ -117,7 +117,7 @@ fun DrawerContent(
     val scope = rememberCoroutineScope()
 
     ModalDrawerSheet(
-        modifier = Modifier.width(260.dp)
+        modifier = Modifier.width(280.dp)
     ) {
         Spacer(Modifier.height(12.dp))
         Text(

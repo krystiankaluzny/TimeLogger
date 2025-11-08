@@ -1,20 +1,23 @@
 package org.obywatelgcc.timelogger.statistics
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.viewmodel.koinViewModel
+import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
 
 @Composable
 fun StatisticsScreen() {
-    Column(
-        modifier = Modifier.Companion.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = "StatisticsScreen")
+
+    val viewModel = koinViewModel<StatisticsViewModel>()
+    val calendarState by viewModel.statisticsCalendarState.collectAsStateWithLifecycle()
+
+    val calendars = calendarState.availableCalendars
+    val selectedCalendar = calendarState.selectedCalendar
+
+    val initialized by viewModel.initialized.collectAsStateWithLifecycle()
+    if (initialized) {
+        CalendarDropdown(calendars, selectedCalendar, {  })
     }
+
 }

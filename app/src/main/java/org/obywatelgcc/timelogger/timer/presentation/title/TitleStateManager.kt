@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
-import org.obywatelgcc.timelogger.timer.model.Calendar
-import org.obywatelgcc.timelogger.timer.model.CalendarRepository
+import org.obywatelgcc.timelogger.core.model.Calendar
+import org.obywatelgcc.timelogger.core.model.CalendarRepository
 import org.obywatelgcc.timelogger.timer.presentation.title.TitleState.Suggestion
 import org.obywatelgcc.timelogger.utils.logDebug
 import org.obywatelgcc.timelogger.utils.logInfo

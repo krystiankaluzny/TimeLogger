@@ -1,7 +1,7 @@
 package org.obywatelgcc.timelogger.timer.presentation.calendar
 
-import org.obywatelgcc.timelogger.timer.model.Calendar
-import org.obywatelgcc.timelogger.timer.model.CalendarEventColor
+import org.obywatelgcc.timelogger.core.model.Calendar
+import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 
 data class CalendarState(
     val availableCalendars: List<Calendar> = listOf<Calendar>(),

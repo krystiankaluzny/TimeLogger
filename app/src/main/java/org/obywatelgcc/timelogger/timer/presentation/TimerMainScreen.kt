@@ -2,10 +2,8 @@ package org.obywatelgcc.timelogger.timer.presentation
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -23,13 +21,11 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuBoxScope
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,8 +45,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.obywatelgcc.timelogger.timer.model.Calendar
-import org.obywatelgcc.timelogger.timer.model.CalendarEventColor
+import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
+import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
 import org.obywatelgcc.timelogger.timer.presentation.components.DateTimePickersView
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
@@ -217,53 +213,6 @@ private fun TimeLoggerLandscapeScreen(
     }
 }
 
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun CalendarDropdown(
-    calendars: List<Calendar>,
-    selected: Calendar?,
-    onSelect: (Calendar) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    var textFieldState by remember { mutableStateOf(selected?.description() ?: "") }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded, onExpandedChange = { expanded = it },
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-    ) {
-        TextField(
-            value = textFieldState,
-            onValueChange = { },
-            singleLine = true,
-            label = { Text("Calendar") },
-            // The `menuAnchor` modifier must be passed to the text field to handle
-            // expanding/collapsing the menu on click. A read-only text field has
-            // the anchor type `PrimaryNotEditable`.
-            modifier = Modifier
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth(),
-            readOnly = true,
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.textFieldColors(),
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded, onDismissRequest = { expanded = false }) {
-            calendars.forEach { c ->
-                DropdownMenuItem(onClick = {
-                    textFieldState = c.description()
-                    onSelect(c)
-                    expanded = false
-                }, text = {
-                    Text(text = c.description())
-                })
-            }
-        }
-    }
-}
 
 @Composable
 private fun TitleAndColorView(

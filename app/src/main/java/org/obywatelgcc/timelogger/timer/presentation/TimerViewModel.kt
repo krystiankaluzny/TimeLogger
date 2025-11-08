@@ -13,9 +13,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
-import org.obywatelgcc.timelogger.timer.model.Calendar
-import org.obywatelgcc.timelogger.timer.model.CalendarEvent
-import org.obywatelgcc.timelogger.timer.model.CalendarRepository
+import org.obywatelgcc.timelogger.core.model.Calendar
+import org.obywatelgcc.timelogger.core.model.CalendarEvent
+import org.obywatelgcc.timelogger.core.model.CalendarRepository
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarStateManager
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState

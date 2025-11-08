@@ -6,9 +6,10 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.presentation.SnackbarMessageBus
-import org.obywatelgcc.timelogger.timer.model.CalendarRepository
-import org.obywatelgcc.timelogger.timer.model.CalendarRepositoryImpl
-import org.obywatelgcc.timelogger.timer.model.TestCalendarRepositoryImpl
+import org.obywatelgcc.timelogger.core.model.CalendarRepository
+import org.obywatelgcc.timelogger.core.model.CalendarRepositoryImpl
+import org.obywatelgcc.timelogger.core.model.TestCalendarRepositoryImpl
+import org.obywatelgcc.timelogger.statistics.StatisticsViewModel
 import org.obywatelgcc.timelogger.timer.presentation.TimerViewModel
 
 val appModule = module {
@@ -16,6 +17,7 @@ val appModule = module {
     singleOf(::SnackbarMessageBus)
     singleOf(::CalendarRepositoryImpl) { bind<CalendarRepository>() }
     viewModelOf(::TimerViewModel)
+    viewModelOf(::StatisticsViewModel)
 }
 
 val testAppModule = module {
@@ -23,4 +25,5 @@ val testAppModule = module {
     singleOf(::SnackbarMessageBus)
     singleOf(::TestCalendarRepositoryImpl) { bind<CalendarRepository>() }
     viewModelOf(::TimerViewModel)
+    viewModelOf(::StatisticsViewModel)
 }

@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
-import org.obywatelgcc.timelogger.timer.model.Calendar
-import org.obywatelgcc.timelogger.timer.model.CalendarEventColor
+import org.obywatelgcc.timelogger.core.model.Calendar
+import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 import org.obywatelgcc.timelogger.utils.logInfo
 
 class CalendarStateManager(
