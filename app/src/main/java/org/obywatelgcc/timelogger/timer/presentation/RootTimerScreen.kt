@@ -1,6 +1,10 @@
 package org.obywatelgcc.timelogger.timer.presentation
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,16 +48,24 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.R
 import org.obywatelgcc.timelogger.timer.presentation.TimerAction.UpdateSavingType
+import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
 import org.obywatelgcc.timelogger.timer.presentation.components.Clock
 import org.obywatelgcc.timelogger.timer.presentation.screens.LoadingScreen
 import org.obywatelgcc.timelogger.timer.presentation.screens.Screen
+import org.obywatelgcc.timelogger.timer.presentation.screens.StatisticsScreen
 import org.obywatelgcc.timelogger.timer.presentation.screens.TimeLoggerScreen
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState.SavingType
+import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
+import org.obywatelgcc.timelogger.timer.presentation.title.TitleState
 
 typealias OnAction = (TimerAction) -> Unit
 
@@ -61,6 +73,7 @@ typealias OnAction = (TimerAction) -> Unit
 @Composable
 fun RootTimerScreen(viewModel: TimerViewModel) {
 
+    val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val appName = stringResource(id = R.string.app_name)
@@ -101,7 +114,7 @@ fun RootTimerScreen(viewModel: TimerViewModel) {
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            RootTimerDrawerContent(appName, drawerState, navItems)
+            RootTimerDrawerContent(navController, appName, drawerState, navItems)
         }
     ) {
         Scaffold(
@@ -111,14 +124,16 @@ fun RootTimerScreen(viewModel: TimerViewModel) {
             val initialized by viewModel.initialized.collectAsStateWithLifecycle()
 
             if (initialized) {
-                TimeLoggerScreen(
+                NavHostView(
+                    navController,
                     calenderState,
                     timerState,
                     titleState,
                     settingsState,
                     innerPadding,
-                    viewModel::onAction
+                    viewModel
                 )
+
             } else {
                 LoadingScreen(innerPadding)
             }
@@ -211,4 +226,75 @@ private fun SavingTypeMenuItem(
         },
         onClick = { }
     )
+}
+
+@Composable
+private fun NavHostView(
+    navController: NavHostController,
+    calenderState: CalendarState,
+    timerState: TimerState,
+    titleState: TitleState,
+    settingsState: SettingsState,
+    innerPadding: PaddingValues,
+    viewModel: TimerViewModel
+) {
+
+    NavHost(
+        navController = navController,
+        startDestination = Screen.TimeLogger
+    ) {
+        composable<Screen.TimeLogger>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    tween(700)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    tween(700)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    tween(700)
+                )
+            }
+        ) {
+            TimeLoggerScreen(
+                calenderState,
+                timerState,
+                titleState,
+                settingsState,
+                innerPadding,
+                viewModel::onAction
+            )
+        }
+
+        composable<Screen.Statistics>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    tween(700)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    tween(700)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    tween(700)
+                )
+            }
+        ) { a ->
+            StatisticsScreen(innerPadding)
+        }
+    }
+
 }

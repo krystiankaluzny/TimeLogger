@@ -21,12 +21,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.timer.presentation.screens.Screen
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 @Composable
 fun RootTimerDrawerContent(
+    navController: NavHostController,
     appName: String,
     drawerState: DrawerState,
     navigationItems: List<NavigationItem>
@@ -60,9 +62,9 @@ fun RootTimerDrawerContent(
                 label = { Text(text = item.title) },
                 selected = (index == selectedItemIndex),
                 onClick = {
-                    selectedItemIndex = index
-                    //navController.navigate(it.destiny)
+                    if(index != selectedItemIndex) navController.navigate(item.destiny)
 
+                    selectedItemIndex = index
                     scope.launch {
                         if (drawerState.isOpen) drawerState.close()
                     }
