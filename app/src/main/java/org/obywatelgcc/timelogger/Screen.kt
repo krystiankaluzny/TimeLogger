@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.timer.presentation.screens
+package org.obywatelgcc.timelogger
 
 import kotlinx.serialization.Serializable
 
@@ -10,4 +10,7 @@ sealed class Screen {
 
     @Serializable
     object Statistics : Screen()
+
+    @Serializable
+    object Settings : Screen()
 }

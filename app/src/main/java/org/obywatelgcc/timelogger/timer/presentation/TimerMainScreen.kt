@@ -1,7 +1,8 @@
-package org.obywatelgcc.timelogger.timer.presentation.screens
+package org.obywatelgcc.timelogger.timer.presentation
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -50,8 +51,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.obywatelgcc.timelogger.timer.model.Calendar
 import org.obywatelgcc.timelogger.timer.model.CalendarEventColor
-import org.obywatelgcc.timelogger.timer.presentation.OnAction
-import org.obywatelgcc.timelogger.timer.presentation.TimerAction
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
 import org.obywatelgcc.timelogger.timer.presentation.components.DateTimePickersView
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
@@ -62,12 +61,11 @@ import kotlin.collections.forEach
 
 
 @Composable
-fun TimeLoggerScreen(
+fun TimerMainScreen(
     calendarState: CalendarState,
     timerState: TimerState,
     titleState: TitleState,
     settingsState: SettingsState,
-    innerPadding: PaddingValues,
     onAction: OnAction
 ) {
     val configuration = LocalConfiguration.current
@@ -77,11 +75,10 @@ fun TimeLoggerScreen(
             timerState,
             titleState,
             settingsState,
-            innerPadding,
             onAction
         )
 
-        else -> TimeLoggerLandscapeScreen(calendarState, timerState, titleState, settingsState, innerPadding, onAction)
+        else -> TimeLoggerLandscapeScreen(calendarState, timerState, titleState, settingsState, onAction)
     }
 }
 
@@ -91,12 +88,10 @@ private fun TimeLoggerPortraitScreen(
     timerState: TimerState,
     titleState: TitleState,
     settingsState: SettingsState,
-    innerPadding: PaddingValues,
     onAction: OnAction
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(innerPadding),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val calendars = calendarState.availableCalendars
         val selectedCalendar = calendarState.selectedCalendar
@@ -152,12 +147,10 @@ private fun TimeLoggerLandscapeScreen(
     timerState: TimerState,
     titleState: TitleState,
     settingsState: SettingsState,
-    innerPadding: PaddingValues,
     onAction: OnAction
 ) {
 
     Column(
-        modifier = Modifier.padding(innerPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(

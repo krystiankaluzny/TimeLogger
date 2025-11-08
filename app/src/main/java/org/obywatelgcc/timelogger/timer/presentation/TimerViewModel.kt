@@ -24,6 +24,7 @@ import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerStateManager
 import org.obywatelgcc.timelogger.timer.presentation.title.TitleState
 import org.obywatelgcc.timelogger.timer.presentation.title.TitleStateManager
+import org.obywatelgcc.timelogger.utils.logDebug
 
 class TimerViewModel(
     savedStateHandle: SavedStateHandle,
@@ -80,6 +81,7 @@ class TimerViewModel(
         }
 
     private suspend fun initData() {
+        logDebug("initData")
         calendarStateManager.init(
             calendarRepository.findAllCalendars(),
             calendarRepository.findAllEventColors()

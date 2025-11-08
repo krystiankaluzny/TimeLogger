@@ -10,13 +10,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.obywatelgcc.timelogger.timer.presentation.TimerViewModel
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 class MainActivity : ComponentActivity() {
-
-    private val viewModel: TimerViewModel by viewModel()
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
@@ -30,7 +26,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TimeLoggerTheme {
-                MainScreen(viewModel)
+                MainScreen()
             }
         }
     }
