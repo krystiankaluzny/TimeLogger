@@ -57,7 +57,7 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.datastore.preferences)
     implementation(libs.compose.date.picker)
-    implementation(libs.compose.charts)
+    implementation(libs.vico.compose.m3)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
