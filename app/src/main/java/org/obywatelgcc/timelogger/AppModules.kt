@@ -16,14 +16,14 @@ val appModule = module {
     singleOf(::DataStoreManager)
     singleOf(::SnackbarMessageBus)
     singleOf(::CalendarRepositoryImpl) { bind<CalendarRepository>() }
-    viewModelOf(::TimerViewModel)
-    viewModelOf(::StatisticsViewModel)
+    singleOf(::TimerViewModel)
+    singleOf(::StatisticsViewModel)
 }
 
 val testAppModule = module {
     singleOf(::DataStoreManager)
     singleOf(::SnackbarMessageBus)
     singleOf(::TestCalendarRepositoryImpl) { bind<CalendarRepository>() }
-    viewModelOf(::TimerViewModel)
-    viewModelOf(::StatisticsViewModel)
+    singleOf(::TimerViewModel)
+    singleOf(::StatisticsViewModel)
 }
