@@ -48,9 +48,20 @@ class StatisticsStateManager(
                 StatisticItem(it.key, it.value.totalDuration, it.value.color)
             }
 
+        val sorted = statisticItems.sortedByDescending { it.totalDuration }
+
+        val result = if(sorted.size > 5) {
+            val othersDuration = sorted.subList(4, sorted.size)
+                .fold(Duration.ZERO) { acc, item -> acc.plus(item.totalDuration) }
+
+            sorted.subList(0, 4) + StatisticItem("Others", othersDuration, sorted[4].color)
+        } else {
+            sorted
+        }
+
         state.update {
             it.copy(
-                statisticItems = statisticItems
+                statisticItems = result
             )
         }
     }
