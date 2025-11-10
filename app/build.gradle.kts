@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "org.obywatelgcc.timelogger"
-        minSdk = 26
+        minSdk = 31
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -57,7 +57,6 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.datastore.preferences)
     implementation(libs.compose.date.picker)
-    implementation(libs.vico.compose.m3)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

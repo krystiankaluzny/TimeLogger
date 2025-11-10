@@ -13,7 +13,6 @@ kotlinxSerializationJson = "1.8.0"
 koin = "4.0.4"
 datastore = "1.1.7"
 datePicker = "1.2.0"
-vico = "2.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,7 +40,6 @@ koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compos
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 compose-date-picker = { group = "io.github.rexmtorres.android", name = "composedatepicker", version.ref = "datePicker" }
-vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
