@@ -23,7 +23,6 @@ class TimerStateManager(
     initialState: TimerState
 ) : BaseStateManager<TimerState>(coroutineScope, savedStateHandle, dataStoreManager, initialState) {
 
-
     private val tickerDelayMs = 1000L
 
     private val timerEventPreferences = jsonDataStoreStateFlow("timerEventPreferences_v4", TimerEventPreferences())
@@ -34,7 +33,6 @@ class TimerStateManager(
         state.update { it.copy(startDateTime = now, endDateTime = now) }
 
         timerEventPreferences.loadFormDataStore()
-
         if (timerEventPreferences.value.endDateTime < timerEventPreferences.value.startDateTime) {
             timerEventPreferences.edit { preferences ->
                 preferences.copy(
@@ -99,6 +97,7 @@ class TimerStateManager(
 
         timerEventPreferences.edit { preferences ->
             preferences.copy(
+                timerRunningState = state.value.runningState,
                 startDateTime = state.value.startDateTime,
                 endDateTime = state.value.endDateTime
             )

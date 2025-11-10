@@ -1,7 +1,6 @@
 package org.obywatelgcc.timelogger
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,7 +23,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -40,7 +38,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -49,13 +46,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navigation
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.obywatelgcc.timelogger.core.presentation.SnackbarMessageBus
 import org.obywatelgcc.timelogger.core.presentation.components.ObserveAsEvents
 import org.obywatelgcc.timelogger.settings.SettingsScreen
 import org.obywatelgcc.timelogger.statistics.StatisticsScreen
-import org.obywatelgcc.timelogger.timer.presentation.TimerEffect
 import org.obywatelgcc.timelogger.timer.presentation.TimerScreen
 import org.obywatelgcc.timelogger.timer.presentation.components.Clock
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme

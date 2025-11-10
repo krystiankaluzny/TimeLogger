@@ -37,21 +37,16 @@ class StatisticsStateManager(
                     min(event.timeRange.to, queryTimeRange.to)
                 )
 
-                logDebug("eventDuration: $eventDuration")
                 if (!eventDuration.isNegative) {
                     dataHolder.totalDuration = dataHolder.totalDuration.plus(eventDuration)
                     dataHolder.color = event.color
                 }
-
-                logDebug("acc: $acc")
 
                 dataHolder
             }
             .map {
                 StatisticItem(it.key, it.value.totalDuration, it.value.color)
             }
-
-        logDebug("statisticItems: $statisticItems")
 
         state.update {
             it.copy(

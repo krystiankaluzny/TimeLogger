@@ -12,8 +12,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
 import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
 import org.obywatelgcc.timelogger.statistics.components.chart.BarChart
+import org.obywatelgcc.timelogger.statistics.components.chart.BarChartProperties
 import org.obywatelgcc.timelogger.statistics.components.chart.model.Data
 import org.obywatelgcc.timelogger.statistics.components.chart.model.DurationScale
+import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 @Composable
 fun StatisticsScreen() {
@@ -50,7 +52,13 @@ fun StatisticsScreen() {
                     modifier = Modifier
                         .padding(horizontal = 22.dp),
                     data = data,
-                    scale = DurationScale()
+                    scale = DurationScale(),
+                    properties = BarChartProperties.of(
+                        textColor = TimeLoggerTheme.colorScheme.onSurface,
+                        axisLineColor = TimeLoggerTheme.colorScheme.onSurface
+                    ).copy(
+                        barValueTextInsideBar = false
+                    )
                 )
             } else {
                 Text(text = "No data")

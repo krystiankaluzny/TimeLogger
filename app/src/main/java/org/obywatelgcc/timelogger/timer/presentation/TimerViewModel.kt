@@ -54,6 +54,10 @@ class TimerViewModel(
     private val _effectsChannel = Channel<TimerEffect>()
     val effectsFlow = _effectsChannel.receiveAsFlow()
 
+    override fun onCleared() {
+        logDebug("onCleared")
+    }
+
     fun onAction(action: TimerAction) =
         when (action) {
             is TimerAction.SelectCalendar -> calendarStateManager.selectCalendar(action.calendar)

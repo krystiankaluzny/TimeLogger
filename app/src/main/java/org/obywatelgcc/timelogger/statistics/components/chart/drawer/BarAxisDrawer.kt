@@ -27,7 +27,8 @@ interface BarAxisDrawer<T> {
     fun drawValueAxis(
         drawScope: DrawScope,
         canvas: Canvas,
-        valueAxisArea: Rect
+        valueAxisArea: Rect,
+        barDrawableArea: Rect
     )
 }
 
@@ -41,6 +42,11 @@ class SimpleBarAxisDrawer<T>(
     private val axisLinePaint = Paint().apply {
         isAntiAlias = true
         color = axisLineColor
+        style = PaintingStyle.Stroke
+    }
+    private val gridLinePaint = Paint().apply {
+        isAntiAlias = true
+        color = axisLineColor.copy(alpha = 0.3f)
         style = PaintingStyle.Stroke
     }
     private val textPaint = android.graphics.Paint().apply {
@@ -62,14 +68,8 @@ class SimpleBarAxisDrawer<T>(
         val y = baseAxisArea.top + (lineThickness / 2f)
 
         canvas.drawLine(
-            p1 = Offset(
-                x = baseAxisArea.left,
-                y = y
-            ),
-            p2 = Offset(
-                x = baseAxisArea.right,
-                y = y
-            ),
+            p1 = Offset(x = baseAxisArea.left, y = y),
+            p2 = Offset(x = baseAxisArea.right, y = y),
             paint = axisLinePaint.apply {
                 strokeWidth = lineThickness
             }
@@ -79,10 +79,11 @@ class SimpleBarAxisDrawer<T>(
     override fun drawValueAxis(
         drawScope: DrawScope,
         canvas: Canvas,
-        valueAxisArea: Rect
+        valueAxisArea: Rect,
+        barDrawableArea: Rect
     ) {
         drawAxisLine(drawScope, canvas, valueAxisArea)
-        drawAxisLabels(drawScope, canvas, valueAxisArea)
+        drawAxisLabels(drawScope, canvas, valueAxisArea, barDrawableArea)
     }
 
     fun drawAxisLine(drawScope: DrawScope, canvas: Canvas, valueAxisArea: Rect) = with(drawScope) {
@@ -90,22 +91,17 @@ class SimpleBarAxisDrawer<T>(
         val x = valueAxisArea.right - (lineThickness / 2f)
 
         canvas.drawLine(
-            p1 = Offset(
-                x = x,
-                y = valueAxisArea.top
-            ),
-            p2 = Offset(
-                x = x,
-                y = valueAxisArea.bottom
-            ),
+            p1 = Offset(x = x, y = valueAxisArea.top),
+            p2 = Offset(x = x, y = valueAxisArea.bottom),
             paint = axisLinePaint.apply {
                 strokeWidth = lineThickness
             }
         )
     }
 
-    fun drawAxisLabels(drawScope: DrawScope, canvas: Canvas, valueAxisArea: Rect) =
+    fun drawAxisLabels(drawScope: DrawScope, canvas: Canvas, valueAxisArea: Rect, barDrawableArea: Rect) =
         with(drawScope) {
+            val lineThickness = axisLineThickness.toPx()
             val ticks = scale.ticksInSpaceSegment(Scale.SpaceSegment(valueAxisArea.bottom, valueAxisArea.top))
 
             val labelPaint = textPaint.apply {
@@ -117,10 +113,19 @@ class SimpleBarAxisDrawer<T>(
                 val label = scale.valueToString(tick.value)
                 labelPaint.getTextBounds(label, 0, label.length, textBounds)
 
-                val x = valueAxisArea.right - axisLineThickness.toPx() - (labelTextSize.toPx() / 2f)
-                val y = tick.spaceVale + (textBounds.height() / 2f)
+                val tickX = valueAxisArea.right - axisLineThickness.toPx()
+                val tickY = tick.spaceVale
+                val textX = tickX - (labelTextSize.toPx() / 2f)
+                val textY =tickY + (textBounds.height() / 2f)
 
-                canvas.nativeCanvas.drawText(label, x, y, labelPaint)
+                canvas.nativeCanvas.drawText(label, textX, textY, labelPaint)
+                canvas.drawLine(
+                    p1 = Offset(x = barDrawableArea.left, y = tickY),
+                    p2 = Offset(x = barDrawableArea.right, y = tickY),
+                    paint = gridLinePaint.apply {
+                        strokeWidth = lineThickness
+                    }
+                )
             }
         }
 }

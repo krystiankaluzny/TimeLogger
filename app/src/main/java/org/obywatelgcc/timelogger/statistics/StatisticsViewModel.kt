@@ -46,6 +46,8 @@ class StatisticsViewModel(
             calendarRepository.findAllCalendars()
         )
         _initialized.update { true }
+
+        onAction(StatisticsAction.SelectCalendar(statisticsCalendarState.value.selectedCalendar))
     }
 
     fun onAction(action: StatisticsAction) = when (action) {

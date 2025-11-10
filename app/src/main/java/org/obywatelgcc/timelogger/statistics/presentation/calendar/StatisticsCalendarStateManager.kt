@@ -60,7 +60,6 @@ class StatisticsCalendarStateManager(
     }
 }
 
-
 @Serializable
 private data class StatisticsCalendarPreferences(
     val calendars: List<Calendar> = mutableListOf<Calendar>(),

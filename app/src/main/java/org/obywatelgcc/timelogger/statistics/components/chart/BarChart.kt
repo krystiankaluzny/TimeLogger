@@ -13,11 +13,15 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.obywatelgcc.timelogger.statistics.components.chart.drawer.BarAxisDrawer
 import org.obywatelgcc.timelogger.statistics.components.chart.drawer.BarDrawer
 import org.obywatelgcc.timelogger.statistics.components.chart.drawer.SimpleBarAxisDrawer
@@ -30,16 +34,31 @@ fun <T> BarChart(
     modifier: Modifier = Modifier,
     data: List<Data<T>>,
     scale: Scale<T>,
-    animation: AnimationSpec<Float> = TweenSpec<Float>(durationMillis = 3000),
-    barHorizontalMargin: Dp = 3.dp
+    animation: AnimationSpec<Float> = TweenSpec<Float>(durationMillis = 2000),
+    properties: BarChartProperties = BarChartProperties()
 ) {
     val transitionAnimation = remember(data) { Animatable(initialValue = 0f) }
     val rectangles = remember(data) { mutableStateMapOf<Data<T>, Rect>() }
 
     scale.adjust(data)
 
-    val barDrawer = SimpleBarDrawer<T>(scale)
-    val axisDrawer = SimpleBarAxisDrawer<T>(scale)
+    val barDrawer = SimpleBarDrawer<T>(
+        scale = scale,
+        labelTextSize = properties.labelTextSize,
+        labelTextColor = properties.labelTextColor,
+        valueTextSize = properties.barValueTextSize,
+        valueTextColor = properties.barValueTextColor,
+        valueDrawLocation =
+            if (properties.barValueTextInsideBar) SimpleBarDrawer.ValueDrawLocation.Inside
+            else SimpleBarDrawer.ValueDrawLocation.Outside
+    )
+    val axisDrawer = SimpleBarAxisDrawer<T>(
+        scale = scale,
+        axisLineThickness = properties.axisLineThickness,
+        axisLineColor = properties.axisLineColor,
+        labelTextSize = properties.tickerTextSize,
+        labelTextColor = properties.tickerTextColor
+    )
 
     LaunchedEffect(data) {
         transitionAnimation.animateTo(1f, animationSpec = animation)
@@ -60,7 +79,7 @@ fun <T> BarChart(
             val chartAreas = calculateChartAreas(this, barDrawer, axisDrawer)
 
             axisDrawer.drawBaseAxis(this, canvas, chartAreas.baseAxisArea)
-            axisDrawer.drawValueAxis(this, canvas, chartAreas.valueAxisArea)
+            axisDrawer.drawValueAxis(this, canvas, chartAreas.valueAxisArea, chartAreas.barDrawableArea)
 
             forEachWithArea(
                 data,
@@ -68,7 +87,7 @@ fun <T> BarChart(
                 chartAreas.barDrawableArea,
                 scale,
                 transitionAnimation.value,
-                barHorizontalMargin
+                properties.barHorizontalMargin
             ) { barArea, barData ->
                 barDrawer.draw(this, canvas, barData, barArea)
                 rectangles[barData] = barArea
@@ -132,5 +151,33 @@ private fun <T> forEachWithArea(
             bottom = barDrawableArea.bottom - barSegment.from
         )
         block(barArea, data)
+    }
+}
+
+data class BarChartProperties(
+    val axisLineThickness: Dp = 1.dp,
+    val axisLineColor: Color = Black,
+
+    val tickerTextSize: TextUnit = 12.sp,
+    val tickerTextColor: Color = Black,
+
+    val labelTextSize: TextUnit = 12.sp,
+    val labelTextColor: Color = Black,
+
+    val barValueTextSize: TextUnit = 14.sp,
+    val barValueTextColor: Color = Black,
+    val barValueTextInsideBar: Boolean = true,
+
+    val barHorizontalMargin: Dp = 3.dp
+) {
+    companion object {
+        fun of(textColor: Color, axisLineColor: Color): BarChartProperties {
+            return BarChartProperties(
+                tickerTextColor = textColor,
+                labelTextColor = textColor,
+                barValueTextColor = textColor,
+                axisLineColor = axisLineColor
+            )
+        }
     }
 }

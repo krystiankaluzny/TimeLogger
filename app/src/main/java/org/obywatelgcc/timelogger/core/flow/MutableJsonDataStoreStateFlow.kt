@@ -7,10 +7,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
+import org.obywatelgcc.timelogger.utils.logDebug
 import kotlin.reflect.KType
 
 class MutableJsonDataStoreStateFlow<T>(
@@ -24,6 +27,8 @@ class MutableJsonDataStoreStateFlow<T>(
     private val _state: MutableStateFlow<T> = MutableStateFlow<T>(defaultValue)
 
 ) : Flow<T> by _state {
+    private val mutex = Mutex()
+
     var value: T
         get() = _state.value
         set(value) {
@@ -39,9 +44,11 @@ class MutableJsonDataStoreStateFlow<T>(
 
     fun edit(map: suspend (T) -> T) {
         coroutineScope.launch {
-            val newValue = map(_state.value)
-            _state.value = newValue
-            dataStoreManager.saveAsJson(key, newValue, kSerializer)
+            mutex.withLock {
+                val newValue = map(_state.value)
+                _state.value = newValue
+                dataStoreManager.saveAsJson(key, newValue, kSerializer)
+            }
         }
     }
 
