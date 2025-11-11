@@ -9,7 +9,6 @@ import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsState.StatisticItem
-import org.obywatelgcc.timelogger.utils.logDebug
 import java.time.Duration
 import java.time.ZonedDateTime
 

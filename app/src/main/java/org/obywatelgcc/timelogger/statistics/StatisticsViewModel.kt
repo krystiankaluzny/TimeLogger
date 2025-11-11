@@ -13,13 +13,15 @@ import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.model.CalendarRepository
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
-import org.obywatelgcc.timelogger.statistics.presentation.calendar.StatisticsCalendarState
-import org.obywatelgcc.timelogger.statistics.presentation.calendar.StatisticsCalendarStateManager
+import org.obywatelgcc.timelogger.statistics.presentation.filter.FilterState
+import org.obywatelgcc.timelogger.statistics.presentation.filter.FilterStateManager
+import org.obywatelgcc.timelogger.statistics.presentation.filter.FilterTimeRangeType
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsState
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsStateManager
 import org.obywatelgcc.timelogger.utils.logDebug
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import java.time.temporal.WeekFields
 
 class StatisticsViewModel(
     savedStateHandle: SavedStateHandle,
@@ -27,8 +29,8 @@ class StatisticsViewModel(
     private val calendarRepository: CalendarRepository
 ) : ViewModel() {
 
-    private val statisticsCalendarStateManager =
-        StatisticsCalendarStateManager(viewModelScope, savedStateHandle, dataSoreManager, StatisticsCalendarState())
+    private val filterStateManager =
+        FilterStateManager(viewModelScope, savedStateHandle, dataSoreManager, FilterState())
     private val statisticsStateManager =
         StatisticsStateManager(viewModelScope, savedStateHandle, dataSoreManager, StatisticsState())
 
@@ -37,22 +39,22 @@ class StatisticsViewModel(
         .onStart { initData() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    val statisticsCalendarState = statisticsCalendarStateManager.state.asStateFlow()
+    val filterState = filterStateManager.state.asStateFlow()
     val statisticsState = statisticsStateManager.state.asStateFlow()
 
     private suspend fun initData() {
         logDebug("initData")
-        statisticsCalendarStateManager.init(
+        filterStateManager.init(
             calendarRepository.findAllCalendars()
         )
         _initialized.update { true }
 
-        onAction(StatisticsAction.SelectCalendar(statisticsCalendarState.value.selectedCalendar))
+        onAction(StatisticsAction.SelectTimeRangeType(filterState.value.timeRangeType))
     }
 
     fun onAction(action: StatisticsAction) = when (action) {
         is StatisticsAction.SelectCalendar -> {
-            statisticsCalendarStateManager.selectCalendar(action.calendar)
+            filterStateManager.selectCalendar(action.calendar)
 
             val now = ZonedDateTime.now()
             val beginningOfDay = now.truncatedTo(ChronoUnit.DAYS).minusDays(1L)
@@ -61,6 +63,26 @@ class StatisticsViewModel(
             viewModelScope.launch {
                 val events = calendarRepository.findEventsInTimeRange(action.calendar, queryTimeRange)
                 statisticsStateManager.recalculate(queryTimeRange, events)
+            }
+        }
+
+        is StatisticsAction.SelectTimeRangeType -> {
+            filterStateManager.selectTimeRangeType(action.type)
+
+            viewModelScope.launch {
+                filterState.collect {
+                    val now = ZonedDateTime.now()
+                    val from = when(it.timeRangeType) {
+                        FilterTimeRangeType.DAY -> now.truncatedTo(ChronoUnit.DAYS)
+                        FilterTimeRangeType.WEEK -> now.with(WeekFields.ISO.firstDayOfWeek).truncatedTo(ChronoUnit.DAYS)
+                        FilterTimeRangeType.MONTH -> now.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
+                    }
+
+                    val queryTimeRange = ZonedDateTimeRange(from, now)
+
+                    val events = calendarRepository.findEventsInTimeRange(it.selectedCalendar, queryTimeRange)
+                    statisticsStateManager.recalculate(queryTimeRange, events)
+                }
             }
         }
     }

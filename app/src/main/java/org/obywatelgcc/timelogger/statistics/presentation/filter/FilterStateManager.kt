@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.statistics.presentation.calendar
+package org.obywatelgcc.timelogger.statistics.presentation.filter
 
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
@@ -9,12 +9,12 @@ import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
 import org.obywatelgcc.timelogger.utils.logInfo
 
-class StatisticsCalendarStateManager(
+class FilterStateManager(
     coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
     dataStoreManager: DataStoreManager,
-    initialState: StatisticsCalendarState
-) : BaseStateManager<StatisticsCalendarState>(
+    initialState: FilterState
+) : BaseStateManager<FilterState>(
     coroutineScope,
     savedStateHandle,
     dataStoreManager,
@@ -22,25 +22,25 @@ class StatisticsCalendarStateManager(
 ) {
 
     private val calendarPreferencesKey = "calendarStatisticsPreferences"
-    private var statisticsCalendarPreferences =
-        jsonDataStoreStateFlow(calendarPreferencesKey, StatisticsCalendarPreferences())
+    private var filterPreferences =
+        jsonDataStoreStateFlow(calendarPreferencesKey, FilterPreferences())
 
     suspend fun init(calendars: List<Calendar>) {
         logInfo("init")
 
-        statisticsCalendarPreferences.loadFormDataStore()
+        filterPreferences.loadFormDataStore()
         updatePreferences(calendars)
 
         state.update {
             it.copy(
                 availableCalendars = calendars,
-                selectedCalendar = statisticsCalendarPreferences.value.selectedCalendar,
+                selectedCalendar = filterPreferences.value.selectedCalendar,
             )
         }
     }
 
     fun selectCalendar(calendar: Calendar) {
-        statisticsCalendarPreferences.edit { pref ->
+        filterPreferences.edit { pref ->
             pref.selectedCalendar = calendar
             pref
         }
@@ -50,7 +50,7 @@ class StatisticsCalendarStateManager(
 
 
     private fun updatePreferences(calendars: List<Calendar>) {
-        statisticsCalendarPreferences.edit { pref ->
+        filterPreferences.edit { pref ->
             if (!calendars.contains(pref.selectedCalendar)) {
                 pref.selectedCalendar = calendars.getOrElse(0, { Calendar.Empty })
             }
@@ -58,10 +58,19 @@ class StatisticsCalendarStateManager(
             pref
         }
     }
+
+    fun selectTimeRangeType(type: FilterTimeRangeType) {
+        return state.update { it.copy(timeRangeType = type) }
+        filterPreferences.edit { pref ->
+            pref.timeRangeType = type
+            pref
+        }
+    }
 }
 
 @Serializable
-private data class StatisticsCalendarPreferences(
+private data class FilterPreferences(
     val calendars: List<Calendar> = mutableListOf<Calendar>(),
-    var selectedCalendar: Calendar = Calendar.Empty
+    var selectedCalendar: Calendar = Calendar.Empty,
+    var timeRangeType: FilterTimeRangeType = FilterTimeRangeType.DAY
 )

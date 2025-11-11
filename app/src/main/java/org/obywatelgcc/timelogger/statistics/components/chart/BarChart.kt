@@ -34,7 +34,7 @@ fun <T> BarChart(
     modifier: Modifier = Modifier,
     data: List<Data<T>>,
     scale: Scale<T>,
-    animation: AnimationSpec<Float> = TweenSpec<Float>(durationMillis = 2000),
+    animation: AnimationSpec<Float> = TweenSpec<Float>(durationMillis = 1000),
     properties: BarChartProperties = BarChartProperties()
 ) {
     val transitionAnimation = remember(data) { Animatable(initialValue = 0f) }
