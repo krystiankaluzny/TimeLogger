@@ -31,22 +31,21 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navigation
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.obywatelgcc.timelogger.core.presentation.SnackbarMessageBus
@@ -81,6 +80,7 @@ fun MainScreen() {
     val snackbarMessageBus = koinInject<SnackbarMessageBus>()
 
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val appName = stringResource(id = R.string.app_name)
@@ -92,7 +92,7 @@ fun MainScreen() {
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            DrawerContent(navController, appName, drawerState, navItems)
+            DrawerContent(navController, appName, drawerState, navItems, navBackStackEntry)
         }
     ) {
         Scaffold(
@@ -109,7 +109,8 @@ fun DrawerContent(
     navController: NavHostController,
     appName: String,
     drawerState: DrawerState,
-    navigationItems: List<NavigationItem>
+    navigationItems: List<NavigationItem>,
+    navBackStackEntry: NavBackStackEntry?
 ) {
     val scope = rememberCoroutineScope()
 
@@ -132,17 +133,14 @@ fun DrawerContent(
         HorizontalDivider()
         Spacer(Modifier.height(12.dp))
 
-        var selectedItemIndex by rememberSaveable { mutableIntStateOf(0) }
-
-        navigationItems.forEachIndexed { index, item ->
+        navigationItems.forEach { item ->
+            val isSelected = navBackStackEntry?.destination?.hasRoute(item.destiny::class) == true
             NavigationDrawerItem(
                 icon = { Icon(item.icon, contentDescription = item.title) },
                 label = { Text(text = item.title) },
-                selected = (index == selectedItemIndex),
+                selected = isSelected,
                 onClick = {
-                    if (index != selectedItemIndex) navController.navigate(item.destiny)
-
-                    selectedItemIndex = index
+                    if (!isSelected) navController.navigate(item.destiny)
                     scope.launch {
                         if (drawerState.isOpen) drawerState.close()
                     }
