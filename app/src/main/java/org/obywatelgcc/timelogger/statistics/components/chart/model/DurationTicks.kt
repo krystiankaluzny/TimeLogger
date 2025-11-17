@@ -6,13 +6,18 @@ import java.time.temporal.ChronoUnit
 private class TimeInterval(
     val units: ChronoUnit,
     private val floor: (Duration) -> Duration,
-    private val offset: (Duration, Long) -> Duration
+    private val offset: (Duration, Long) -> Duration,
+    private val value: (Duration) -> Long
 ) {
     fun range(start: Duration, stop: Duration, step: Long): List<Duration> {
         val ticks = mutableListOf<Duration>()
         var time = floor(start)
-        if (time > start) {
-            time = offset(time, -1)
+        if (time < start) {
+            time = offset(time, 1)
+        }
+
+        while (value(time) % step != 0L) {
+            time = offset(time, 1)
         }
 
         while (time <= stop) {
@@ -26,27 +31,32 @@ private class TimeInterval(
 private val timeMillisecond = TimeInterval(
     units = ChronoUnit.MILLIS,
     floor = { it.truncatedTo(ChronoUnit.MILLIS) },
-    offset = { date, step -> date.plusMillis(step) }
+    offset = { date, step -> date.plusMillis(step) },
+    value = { it.toMillis() }
 )
 private val timeSecond = TimeInterval(
     units = ChronoUnit.SECONDS,
     floor = { it.truncatedTo(ChronoUnit.SECONDS) },
-    offset = { date, step -> date.plusSeconds(step) }
+    offset = { date, step -> date.plusSeconds(step) },
+    value = { it.seconds }
 )
 private val timeMinute = TimeInterval(
     units = ChronoUnit.MINUTES,
     floor = { it.truncatedTo(ChronoUnit.MINUTES) },
-    offset = { date, step -> date.plusMinutes(step) }
+    offset = { date, step -> date.plusMinutes(step) },
+    value = { it.toMinutes() }
 )
 private val timeHour = TimeInterval(
     units = ChronoUnit.HOURS,
     floor = { it.truncatedTo(ChronoUnit.HOURS) },
-    offset = { date, step -> date.plusHours(step) }
+    offset = { date, step -> date.plusHours(step) },
+    value = { it.toHours() }
 )
 private val timeDay = TimeInterval(
     units = ChronoUnit.DAYS,
     floor = { it.truncatedTo(ChronoUnit.DAYS) },
-    offset = { date, step -> date.plusDays(step) }
+    offset = { date, step -> date.plusDays(step) },
+    value = { it.toDays() }
 )
 
 private val tickIntervals = listOf(

@@ -1,7 +1,5 @@
 package org.obywatelgcc.timelogger.statistics.components.chart.model
 
-import android.util.Log
-import org.obywatelgcc.timelogger.utils.logDebug
 import java.time.Duration
 import java.util.Locale
 
@@ -16,6 +14,8 @@ class DurationScale(
     }
 
     override fun adjust(data: List<Data<Duration>>) {
+        if (domain != DEFAULT_DOMAIN) return
+
         val min = data.minByOrNull { it.value } ?: EMPTY_DATA
         val max = data.maxByOrNull { it.value } ?: EMPTY_DATA
 
@@ -74,8 +74,7 @@ class DurationScale(
             )
         }
 
-        logDebug("scaleToSpaceSegment: data: $data, targetSpaceSegment: $targetSpaceSegment, result: $result")
-        return  if (targetInverted) result.invert() else result
+        return if (targetInverted) result.invert() else result
     }
 
     private fun scaleValuesToSpaceSegment(
