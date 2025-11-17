@@ -53,6 +53,7 @@ import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
 import org.obywatelgcc.timelogger.timer.presentation.title.TitleState
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
+import java.time.temporal.ChronoUnit
 import kotlin.collections.forEach
 
 
@@ -115,7 +116,7 @@ private fun TimeLoggerPortraitScreen(
                 onAction
             )
             HorizontalDivider()
-            DurationView(timerState.durationStr)
+            DurationView(timerState.durationStr, onAction)
         }
 
         HorizontalDivider()
@@ -185,7 +186,7 @@ private fun TimeLoggerLandscapeScreen(
                     onAction
                 )
                 HorizontalDivider()
-                DurationView(timerState.durationStr)
+                DurationView(timerState.durationStr, onAction)
             }
 
             Column(
@@ -425,12 +426,42 @@ private fun ExposedDropdownMenuBoxScope.ColorHolder(
 }
 
 @Composable
-private fun DurationView(durationStr: String) {
+private fun DurationView(durationStr: String, onAction: OnAction) {
     Text(
         text = "Duration: $durationStr",
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
         fontSize = 20.sp
     )
+
+    val buttonModifier = Modifier
+        .padding(horizontal = 3.dp)
+
+    val buttonElevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp)
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        val offsets = listOf(5L, 1L)
+        offsets.forEach { offset ->
+            ElevatedButton(
+                modifier = buttonModifier,
+                onClick = { onAction(TimerAction.OffsetStartTime(offset, ChronoUnit.MINUTES)) },
+                elevation = buttonElevation
+            ) {
+                Text(text = "-${offset}m")
+            }
+        }
+
+        offsets.reversed().forEach { offset ->
+            ElevatedButton(
+                modifier = buttonModifier,
+                onClick = { onAction(TimerAction.OffsetStartTime(-offset, ChronoUnit.MINUTES)) },
+                elevation = buttonElevation
+            ) {
+                Text(text = "+${offset}m")
+            }
+        }
+    }
+
+    Spacer(Modifier.height(8.dp))
 }
 
 @Composable

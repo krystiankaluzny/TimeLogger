@@ -6,6 +6,7 @@ import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState.Savi
 import org.obywatelgcc.timelogger.timer.presentation.title.TitleState.Suggestion
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 
 sealed interface TimerAction {
     data class SelectCalendar(val calendar: Calendar) : TimerAction
@@ -21,6 +22,7 @@ sealed interface TimerAction {
     data class UpdateStartTime(val time: LocalTime) : TimerAction
     data class UpdateEndDate(val date: LocalDate) : TimerAction
     data class UpdateEndTime(val time: LocalTime) : TimerAction
+    data class OffsetStartTime(val value: Long, val unit: ChronoUnit) : TimerAction
 
     data class UpdateSavingType(val newSavingType: SavingType) : TimerAction
 

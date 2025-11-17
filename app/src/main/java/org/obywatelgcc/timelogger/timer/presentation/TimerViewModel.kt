@@ -80,6 +80,7 @@ class TimerViewModel(
             is TimerAction.UpdateStartTime -> timerStateManager.updateStartTime(action.time)
             is TimerAction.UpdateEndDate -> timerStateManager.updateEndDate(action.date)
             is TimerAction.UpdateEndTime -> timerStateManager.updateEndTime(action.time)
+            is TimerAction.OffsetStartTime -> timerStateManager.offsetStartTime(action.value, action.unit)
             is TimerAction.UpdateSavingType -> settingsStateManager.updateSavingType(action.newSavingType)
             TimerAction.TrySave -> trySave()
         }

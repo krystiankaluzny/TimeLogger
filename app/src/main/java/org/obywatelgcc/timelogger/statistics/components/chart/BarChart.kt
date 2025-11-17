@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
@@ -87,7 +88,7 @@ fun <T> BarChart(
                 chartAreas.barDrawableArea,
                 scale,
                 transitionAnimation.value,
-                properties.barHorizontalMargin
+                properties.barPadding
             ) { barArea, barData ->
                 barDrawer.draw(this, canvas, barData, barArea)
                 rectangles[barData] = barArea
@@ -131,12 +132,12 @@ private fun <T> forEachWithArea(
     barDrawableArea: Rect,
     scale: Scale<T>,
     progress: Float,
-    barHorizontalMargin: Dp,
+    barPadding: Dp,
     block: (barArea: Rect, data: Data<T>) -> Unit
 ) = with(drawScope) {
     val totalBars = barsData.size
     val widthOfBarArea = barDrawableArea.width / totalBars
-    val barGapPx = barHorizontalMargin.toPx()
+    val barGapPx = barPadding.toPx()
 
     barsData.forEachIndexed { index, data ->
         val barSegment =
@@ -168,7 +169,8 @@ data class BarChartProperties(
     val barValueTextColor: Color = Black,
     val barValueTextInsideBar: Boolean = true,
 
-    val barHorizontalMargin: Dp = 3.dp
+    val barPadding: Dp = 3.dp,
+    val barWidth: Dp = 100.dp
 ) {
     companion object {
         fun of(textColor: Color, axisLineColor: Color): BarChartProperties {

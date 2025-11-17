@@ -144,6 +144,11 @@ class TimerStateManager(
     private fun currentLocalDateTime(): LocalDateTime {
         return LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     }
+
+    fun offsetStartTime(value: Long, unit: ChronoUnit) {
+        state.update { it.copy(startDateTime = it.startDateTime.plus(value, unit)) }
+        timerEventPreferences.edit { preferences -> preferences.copy(startDateTime = state.value.startDateTime) }
+    }
 }
 
 

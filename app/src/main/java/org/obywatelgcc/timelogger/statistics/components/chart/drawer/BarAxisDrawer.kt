@@ -116,7 +116,7 @@ class SimpleBarAxisDrawer<T>(
                 val tickX = valueAxisArea.right - axisLineThickness.toPx()
                 val tickY = tick.spaceVale
                 val textX = tickX - (labelTextSize.toPx() / 2f)
-                val textY =tickY + (textBounds.height() / 2f)
+                val textY = tickY + (textBounds.height() / 2f)
 
                 canvas.nativeCanvas.drawText(label, textX, textY, labelPaint)
                 canvas.drawLine(
