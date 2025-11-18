@@ -55,7 +55,7 @@ class DurationScale(
         val zeroValueMs = 0.0
 
         val targetInverted = targetSpaceSegment.isInverted()
-        val spaceSegment = if (targetInverted) targetSpaceSegment.invert() else targetSpaceSegment
+        val spaceSegment = targetSpaceSegment
 
         val (dataLocation, zeroLocation) = scaleValuesToSpaceSegment(
             spaceSegment,
@@ -63,18 +63,33 @@ class DurationScale(
         )
 
         val result = if (zeroValueMs < dataValueMs) {
-            Scale.SpaceSegment(
-                from = minOf(maxOf(spaceSegment.from, zeroLocation), spaceSegment.to),
-                to = minOf(maxOf(spaceSegment.from, dataLocation), spaceSegment.to)
-            )
+            if (targetInverted) {
+                Scale.SpaceSegment(
+                    from = maxOf(minOf(spaceSegment.from, zeroLocation), spaceSegment.to),
+                    to = maxOf(minOf(spaceSegment.from, dataLocation), spaceSegment.to)
+                )
+            } else {
+                Scale.SpaceSegment(
+                    from = minOf(maxOf(spaceSegment.from, zeroLocation), spaceSegment.to),
+                    to = minOf(maxOf(spaceSegment.from, dataLocation), spaceSegment.to)
+                )
+            }
+
         } else {
-            Scale.SpaceSegment(
-                from = minOf(maxOf(spaceSegment.from, dataLocation), spaceSegment.to),
-                to = minOf(maxOf(spaceSegment.from, zeroLocation), spaceSegment.to)
-            )
+            if (targetInverted) {
+                Scale.SpaceSegment(
+                    from = maxOf(minOf(spaceSegment.from, dataLocation), spaceSegment.to),
+                    to = maxOf(minOf(spaceSegment.from, zeroLocation), spaceSegment.to)
+                )
+            } else {
+                Scale.SpaceSegment(
+                    from = minOf(maxOf(spaceSegment.from, dataLocation), spaceSegment.to),
+                    to = minOf(maxOf(spaceSegment.from, zeroLocation), spaceSegment.to)
+                )
+            }
         }
 
-        return if (targetInverted) result.invert() else result
+        return result
     }
 
     private fun scaleValuesToSpaceSegment(

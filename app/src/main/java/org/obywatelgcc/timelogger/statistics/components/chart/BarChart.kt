@@ -29,6 +29,7 @@ import org.obywatelgcc.timelogger.statistics.components.chart.drawer.SimpleBarAx
 import org.obywatelgcc.timelogger.statistics.components.chart.drawer.SimpleBarDrawer
 import org.obywatelgcc.timelogger.statistics.components.chart.model.Data
 import org.obywatelgcc.timelogger.statistics.components.chart.model.Scale
+import kotlin.math.abs
 
 @Composable
 fun <T> BarChart(
@@ -122,7 +123,7 @@ private fun <T> calculateChartAreas(
     return ChartAreas(
         baseAxisArea = Rect(valueAxisRight, baseAxisTop, baseAxisRight, chartSize.height),
         valueAxisArea = Rect(0f, valueAxisTop, valueAxisRight, baseAxisTop),
-        barDrawableArea = Rect(valueAxisRight, 0f, baseAxisRight, baseAxisTop)
+        barDrawableArea = Rect(valueAxisRight, valueAxisTop, baseAxisRight, baseAxisTop)
     )
 }
 
@@ -141,15 +142,16 @@ private fun <T> forEachWithArea(
 
     barsData.forEachIndexed { index, data ->
         val barSegment =
-            scale.scaleToSpaceSegment(data, Scale.SpaceSegment(barDrawableArea.top, barDrawableArea.bottom))
+            scale.scaleToSpaceSegment(data, Scale.SpaceSegment(barDrawableArea.bottom, barDrawableArea.top))
 
+        val barSegmentLength = abs(barSegment.to - barSegment.from)
         val left = barDrawableArea.left + (index * widthOfBarArea)
 
         val barArea = Rect(
             left = left + barGapPx,
             right = left + widthOfBarArea - barGapPx,
-            top = barDrawableArea.bottom - barSegment.to * progress,
-            bottom = barDrawableArea.bottom - barSegment.from
+            top = barSegment.from - barSegmentLength * progress,
+            bottom = barSegment.from
         )
         block(barArea, data)
     }
