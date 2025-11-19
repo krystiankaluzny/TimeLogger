@@ -27,7 +27,7 @@ class DurationScale(
         val maxInMillis = max.value.toMillis()
         val minInMillis = min.value.toMillis()
 
-        val gap = maxInMillis - minInMillis
+        val gap = if(maxInMillis != minInMillis) maxInMillis - minInMillis else minInMillis
 
         domain = Scale.ValueDomain<Duration>(
             Duration.ofMillis(0.0.coerceAtLeast(minInMillis - gap * GAP_SCALE).toLong()),
