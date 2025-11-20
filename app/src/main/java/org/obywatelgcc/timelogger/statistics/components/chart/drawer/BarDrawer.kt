@@ -20,6 +20,7 @@ interface BarDrawer<T> {
         drawScope: DrawScope,
         canvas: Canvas,
         data: Data<T>,
+        dataIndex: Int,
         barArea: Rect
     )
 }
@@ -53,10 +54,11 @@ class SimpleBarDrawer<T>(
         drawScope: DrawScope,
         canvas: Canvas,
         data: Data<T>,
+        dataIndex: Int,
         barArea: Rect
     ) {
         drawBar(canvas, barArea, data)
-        drawLabel(drawScope, canvas, data, barArea)
+        drawLabel(drawScope, canvas, data, dataIndex, barArea)
         drawValue(drawScope, canvas, data, barArea)
     }
 
@@ -66,13 +68,15 @@ class SimpleBarDrawer<T>(
         })
     }
 
-    private fun drawLabel(drawScope: DrawScope, canvas: Canvas, data: Data<T>, barArea: Rect) = with(drawScope) {
-        val xCenter = barArea.left + (barArea.width / 2)
-        val yCenter = barArea.bottom + labelTextHeight(drawScope)
+    private fun drawLabel(drawScope: DrawScope, canvas: Canvas, data: Data<T>, dataIndex: Int, barArea: Rect) =
+        with(drawScope) {
+            val textOffsetFactor = if(dataIndex % 2 == 0)  1.0f else 2.0f
+            val xCenter = barArea.left + (barArea.width / 2)
+            val yCenter = barArea.bottom + textOffsetFactor * labelTextHeight(drawScope)
 
-        val currentLabelPaint = labelPaint.apply { this.textSize = labelTextSize.toPx() }
-        canvas.nativeCanvas.drawText(data.label, xCenter, yCenter, currentLabelPaint)
-    }
+            val currentLabelPaint = labelPaint.apply { this.textSize = labelTextSize.toPx() }
+            canvas.nativeCanvas.drawText(data.label, xCenter, yCenter, currentLabelPaint)
+        }
 
     fun drawValue(drawScope: DrawScope, canvas: Canvas, data: Data<T>, barArea: Rect) =
         with(drawScope) {

@@ -56,7 +56,7 @@ class SimpleBarAxisDrawer<T>(
     private val textBounds = android.graphics.Rect()
 
     override fun baseAxisSafeSpace(drawScope: DrawScope): Float = with(drawScope) {
-        (2f) * (axisLineThickness.toPx() + labelTextSize.toPx())
+        2f * axisLineThickness.toPx() + 4f * labelTextSize.toPx()
     }
 
     override fun valueAxisSafeSpace(drawScope: DrawScope): Float = with(drawScope) {

@@ -7,7 +7,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
@@ -90,8 +89,8 @@ fun <T> BarChart(
                 scale,
                 transitionAnimation.value,
                 properties.barPadding
-            ) { barArea, barData ->
-                barDrawer.draw(this, canvas, barData, barArea)
+            ) { barArea, barData, index ->
+                barDrawer.draw(this, canvas, barData, index, barArea)
                 rectangles[barData] = barArea
             }
         }
@@ -134,7 +133,7 @@ private fun <T> forEachWithArea(
     scale: Scale<T>,
     progress: Float,
     barPadding: Dp,
-    block: (barArea: Rect, data: Data<T>) -> Unit
+    block: (barArea: Rect, data: Data<T>, index: Int) -> Unit
 ) = with(drawScope) {
     val totalBars = barsData.size
     val widthOfBarArea = barDrawableArea.width / totalBars
@@ -153,7 +152,7 @@ private fun <T> forEachWithArea(
             top = barSegment.from - barSegmentLength * progress,
             bottom = barSegment.from
         )
-        block(barArea, data)
+        block(barArea, data, index)
     }
 }
 
