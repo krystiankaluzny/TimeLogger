@@ -149,6 +149,11 @@ class TimerStateManager(
         state.update { it.copy(startDateTime = it.startDateTime.plus(value, unit)) }
         timerEventPreferences.edit { preferences -> preferences.copy(startDateTime = state.value.startDateTime) }
     }
+
+    fun offsetEndTime(value: Long, unit: ChronoUnit) {
+        state.update { it.copy(endDateTime = it.endDateTime.plus(value, unit)) }
+        timerEventPreferences.edit { preferences -> preferences.copy(endDateTime = state.value.endDateTime) }
+    }
 }
 
 

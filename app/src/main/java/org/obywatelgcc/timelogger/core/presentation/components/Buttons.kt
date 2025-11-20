@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
@@ -62,6 +63,10 @@ object CustomButtonDefaults {
         .defaultMinSize(minWidth = ButtonDefaults.MinWidth / 2, minHeight = ButtonDefaults.MinHeight / 2)
         .padding(ButtonDefaults.TextButtonContentPadding)
 
+    val elevatedButtonContentModifier = Modifier
+        .defaultMinSize(minWidth = ButtonDefaults.MinWidth, minHeight = ButtonDefaults.MinHeight)
+        .padding(ButtonDefaults.TextButtonContentPadding)
+
     @Composable
     fun toggleButtonDefaultColors(): ButtonColors {
         return ButtonColors(
@@ -71,6 +76,27 @@ object CustomButtonDefaults {
             TimeLoggerTheme.colorScheme.onSurface.copy(alpha = 0.38f)
         )
     }
+
+    @Composable
+    fun buttonElevation(
+        defaultElevation: Dp = 0.0.dp,
+        pressedElevation: Dp = 0.0.dp,
+        focusedElevation: Dp = 0.0.dp,
+        hoveredElevation: Dp = 1.0.dp,
+        disabledElevation: Dp = 0.0.dp,
+    ): CustomButtonElevation =
+        CustomButtonElevation(defaultElevation, pressedElevation, focusedElevation, hoveredElevation, disabledElevation)
+
+
+    @Composable
+    fun elevatedButtonElevation(
+        defaultElevation: Dp = 1.0.dp,
+        pressedElevation: Dp = 1.0.dp,
+        focusedElevation: Dp = 1.0.dp,
+        hoveredElevation: Dp = 3.0.dp,
+        disabledElevation: Dp = 0.0.dp
+    ): CustomButtonElevation =
+        CustomButtonElevation(defaultElevation, pressedElevation, focusedElevation, hoveredElevation, disabledElevation)
 
     val minimumInteractiveComponentSize = 25.dp
 
@@ -94,7 +120,7 @@ fun Button(
     enabled: Boolean = true,
     shape: Shape = ButtonDefaults.shape,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
-//    elevation: ButtonElevation? = ButtonDefaults.buttonElevation(),
+    elevation: CustomButtonElevation? = CustomButtonDefaults.buttonElevation(),
     border: BorderStroke? = null,
     contentModifier: Modifier = CustomButtonDefaults.contentModifier,
     interactionSource: MutableInteractionSource? = null,
@@ -104,7 +130,7 @@ fun Button(
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
     val containerColor = rememberUpdatedState(colors.containerColor(enabled)).value
     val contentColor = rememberUpdatedState(colors.contentColor(enabled)).value
-    val shadowElevation = 0.dp
+    val shadowElevation = elevation?.shadowElevation(enabled, interactionSource)?.value ?: 0.dp
 
     CompositionLocalProvider(
         LocalMinimumInteractiveComponentSize provides CustomButtonDefaults.minimumInteractiveComponentSize,
@@ -142,7 +168,7 @@ fun TextButton(
     enabled: Boolean = true,
     shape: Shape = ButtonDefaults.textShape,
     colors: ButtonColors = ButtonDefaults.textButtonColors(),
-//    elevation: ButtonElevation? = null,
+    elevation: CustomButtonElevation? = null,
     border: BorderStroke? = null,
     contentModifier: Modifier = CustomButtonDefaults.textButtonContentModifier,
     interactionSource: MutableInteractionSource? = null,
@@ -154,7 +180,7 @@ fun TextButton(
         enabled = enabled,
         shape = shape,
         colors = colors,
-//        elevation = elevation,
+        elevation = elevation,
         border = border,
         contentModifier = contentModifier,
         interactionSource = interactionSource,
@@ -319,6 +345,33 @@ fun ToggleButton(
         }
     }
 }
+
+
+@Composable
+fun ElevatedButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    shape: Shape = ButtonDefaults.elevatedShape,
+    colors: ButtonColors = ButtonDefaults.elevatedButtonColors(),
+    elevation: CustomButtonElevation? = CustomButtonDefaults.elevatedButtonElevation(),
+    border: BorderStroke? = null,
+    contentModifier: Modifier = CustomButtonDefaults.elevatedButtonContentModifier,
+    interactionSource: MutableInteractionSource? = null,
+    content: @Composable RowScope.() -> Unit
+) =
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        shape = shape,
+        colors = colors,
+        elevation = elevation,
+        border = border,
+        contentModifier = contentModifier,
+        interactionSource = interactionSource,
+        content = content
+    )
 
 
 fun ButtonColors.containerColor(enabled: Boolean): Color =

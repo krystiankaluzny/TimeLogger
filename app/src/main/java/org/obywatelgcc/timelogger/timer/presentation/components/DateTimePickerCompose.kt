@@ -3,12 +3,14 @@ package org.obywatelgcc.timelogger.timer.presentation.components
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -32,6 +34,7 @@ import io.github.rexmtorres.android.composedatepicker.timepicker.data.DefaultTim
 import io.github.rexmtorres.android.composedatepicker.timepicker.data.model.TimePickerTime
 import io.github.rexmtorres.android.composedatepicker.timepicker.enums.MinuteGap
 import io.github.rexmtorres.android.composedatepicker.timepicker.ui.model.TimePickerConfiguration
+import org.obywatelgcc.timelogger.core.presentation.components.CustomButtonDefaults
 import org.obywatelgcc.timelogger.core.presentation.components.CustomButtonDefaults.textButtonContentModifier
 import org.obywatelgcc.timelogger.core.presentation.components.TextButton
 import org.obywatelgcc.timelogger.timer.presentation.TimerAction
@@ -40,6 +43,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import kotlin.math.absoluteValue
 
 @Preview
 @Composable
@@ -61,9 +66,12 @@ fun DateTimePickersView(
 
     var timerDataTimeCheckState by remember { mutableStateOf(TimerDateTimeCheckState()) }
 
-//    if (!modifiable) {
-//        timerDataTimeCheckState = TimerDateTimeCheckState()
-//    }
+    val offsetButtonValue = 5L
+
+
+    if (!modifiable) {
+        timerDataTimeCheckState = TimerDateTimeCheckState()
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -81,11 +89,20 @@ fun DateTimePickersView(
             ) {
 
                 CheckableTextButton(timerDataTimeCheckState.startDateChecked, startDateTime.format(dateFormatter)) {
-                    timerDataTimeCheckState = timerDataTimeCheckState.toggleStartDate()
+                    if (modifiable) {
+                        timerDataTimeCheckState = timerDataTimeCheckState.toggleStartDate()
+                    }
                 }
 
                 CheckableTextButton(timerDataTimeCheckState.startTimeChecked, startDateTime.format(timeFormatter)) {
-                    timerDataTimeCheckState = timerDataTimeCheckState.toggleStartTime()
+                    if (modifiable) {
+                        timerDataTimeCheckState = timerDataTimeCheckState.toggleStartTime()
+                    }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OffsetButton(-5L, { onAction(TimerAction.OffsetStartTime(-5L, ChronoUnit.MINUTES)) })
+                    OffsetButton(+5L, { onAction(TimerAction.OffsetStartTime(+5L, ChronoUnit.MINUTES)) })
                 }
             }
 
@@ -105,6 +122,11 @@ fun DateTimePickersView(
                     if (modifiable) {
                         timerDataTimeCheckState = timerDataTimeCheckState.toggleEndTime()
                     }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OffsetButton(-5L, { onAction(TimerAction.OffsetEndTime(-5L, ChronoUnit.MINUTES)) })
+                    OffsetButton(+5L, { onAction(TimerAction.OffsetEndTime(+5L, ChronoUnit.MINUTES)) })
                 }
             }
         }
@@ -258,5 +280,22 @@ fun CheckableTextButton(checked: Boolean, text: String, onClick: () -> Unit) {
             )
     ) {
         Text(text = text, fontSize = 18.sp)
+    }
+}
+
+@Composable
+fun OffsetButton(offsetButtonValue: Long, onClick: () -> Unit) {
+
+    val sign = if(offsetButtonValue < 0) "-" else "+"
+
+    val offsetButtonModifier =  Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+    val offsetButtonElevation = CustomButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp)
+
+    org.obywatelgcc.timelogger.core.presentation.components.ElevatedButton (
+        modifier = offsetButtonModifier,
+        onClick = onClick,
+        elevation = offsetButtonElevation
+    ) {
+        Text(text = "${sign}${offsetButtonValue.absoluteValue}m")
     }
 }
