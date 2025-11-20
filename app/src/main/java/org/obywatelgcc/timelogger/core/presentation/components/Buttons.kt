@@ -1,5 +1,6 @@
 package org.obywatelgcc.timelogger.core.presentation.components
 
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
@@ -9,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,8 +38,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.draw.innerShadow
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -46,7 +50,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.combine
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 object CustomButtonDefaults {
@@ -175,29 +178,123 @@ fun ToggleButton(
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
     val containerColor = rememberUpdatedState(colors.containerColor(enabled)).value
-    val contentColor = rememberUpdatedState(colors.contentColor(enabled)).value
-
-    val dropShadow = rememberUpdatedState(shadowColor.copy(alpha = 0.4f)).value
-    val darkDropShadow = rememberUpdatedState(shadowColor.copy(alpha = 0.6f)).value
-    val innerShadow = rememberUpdatedState(shadowColor.copy(alpha = 0.5f)).value
+    var contentColor = rememberUpdatedState(colors.contentColor(enabled)).value
 
     val isPressed by interactionSource.collectIsPressedAsState()
     val isClicked = isPressed || checked
-
     // Create transition with pressed state
     val transition = updateTransition(targetState = isClicked, label = "button_press_transition")
-
     fun <T> buttonPressAnimation() = tween<T>(durationMillis = 200, easing = EaseInOut)
 
-    val shadowAlpha by transition.animateFloat(
-        label = "shadow_alpha",
-        transitionSpec = { buttonPressAnimation() }) { clicked ->
-        if (clicked) 0f else 1f
-    }
-    val innerShadowAlpha by transition.animateFloat(
-        label = "shadow_alpha",
-        transitionSpec = { buttonPressAnimation() }) { clicked ->
-        if (clicked) 1f else 0f
+    var buttonModifier = modifier
+
+    if (isSystemInDarkTheme()) {
+
+        val clickedBackgroundColor = lerp(containerColor, Color.White, 0.7f)
+        val clickedTextColor = lerp(contentColor, Color.Black, 0.7f)
+        val backgroundColor by transition.animateColor(
+            label = "background_color",
+            transitionSpec = { buttonPressAnimation() }) { clicked ->
+            if (clicked) clickedBackgroundColor else containerColor
+        }
+
+        contentColor = transition.animateColor(
+            label = "content_color",
+            transitionSpec = { buttonPressAnimation() }) { clicked ->
+            if (clicked) clickedTextColor else contentColor
+        }.value
+
+        val scale by transition.animateFloat(
+            label = "scale",
+            transitionSpec = { buttonPressAnimation() }) { clicked ->
+            if (clicked) 1.0f else 0.85f
+        }
+
+        buttonModifier = buttonModifier
+            .minimumInteractiveComponentSize()
+            .scale(scale)
+            .then(if (border != null) Modifier.border(border, shape) else Modifier)
+            .background(color = backgroundColor, shape = shape)
+            .clip(shape)
+            .semantics { role = Role.Checkbox }
+            .toggleable(
+                value = checked,
+                interactionSource = interactionSource,
+                indication = ripple(),
+                enabled = enabled,
+                onValueChange = onCheckedChange
+            )
+
+    } else {
+        val dropShadow = rememberUpdatedState(shadowColor.copy(alpha = 0.4f)).value
+        val darkDropShadow = rememberUpdatedState(shadowColor.copy(alpha = 0.6f)).value
+        val innerShadow = rememberUpdatedState(shadowColor.copy(alpha = 0.5f)).value
+
+        val shadowAlpha by transition.animateFloat(
+            label = "shadow_alpha",
+            transitionSpec = { buttonPressAnimation() }) { clicked ->
+            if (clicked) 0f else 1f
+        }
+        val innerShadowAlpha by transition.animateFloat(
+            label = "shadow_alpha",
+            transitionSpec = { buttonPressAnimation() }) { clicked ->
+            if (clicked) 1f else 0f
+
+        }
+
+        buttonModifier = buttonModifier
+            .minimumInteractiveComponentSize()
+            .then(if (border != null) Modifier.border(border, shape) else Modifier)
+            .dropShadow(
+                shape = shape,
+                shadow = Shadow(
+                    radius = 3.dp,
+                    spread = 0.dp,
+                    color = dropShadow,
+                    offset = DpOffset(x = 0.dp, -(2).dp),
+                    alpha = shadowAlpha
+                )
+            )
+            .dropShadow(
+                shape = shape,
+                shadow = Shadow(
+                    radius = 3.dp,
+                    spread = 0.dp,
+                    color = darkDropShadow,
+                    offset = DpOffset(x = 2.dp, 2.dp),
+                    alpha = shadowAlpha
+                )
+            )
+            .background(color = containerColor, shape = shape)
+            .clip(shape)
+            .semantics { role = Role.Checkbox }
+            .innerShadow(
+                shape = shape,
+                shadow = Shadow(
+                    radius = 3.dp,
+                    spread = 1.dp,
+                    color = innerShadow,
+                    offset = DpOffset(x = 2.dp, 2.dp),
+                    alpha = innerShadowAlpha
+                )
+            )
+            .innerShadow(
+                shape = shape,
+                shadow = Shadow(
+                    radius = 1.dp,
+                    spread = 1.dp,
+                    color = innerShadow,
+                    offset = DpOffset(x = 0.dp, 0.dp),
+                    alpha = innerShadowAlpha
+                )
+            )
+            .toggleable(
+                value = checked,
+                interactionSource = interactionSource,
+                indication = ripple(),
+                enabled = enabled,
+                onValueChange = onCheckedChange
+            )
     }
 
     CompositionLocalProvider(
@@ -205,60 +302,7 @@ fun ToggleButton(
         LocalContentColor provides contentColor,
     ) {
         Box(
-            modifier =
-                modifier
-                    .minimumInteractiveComponentSize()
-                    .then(if (border != null) Modifier.border(border, shape) else Modifier)
-                    .dropShadow(
-                        shape = shape,
-                        shadow = Shadow(
-                            radius = 3.dp,
-                            spread = 0.dp,
-                            color = dropShadow,
-                            offset = DpOffset(x = 0.dp, -(2).dp),
-                            alpha = shadowAlpha
-                        )
-                    )
-                    .dropShadow(
-                        shape = shape,
-                        shadow = Shadow(
-                            radius = 3.dp,
-                            spread = 0.dp,
-                            color = darkDropShadow,
-                            offset = DpOffset(x = 2.dp, 2.dp),
-                            alpha = shadowAlpha
-                        )
-                    )
-                    .background(color = containerColor, shape = shape)
-                    .clip(shape)
-                    .semantics { role = Role.Checkbox }
-                    .innerShadow(
-                        shape = shape,
-                        shadow = Shadow(
-                            radius = 3.dp,
-                            spread = 1.dp,
-                            color = innerShadow,
-                            offset = DpOffset(x = 2.dp, 2.dp),
-                            alpha = innerShadowAlpha
-                        )
-                    )
-                    .innerShadow(
-                        shape = shape,
-                        shadow = Shadow(
-                            radius = 1.dp,
-                            spread = 1.dp,
-                            color = innerShadow,
-                            offset = DpOffset(x = 0.dp, 0.dp),
-                            alpha = innerShadowAlpha
-                        )
-                    )
-                    .toggleable(
-                        value = checked,
-                        interactionSource = interactionSource,
-                        indication = ripple(),
-                        enabled = enabled,
-                        onValueChange = onCheckedChange
-                    ),
+            modifier = buttonModifier,
             propagateMinConstraints = true
         ) {
             ProvideContentColorTextStyle(
