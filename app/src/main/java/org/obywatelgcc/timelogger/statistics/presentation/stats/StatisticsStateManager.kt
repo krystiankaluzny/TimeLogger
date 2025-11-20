@@ -24,6 +24,11 @@ class StatisticsStateManager(
     initialState
 ) {
 
+    companion object {
+        const val OTHERS_LABEL = "Others"
+        const val OTHERS_THRESHOLD = 6
+    }
+
     fun recalculate(queryTimeRange: ZonedDateTimeRange, calendarEvents: List<CalendarEvent>) {
 
         val statisticItems = calendarEvents.groupingBy { it.title }
@@ -49,11 +54,11 @@ class StatisticsStateManager(
 
         val sorted = statisticItems.sortedByDescending { it.totalDuration }
 
-        val result = if(sorted.size > 5) {
-            val othersDuration = sorted.subList(4, sorted.size)
+        val result = if(sorted.size > OTHERS_THRESHOLD) {
+            val othersDuration = sorted.subList(OTHERS_THRESHOLD, sorted.size)
                 .fold(Duration.ZERO) { acc, item -> acc.plus(item.totalDuration) }
 
-            sorted.subList(0, 4) + StatisticItem("Others", othersDuration, sorted[4].color)
+            sorted.subList(0, OTHERS_THRESHOLD) + StatisticItem(OTHERS_LABEL, othersDuration, sorted[OTHERS_THRESHOLD].color)
         } else {
             sorted
         }
