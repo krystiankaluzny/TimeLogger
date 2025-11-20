@@ -57,16 +57,19 @@ class StatisticsViewModel(
             refreshStatisticsData()
         }
 
-        StatisticsAction.ShowPreviousRange -> {
+        StatisticsAction.PreviousRange -> {
             filterStateManager.calculatePreviousRange()
             refreshStatisticsData()
         }
 
-        StatisticsAction.ShowNextRange -> {
+        StatisticsAction.NextRange -> {
             filterStateManager.calculateNextRange()
             refreshStatisticsData()
         }
-
+        StatisticsAction.ResetRange -> {
+            filterStateManager.resetRange()
+            refreshStatisticsData()
+        }
     }
 
     private fun refreshStatisticsData() {

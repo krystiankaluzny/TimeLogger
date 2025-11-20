@@ -25,7 +25,7 @@ class FilterStateManager(
     initialState
 ) {
 
-    private val filterPreferencesKey = "calendarStatisticsPreferences_v2"
+    private val filterPreferencesKey = "filtersPreferences_v1"
     private var filterPreferences =
         jsonDataStoreStateFlow(filterPreferencesKey, FilterPreferences())
 
@@ -39,8 +39,12 @@ class FilterStateManager(
             it.copy(
                 availableCalendars = calendars,
                 selectedCalendar = filterPreferences.value.selectedCalendar,
+                timeRangeType = filterPreferences.value.timeRangeType,
+                timeRange = filterPreferences.value.timeRange
             )
         }
+
+        selectTimeRangeType(filterPreferences.value.timeRangeType)
     }
 
     fun selectCalendar(calendar: Calendar) {
@@ -49,9 +53,8 @@ class FilterStateManager(
             pref
         }
 
-        return state.update { it.copy(selectedCalendar = calendar) }
+        state.update { it.copy(selectedCalendar = calendar) }
     }
-
 
     private fun updatePreferences(calendars: List<Calendar>) {
         filterPreferences.edit { pref ->
@@ -80,7 +83,7 @@ class FilterStateManager(
 
         val timeRange = ZonedDateTimeRange(newForm, newTo)
 
-        return state.update {
+        state.update {
             it.copy(
                 timeRangeType = type,
                 timeRange = timeRange
@@ -112,7 +115,7 @@ class FilterStateManager(
 
         val timeRange = ZonedDateTimeRange(newForm, newTo)
 
-        return state.update {
+        state.update {
             it.copy(
                 timeRangeType = type,
                 timeRange = timeRange
@@ -144,7 +147,38 @@ class FilterStateManager(
 
         val timeRange = ZonedDateTimeRange(newForm, newTo)
 
-        return state.update {
+        state.update {
+            it.copy(
+                timeRangeType = type,
+                timeRange = timeRange
+            )
+        }
+        filterPreferences.edit { pref ->
+            pref.timeRangeType = type
+            pref.timeRange = timeRange
+            pref
+        }
+    }
+
+    fun resetRange() {
+        val type = state.value.timeRangeType
+
+        val now = ZonedDateTime.now()
+        val newForm = when (type) {
+            FilterTimeRangeType.DAY -> now.truncatedTo(ChronoUnit.DAYS)
+            FilterTimeRangeType.WEEK -> now.with(WeekFields.ISO.firstDayOfWeek).truncatedTo(ChronoUnit.DAYS)
+            FilterTimeRangeType.MONTH -> now.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
+        }
+
+        val newTo = when (type) {
+            FilterTimeRangeType.DAY -> newForm.plusDays(1L)
+            FilterTimeRangeType.WEEK -> newForm.plusDays(7L)
+            FilterTimeRangeType.MONTH -> newForm.plusMonths(1L)
+        }
+
+        val timeRange = ZonedDateTimeRange(newForm, newTo)
+
+        state.update {
             it.copy(
                 timeRangeType = type,
                 timeRange = timeRange
