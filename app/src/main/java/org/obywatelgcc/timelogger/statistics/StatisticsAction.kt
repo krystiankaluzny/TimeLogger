@@ -6,4 +6,7 @@ import org.obywatelgcc.timelogger.statistics.presentation.filter.FilterTimeRange
 sealed interface StatisticsAction {
     data class SelectCalendar(val calendar: Calendar) : StatisticsAction
     data class SelectTimeRangeType(val type: FilterTimeRangeType) : StatisticsAction
+
+    data object ShowPreviousRange: StatisticsAction
+    data object ShowNextRange: StatisticsAction
 }

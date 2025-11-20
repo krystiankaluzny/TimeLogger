@@ -46,7 +46,7 @@ class SimpleBarDrawer<T>(
     }
 
     override fun valueSafeSpace(drawScope: DrawScope): Float = when (valueDrawLocation) {
-        ValueDrawLocation.Outside -> (3f / 2f) * labelTextHeight(drawScope)
+        ValueDrawLocation.Outside -> labelTextHeight(drawScope)
         ValueDrawLocation.Inside -> 0f
     }
 

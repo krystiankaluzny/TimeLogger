@@ -92,7 +92,9 @@ private fun TimeLoggerPortraitScreen(
         val calendars = calendarState.availableCalendars
         val selectedCalendar = calendarState.selectedCalendar
 
-        CalendarDropdown(calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
+        CalendarDropdown(
+            Modifier.padding(16.dp).fillMaxWidth(),
+            calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
         TitleAndColorView(
             titleState,
             calendarState.availableColors,
@@ -156,7 +158,9 @@ private fun TimeLoggerLandscapeScreen(
             val selectedCalendar = calendarState.selectedCalendar
 
             Box(modifier = Modifier.weight(1.0f)) {
-                CalendarDropdown(calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
+                CalendarDropdown(
+                    Modifier.padding(16.dp).fillMaxWidth(),
+                    calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
             }
             Box(modifier = Modifier.weight(1.0f)) {
                 TitleAndColorView(

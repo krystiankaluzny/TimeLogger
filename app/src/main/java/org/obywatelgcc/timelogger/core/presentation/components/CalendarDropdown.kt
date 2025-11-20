@@ -1,7 +1,6 @@
 package org.obywatelgcc.timelogger.core.presentation.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -15,12 +14,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import org.obywatelgcc.timelogger.core.model.Calendar
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun CalendarDropdown(
+    modifier: Modifier = Modifier,
     calendars: List<Calendar>,
     selected: Calendar?,
     onSelect: (Calendar) -> Unit
@@ -30,9 +29,7 @@ fun CalendarDropdown(
 
     ExposedDropdownMenuBox(
         expanded = expanded, onExpandedChange = { expanded = it },
-        modifier = Modifier.Companion
-            .padding(16.dp)
-            .fillMaxWidth()
+        modifier = modifier
     ) {
         TextField(
             value = textFieldState,
@@ -42,7 +39,7 @@ fun CalendarDropdown(
             // The `menuAnchor` modifier must be passed to the text field to handle
             // expanding/collapsing the menu on click. A read-only text field has
             // the anchor type `PrimaryNotEditable`.
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .menuAnchor(MenuAnchorType.Companion.PrimaryNotEditable)
                 .fillMaxWidth(),
             readOnly = true,
