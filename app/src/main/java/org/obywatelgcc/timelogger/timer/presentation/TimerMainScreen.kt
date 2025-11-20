@@ -482,7 +482,7 @@ private fun TimeLoggerButtonsView(timerRunningState: TimerState.RunningState, on
             modifier = buttonModifier,
             onClick = { onAction(TimerAction.RestartTimer) },
             elevation = buttonElevation,
-            enabled = (timerRunningState == TimerState.RunningState.READY_TO_START || timerRunningState == TimerState.RunningState.STOPPED)
+            enabled = true
         ) {
             Text(text = "Restart")
         }

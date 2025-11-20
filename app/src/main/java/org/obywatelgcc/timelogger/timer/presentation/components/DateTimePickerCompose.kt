@@ -61,9 +61,9 @@ fun DateTimePickersView(
 
     var timerDataTimeCheckState by remember { mutableStateOf(TimerDateTimeCheckState()) }
 
-    if (!modifiable) {
-        timerDataTimeCheckState = TimerDateTimeCheckState()
-    }
+//    if (!modifiable) {
+//        timerDataTimeCheckState = TimerDateTimeCheckState()
+//    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -81,15 +81,11 @@ fun DateTimePickersView(
             ) {
 
                 CheckableTextButton(timerDataTimeCheckState.startDateChecked, startDateTime.format(dateFormatter)) {
-                    if (modifiable) {
-                        timerDataTimeCheckState = timerDataTimeCheckState.toggleStartDate()
-                    }
+                    timerDataTimeCheckState = timerDataTimeCheckState.toggleStartDate()
                 }
 
                 CheckableTextButton(timerDataTimeCheckState.startTimeChecked, startDateTime.format(timeFormatter)) {
-                    if (modifiable) {
-                        timerDataTimeCheckState = timerDataTimeCheckState.toggleStartTime()
-                    }
+                    timerDataTimeCheckState = timerDataTimeCheckState.toggleStartTime()
                 }
             }
 
