@@ -30,7 +30,6 @@ import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
 import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
 import org.obywatelgcc.timelogger.core.presentation.components.OutlinedTextField
-import org.obywatelgcc.timelogger.core.presentation.components.ToggleButton
 import org.obywatelgcc.timelogger.statistics.StatisticsAction.NextRange
 import org.obywatelgcc.timelogger.statistics.StatisticsAction.PreviousRange
 import org.obywatelgcc.timelogger.statistics.StatisticsAction.ResetRange
@@ -65,7 +64,7 @@ fun StatisticsScreen() {
 
             TimeRangeButtonsView(timeRangeType, viewModel::onAction)
 
-            TimeRangeValewView(timeRange, timeRangeType, viewModel::onAction)
+            TimeRangeValeView(timeRange, timeRangeType, viewModel::onAction)
 
             StatisticsBarChartView(statisticsState)
         }
@@ -133,28 +132,10 @@ fun TimeRangeButtonsView(
     }
 }
 
-@Composable
-private fun TimeRangeTypeButton(
-    selectedTimeRangeType: FilterTimeRangeType,
-    targetTimeRangeType: FilterTimeRangeType,
-    text: String,
-    onAction: (StatisticsAction) -> Unit
-) {
-    ToggleButton(
-        modifier = Modifier.padding(horizontal = 5.dp),
-        checked = (selectedTimeRangeType == targetTimeRangeType),
-        onCheckedChange = {
-            if (it) {
-                onAction(SelectTimeRangeType(targetTimeRangeType))
-            }
-        }
-    ) { Text(text = text) }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimeRangeValewView(
+fun TimeRangeValeView(
     timeRange: ZonedDateTimeRange,
     timeRangeType: FilterTimeRangeType,
     onAction: (StatisticsAction) -> Unit
@@ -179,7 +160,7 @@ fun TimeRangeValewView(
 
         OutlinedTextField(
             modifier = Modifier
-                .fillMaxWidth(0.7f),
+                .fillMaxWidth(0.75f),
             value = dateRangeStr,
             onValueChange = {},
             readOnly = true,
