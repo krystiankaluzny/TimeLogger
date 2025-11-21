@@ -12,11 +12,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.obywatelgcc.timelogger.statistics.components.chart.drawer.BarDrawer.DrawingResult
+import org.obywatelgcc.timelogger.statistics.components.chart.drawer.BarDrawer.Offset
 import org.obywatelgcc.timelogger.statistics.components.chart.drawer.DrawingElements.Bar
-import org.obywatelgcc.timelogger.statistics.components.chart.drawer.DrawingElements.BarData
 import org.obywatelgcc.timelogger.statistics.components.chart.drawer.DrawingElements.Text
+import org.obywatelgcc.timelogger.statistics.components.chart.drawer.DrawingElements.VisibleBar
 import org.obywatelgcc.timelogger.statistics.components.chart.model.Data
 import org.obywatelgcc.timelogger.statistics.components.chart.model.Scale
+import java.lang.Math.clamp
 import kotlin.math.abs
 
 interface BarDrawer<T> {
@@ -27,7 +30,24 @@ interface BarDrawer<T> {
         canvas: Canvas,
         barsData: List<Data<T>>,
         barDrawableArea: Rect,
-        progress: Float
+        progress: Float,
+        horizontalOffset: Float
+    ): DrawingResult
+
+    data class DrawingResult(
+        val horizontalOffset: Offset
+    ) {
+        companion object {
+            val EMPTY = DrawingResult(Offset(0f, 0f, 0f, 0f, 0f))
+        }
+    }
+
+    data class Offset(
+        val min: Float,
+        val max: Float,
+        val suggestedMin: Float,
+        val suggestedMax: Float,
+        val current: Float
     )
 }
 
@@ -55,8 +75,6 @@ class SimpleBarDrawer<T>(
         this.color = valueTextColor.toLegacyInt()
     }
 
-    private var lastDrawingCalculationsResults: Pair<DrawingInput<T>, DrawingElements>? = null
-
     override fun valueSafeSpace(drawScope: DrawScope): Float = when (valueDrawLocation) {
         ValueDrawLocation.Outside -> labelTextHeight(drawScope)
         ValueDrawLocation.Inside -> 0f
@@ -67,26 +85,41 @@ class SimpleBarDrawer<T>(
         canvas: Canvas,
         barsData: List<Data<T>>,
         barDrawableArea: Rect,
-        progress: Float
-    ) {
-        val input = DrawingInput(barsData, barDrawableArea, progress, 0.0f)
+        progress: Float,
+        horizontalOffset: Float
+    ): DrawingResult {
 
-        if (lastDrawingCalculationsResults == null || lastDrawingCalculationsResults!!.first != input) {
-            val drawingElements = calculateDrawingElements(drawScope, input)
-            lastDrawingCalculationsResults = Pair(input, drawingElements)
-        }
+        val input = DrawingInput(barsData, barDrawableArea, progress, horizontalOffset)
+        val drawingElements = calculateDrawingElements(drawScope, input)
 
-        draw(drawScope, canvas, lastDrawingCalculationsResults!!.second)
+        draw(drawScope, canvas, drawingElements)
+
+        return DrawingResult(drawingElements.horizontalOffset)
     }
 
     private fun calculateDrawingElements(drawScope: DrawScope, input: DrawingInput<T>): DrawingElements =
         with(drawScope) {
-            val (barsData, barDrawableArea, progress, horizontalOffset) = input
+
+            val (barsData, barDrawableArea, progress, givenHorizontalOffset) = input
             val totalBars = barsData.size
             val widthOfBarArea = barMinWidth.toPx().coerceAtLeast(barDrawableArea.width / totalBars)
             val barGapPx = barPadding.toPx()
 
-            val barElements = mutableListOf<BarData>()
+            val visibleBars = mutableListOf<VisibleBar>()
+
+            val minOffset = barDrawableArea.width - (barsData.size * widthOfBarArea) - widthOfBarArea / 4
+            val maxOffset = 0.0f
+
+            val suggestedMin = minOffset - widthOfBarArea
+            val suggestedMax = maxOffset + widthOfBarArea
+            val horizontalOffset =
+                clamp(
+                    givenHorizontalOffset,
+                    suggestedMin,
+                    suggestedMax
+                )
+
+            val horizontalOffsetData = Offset(minOffset, maxOffset, suggestedMin, suggestedMax, horizontalOffset)
 
             barsData.forEachIndexed { index, data ->
 
@@ -103,7 +136,7 @@ class SimpleBarDrawer<T>(
                     bottom = barSegment.from
                 )
 
-                if(barArea.overlaps(barDrawableArea)) {
+                if (barArea.overlaps(barDrawableArea)) {
                     val barVisibleArea = barArea.intersect(barDrawableArea)
 
                     val xCenter = barArea.left + (barArea.width / 2)
@@ -121,21 +154,23 @@ class SimpleBarDrawer<T>(
                     val valueStr = scale.valueToString(data.value)
                     val valueElement = Text(valueStr, xCenter, yCenterValue)
 
-                    barElements.add(BarData(
-                        bar = Bar(barVisibleArea, data.color),
-                        label = labelElement,
-                        value = valueElement)
+                    visibleBars.add(
+                        VisibleBar(
+                            bar = Bar(barVisibleArea, data.color),
+                            label = labelElement,
+                            value = valueElement
+                        )
                     )
                 }
             }
 
-            return DrawingElements(barElements)
+            return DrawingElements(visibleBars, horizontalOffsetData)
         }
 
 
-    private fun draw(drawScope: DrawScope, canvas: Canvas, elements: DrawingElements) = with(drawScope){
+    private fun draw(drawScope: DrawScope, canvas: Canvas, elements: DrawingElements) = with(drawScope) {
 
-        elements.barsData.forEach {
+        elements.visibleBars.forEach {
             canvas.drawRect(it.bar.area, barPaint.apply { color = it.bar.color })
 
             val currentLabelPaint = labelPaint.apply { this.textSize = labelTextSize.toPx() }
@@ -173,9 +208,10 @@ private data class DrawingInput<T>(
 )
 
 private data class DrawingElements(
-    val barsData: List<BarData>
+    val visibleBars: List<VisibleBar>,
+    val horizontalOffset: Offset
 ) {
-    data class BarData(
+    data class VisibleBar(
         val bar: Bar,
         val label: Text,
         val value: Text
@@ -191,4 +227,6 @@ private data class DrawingElements(
         val x: Float,
         val y: Float
     )
+
+
 }

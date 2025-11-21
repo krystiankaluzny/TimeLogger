@@ -2,15 +2,19 @@ package org.obywatelgcc.timelogger.statistics.components.chart
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -22,24 +26,31 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.statistics.components.chart.drawer.BarAxisDrawer
 import org.obywatelgcc.timelogger.statistics.components.chart.drawer.BarDrawer
 import org.obywatelgcc.timelogger.statistics.components.chart.drawer.SimpleBarAxisDrawer
 import org.obywatelgcc.timelogger.statistics.components.chart.drawer.SimpleBarDrawer
 import org.obywatelgcc.timelogger.statistics.components.chart.model.Data
 import org.obywatelgcc.timelogger.statistics.components.chart.model.Scale
-import kotlin.math.abs
+import java.lang.Math.clamp
 
 @Composable
 fun <T> BarChart(
     modifier: Modifier = Modifier,
     data: List<Data<T>>,
     scale: Scale<T>,
-    animation: AnimationSpec<Float> = TweenSpec<Float>(durationMillis = 1000),
+    barShowAnimation: AnimationSpec<Float> = TweenSpec<Float>(durationMillis = 1000),
+    barTransitionAnimation: AnimationSpec<Float> = TweenSpec<Float>(
+        durationMillis = 500,
+        easing = LinearOutSlowInEasing
+    ),
     properties: BarChartProperties = BarChartProperties()
 ) {
+    var drawingResult by remember(data) { mutableStateOf(BarDrawer.DrawingResult.EMPTY) }
     val transitionAnimation = remember(data) { Animatable(initialValue = 0f) }
-    val rectangles = remember(data) { mutableStateMapOf<Data<T>, Rect>() }
+    val horizontalOffsetAnimation = remember(data) { Animatable(initialValue = 0.0f) }
 
     scale.adjust(data)
 
@@ -64,7 +75,7 @@ fun <T> BarChart(
     )
 
     LaunchedEffect(data) {
-        transitionAnimation.animateTo(1f, animationSpec = animation)
+        transitionAnimation.animateTo(1f, animationSpec = barShowAnimation)
     }
 
     Canvas(
@@ -72,19 +83,52 @@ fun <T> BarChart(
             .padding()
             .fillMaxSize()
             .pointerInput(data) {
-                detectTapGestures { offset ->
-                    rectangles
-                        .filter { it.value.contains(offset) }
-//                        .forEach { it.key.onTap(it.key) }
+                coroutineScope {
+                    detectTapGestures(
+                        onDoubleTap = {
+                            launch {
+                                horizontalOffsetAnimation.animateTo(0f, animationSpec = barTransitionAnimation)
+                            }
+                        }
+                    )
                 }
-            }) {
+            }
+            .pointerInput(data) {
+                coroutineScope {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            launch {
+                                val offsetData = drawingResult.horizontalOffset
+                                val offset = clamp(offsetData.current, offsetData.min, offsetData.max)
+                                if(offset != offsetData.current) {
+                                    horizontalOffsetAnimation.animateTo(offset, animationSpec = barTransitionAnimation)
+                                }
+                            }
+                        }
+                    ) { change, dragAmount ->
+                        launch {
+                            horizontalOffsetAnimation.snapTo(drawingResult.horizontalOffset.current + dragAmount)
+                        }
+                    }
+                }
+            }
+    ) {
         drawIntoCanvas { canvas ->
             val chartAreas = calculateChartAreas(this, barDrawer, axisDrawer)
 
             axisDrawer.drawBaseAxis(this, canvas, chartAreas.baseAxisArea)
             axisDrawer.drawValueAxis(this, canvas, chartAreas.valueAxisArea, chartAreas.barDrawableArea)
 
-            barDrawer.draw(this, canvas, data, chartAreas.barDrawableArea, transitionAnimation.value)
+            val result = barDrawer.draw(
+                this,
+                canvas,
+                data,
+                chartAreas.barDrawableArea,
+                transitionAnimation.value,
+                horizontalOffsetAnimation.value
+            )
+
+            drawingResult = result
         }
     }
 }
