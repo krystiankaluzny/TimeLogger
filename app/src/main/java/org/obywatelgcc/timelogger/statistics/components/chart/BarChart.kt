@@ -51,7 +51,9 @@ fun <T> BarChart(
         valueTextColor = properties.barValueTextColor,
         valueDrawLocation =
             if (properties.barValueTextInsideBar) SimpleBarDrawer.ValueDrawLocation.Inside
-            else SimpleBarDrawer.ValueDrawLocation.Outside
+            else SimpleBarDrawer.ValueDrawLocation.Outside,
+        barMinWidth = properties.barMinWidth,
+        barPadding = properties.barPadding
     )
     val axisDrawer = SimpleBarAxisDrawer<T>(
         scale = scale,
@@ -82,17 +84,7 @@ fun <T> BarChart(
             axisDrawer.drawBaseAxis(this, canvas, chartAreas.baseAxisArea)
             axisDrawer.drawValueAxis(this, canvas, chartAreas.valueAxisArea, chartAreas.barDrawableArea)
 
-            forEachWithArea(
-                data,
-                this,
-                chartAreas.barDrawableArea,
-                scale,
-                transitionAnimation.value,
-                properties.barPadding
-            ) { barArea, barData, index ->
-                barDrawer.draw(this, canvas, barData, index, barArea)
-                rectangles[barData] = barArea
-            }
+            barDrawer.draw(this, canvas, data, chartAreas.barDrawableArea, transitionAnimation.value)
         }
     }
 }
@@ -126,36 +118,6 @@ private fun <T> calculateChartAreas(
     )
 }
 
-private fun <T> forEachWithArea(
-    barsData: List<Data<T>>,
-    drawScope: DrawScope,
-    barDrawableArea: Rect,
-    scale: Scale<T>,
-    progress: Float,
-    barPadding: Dp,
-    block: (barArea: Rect, data: Data<T>, index: Int) -> Unit
-) = with(drawScope) {
-    val totalBars = barsData.size
-    val widthOfBarArea = barDrawableArea.width / totalBars
-    val barGapPx = barPadding.toPx()
-
-    barsData.forEachIndexed { index, data ->
-        val barSegment =
-            scale.scaleToSpaceSegment(data, Scale.SpaceSegment(barDrawableArea.bottom, barDrawableArea.top))
-
-        val barSegmentLength = abs(barSegment.to - barSegment.from)
-        val left = barDrawableArea.left + (index * widthOfBarArea)
-
-        val barArea = Rect(
-            left = left + barGapPx,
-            right = left + widthOfBarArea - barGapPx,
-            top = barSegment.from - barSegmentLength * progress,
-            bottom = barSegment.from
-        )
-        block(barArea, data, index)
-    }
-}
-
 data class BarChartProperties(
     val axisLineThickness: Dp = 1.dp,
     val axisLineColor: Color = Black,
@@ -171,7 +133,7 @@ data class BarChartProperties(
     val barValueTextInsideBar: Boolean = true,
 
     val barPadding: Dp = 3.dp,
-    val barWidth: Dp = 100.dp
+    val barMinWidth: Dp = 60.dp
 ) {
     companion object {
         fun of(textColor: Color, axisLineColor: Color): BarChartProperties {
