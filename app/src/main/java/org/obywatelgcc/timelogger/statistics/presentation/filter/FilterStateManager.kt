@@ -67,12 +67,11 @@ class FilterStateManager(
     }
 
     fun selectTimeRangeType(type: FilterTimeRangeType) {
-        val oldFrom = state.value.timeRange.from
-
+        val now = ZonedDateTime.now()
         val newForm = when (type) {
-            FilterTimeRangeType.DAY -> oldFrom.truncatedTo(ChronoUnit.DAYS)
-            FilterTimeRangeType.WEEK -> oldFrom.with(WeekFields.ISO.firstDayOfWeek).truncatedTo(ChronoUnit.DAYS)
-            FilterTimeRangeType.MONTH -> oldFrom.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
+            FilterTimeRangeType.DAY -> now.truncatedTo(ChronoUnit.DAYS)
+            FilterTimeRangeType.WEEK -> now.with(WeekFields.ISO.firstDayOfWeek).truncatedTo(ChronoUnit.DAYS)
+            FilterTimeRangeType.MONTH -> now.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
         }
 
         val newTo = when (type) {
