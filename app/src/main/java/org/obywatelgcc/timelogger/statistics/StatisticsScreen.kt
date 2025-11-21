@@ -3,6 +3,7 @@ package org.obywatelgcc.timelogger.statistics
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -97,6 +98,7 @@ fun TimeRangeButtonsView(
         IconButton(
             modifier = Modifier.constrainAs(homeIcon, {
                 end.linkTo(timeRangeTypes.start)
+                centerVerticallyTo(parent)
             }),
             onClick = { onAction(ResetRange) }) {
             Icon(imageVector = Icons.Filled.Home, contentDescription = "Reset")
@@ -105,8 +107,10 @@ fun TimeRangeButtonsView(
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier.constrainAs(timeRangeTypes, {
                 start.linkTo(homeIcon.end)
+                centerVerticallyTo(parent)
                 centerHorizontallyTo(parent)
             })
+                .height(38.dp)
         ) {
             SegmentedButton(
                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
@@ -151,7 +155,6 @@ fun TimeRangeValeView(
     }
 
     Row(
-        modifier = Modifier.padding(top = 5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = { onAction(PreviousRange) }) {

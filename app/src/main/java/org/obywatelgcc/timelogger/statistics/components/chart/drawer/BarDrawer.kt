@@ -171,7 +171,16 @@ class SimpleBarDrawer<T>(
     private fun draw(drawScope: DrawScope, canvas: Canvas, elements: DrawingElements) = with(drawScope) {
 
         elements.visibleBars.forEach {
-            canvas.drawRect(it.bar.area, barPaint.apply { color = it.bar.color })
+            val area = it.bar.area
+            val cornerRadius = 8f
+            canvas.drawRoundRect(
+                area.left,
+                area.top,
+                area.right,
+                area.bottom,
+                cornerRadius,
+                cornerRadius,
+                barPaint.apply { color = it.bar.color })
 
             val currentLabelPaint = labelPaint.apply { this.textSize = labelTextSize.toPx() }
             canvas.nativeCanvas.drawText(it.label.text, it.label.x, it.label.y, currentLabelPaint)
