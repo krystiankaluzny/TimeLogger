@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.rotate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -55,6 +56,7 @@ class SimpleBarDrawer<T>(
     private val scale: Scale<T>,
     private val labelTextSize: TextUnit = 12.sp,
     private val labelTextColor: Color = Black,
+    private val labelMaxLength: Int = 10,
     private val valueDrawLocation: ValueDrawLocation = ValueDrawLocation.Inside,
     private val valueTextSize: TextUnit = 14.sp,
     private val valueTextColor: Color = Black,
@@ -66,7 +68,7 @@ class SimpleBarDrawer<T>(
     }
 
     private val labelPaint = android.graphics.Paint().apply {
-        this.textAlign = android.graphics.Paint.Align.CENTER
+        this.textAlign = android.graphics.Paint.Align.RIGHT
         this.color = labelTextColor.toLegacyInt()
     }
 
@@ -76,7 +78,7 @@ class SimpleBarDrawer<T>(
     }
 
     override fun valueSafeSpace(drawScope: DrawScope): Float = when (valueDrawLocation) {
-        ValueDrawLocation.Outside -> labelTextHeight(drawScope)
+        ValueDrawLocation.Outside -> with(drawScope) { labelTextSize.toPx() }
         ValueDrawLocation.Inside -> 0f
     }
 
@@ -140,11 +142,10 @@ class SimpleBarDrawer<T>(
                     val barVisibleArea = barArea.intersect(barDrawableArea)
 
                     val xCenter = barArea.left + (barArea.width / 2)
+                    val yCenterLabel = barArea.bottom + labelTextSize.toPx()
 
-                    val textOffsetFactor = if (index % 2 == 0) 1.0f else 2.0f
-                    val yCenterLabel = barArea.bottom + textOffsetFactor * labelTextHeight(drawScope)
-
-                    val labelElement = Text(data.label, xCenter, yCenterLabel)
+                    val labelLinesStr = wrapTextIntoLines(data.label, labelMaxLength)
+                    val labelElement = Text(labelLinesStr, xCenter, yCenterLabel)
 
                     val yCenterValue = when (valueDrawLocation) {
                         ValueDrawLocation.Inside -> (barArea.top + barArea.bottom) / 2
@@ -182,16 +183,29 @@ class SimpleBarDrawer<T>(
                 cornerRadius,
                 barPaint.apply { color = it.bar.color })
 
+            canvas.save()
+            canvas.rotate(-30f, it.label.x, it.label.y)
             val currentLabelPaint = labelPaint.apply { this.textSize = labelTextSize.toPx() }
-            canvas.nativeCanvas.drawText(it.label.text, it.label.x, it.label.y, currentLabelPaint)
+            drawTextElement(drawScope, canvas, it.label, currentLabelPaint)
+            canvas.restore()
 
             val currentValuePaint = valuePaint.apply { this.textSize = valueTextSize.toPx() }
-            canvas.nativeCanvas.drawText(it.value.text, it.value.x, it.value.y, currentValuePaint)
+            drawTextElement(drawScope, canvas, it.value, currentValuePaint)
         }
     }
 
-    private fun labelTextHeight(drawScope: DrawScope) = with(drawScope) {
-        ((3f / 2f) * labelTextSize.toPx())
+    private fun drawTextElement(drawScope: DrawScope, canvas: Canvas, text: Text, paint: android.graphics.Paint) {
+        if (text.lines.size == 1) {
+            canvas.nativeCanvas.drawText(text.lines[0], text.x, text.y, paint)
+        } else if (text.lines.size > 1) {
+            val maxLineLength = text.lines.maxOf { it.length }
+            val yBase = text.y - text.lines.size * paint.textSize / 2 + paint.textSize
+            text.lines.forEachIndexed { index, line ->
+                val y = yBase + index * paint.textSize
+                val paddedLine = line.padEnd(maxLineLength, ' ')
+                canvas.nativeCanvas.drawText(paddedLine, text.x, y, paint)
+            }
+        }
     }
 
     enum class ValueDrawLocation {
@@ -232,10 +246,42 @@ private data class DrawingElements(
     )
 
     data class Text(
-        val text: String,
+        val lines: List<String>,
         val x: Float,
         val y: Float
-    )
+    ) {
+        constructor(text: String, x: Float, y: Float) : this(listOf(text), x, y)
+    }
+}
 
+private fun wrapTextIntoLines(text: String, maxLength: Int): List<String> {
+    val words = text.split(' ')
+    if (words.isEmpty()) return emptyList()
 
+    val lines = mutableListOf<String>()
+    var currentLine = StringBuilder()
+
+    for (word in words) {
+        val testLength = if (currentLine.isEmpty()) {
+            word.length
+        } else {
+            currentLine.length + 1 + word.length // +1 for the space ' '
+        }
+
+        if (testLength <= maxLength) {
+            if (currentLine.isNotEmpty()) {
+                currentLine.append(' ')
+            }
+            currentLine.append(word)
+        } else {
+            lines.add(currentLine.toString())
+            currentLine.clear().append(word)
+        }
+    }
+
+    if (currentLine.isNotEmpty()) {
+        lines.add(currentLine.toString())
+    }
+
+    return lines
 }
