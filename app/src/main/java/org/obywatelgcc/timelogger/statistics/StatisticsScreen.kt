@@ -43,6 +43,7 @@ import org.obywatelgcc.timelogger.statistics.components.chart.model.DurationScal
 import org.obywatelgcc.timelogger.statistics.presentation.filter.FilterTimeRangeType
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsState
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
+import java.time.Duration
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -66,6 +67,8 @@ fun StatisticsScreen() {
             TimeRangeButtonsView(timeRangeType, viewModel::onAction)
 
             TimeRangeValeView(timeRange, timeRangeType, viewModel::onAction)
+
+            StatisticsInfoView(statisticsState)
 
             StatisticsBarChartView(statisticsState)
         }
@@ -174,6 +177,15 @@ fun TimeRangeValeView(
             Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
         }
     }
+}
+
+
+@Composable
+fun StatisticsInfoView(statisticsState: StatisticsState) {
+    val statisticItems = statisticsState.statisticItems
+    val totalDuration = statisticItems.fold(Duration.ZERO) { acc, item -> acc.plus(item.totalDuration) }
+
+    Text(text = "Total: ${totalDuration.toHours()}h ${totalDuration.toMinutesPart()}m")
 }
 
 @Composable

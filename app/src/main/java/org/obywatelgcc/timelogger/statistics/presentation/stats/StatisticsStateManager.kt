@@ -36,6 +36,7 @@ class StatisticsStateManager(
 
                 val dataHolder = if (first || acc == null) { DataHolder() } else acc
 
+                //Cut event duration to query time range
                 val eventDuration = Duration.between(
                     max(event.timeRange.from, queryTimeRange.from),
                     min(event.timeRange.to, queryTimeRange.to)
