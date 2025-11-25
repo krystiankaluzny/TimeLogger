@@ -37,8 +37,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
@@ -48,11 +50,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import org.obywatelgcc.timelogger.core.presentation.SnackbarMessageBus
 import org.obywatelgcc.timelogger.core.presentation.components.ObserveAsEvents
 import org.obywatelgcc.timelogger.settings.SettingsScreen
 import org.obywatelgcc.timelogger.statistics.StatisticsScreen
+import org.obywatelgcc.timelogger.statistics.StatisticsViewModel
 import org.obywatelgcc.timelogger.timer.presentation.TimerScreen
+import org.obywatelgcc.timelogger.timer.presentation.TimerViewModel
 import org.obywatelgcc.timelogger.timer.presentation.components.Clock
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
@@ -190,21 +195,32 @@ private fun NavHostView(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(innerPadding),
     ) {
+        val vmStoreOwner = rememberViewModelStoreOwner()
+
         NavHost(
             navController = navController,
             startDestination = Screen.TimeLogger
         ) {
             composable<Screen.TimeLogger> {
-                TimerScreen()
+                val viewModel = koinViewModel<TimerViewModel>(viewModelStoreOwner = vmStoreOwner)
+                TimerScreen(viewModel)
             }
             composable<Screen.Statistics> {
-                StatisticsScreen()
+                val viewModel = koinViewModel<StatisticsViewModel>(viewModelStoreOwner = vmStoreOwner)
+                StatisticsScreen(viewModel)
             }
             composable<Screen.Settings> {
                 SettingsScreen()
             }
         }
     }
+}
+
+//composable store-owner builder
+@Composable
+fun rememberViewModelStoreOwner(): ViewModelStoreOwner {
+    val context = LocalContext.current
+    return remember(context) { context as ViewModelStoreOwner }
 }
 
 data class NavigationItem(

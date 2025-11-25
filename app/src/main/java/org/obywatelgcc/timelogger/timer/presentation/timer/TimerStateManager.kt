@@ -10,6 +10,7 @@ import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.data.LocalDateTimeSerializer
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState.RunningState
+import org.obywatelgcc.timelogger.utils.logDebug
 import org.obywatelgcc.timelogger.utils.logInfo
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -108,6 +109,7 @@ class TimerStateManager(
         state.update { it.copy(runningState = RunningState.STARTED) }
         coroutineScope.launch {
             while (state.value.runningState == RunningState.STARTED) {
+                logDebug("tick $this@TimerStateManager - $this")
                 refreshEndDateTime()
                 delay(tickerDelayMs)
             }

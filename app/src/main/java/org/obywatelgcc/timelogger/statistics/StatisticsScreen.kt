@@ -26,7 +26,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.koin.compose.viewmodel.koinViewModel
 import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
 import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
@@ -47,9 +46,8 @@ import java.time.Duration
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun StatisticsScreen() {
+fun StatisticsScreen(viewModel: StatisticsViewModel) {
 
-    val viewModel = koinViewModel<StatisticsViewModel>()
     val filterState by viewModel.filterState.collectAsStateWithLifecycle()
     val statisticsState by viewModel.statisticsState.collectAsStateWithLifecycle()
 

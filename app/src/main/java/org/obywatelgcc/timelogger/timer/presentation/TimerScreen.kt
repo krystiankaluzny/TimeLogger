@@ -15,9 +15,8 @@ typealias OnAction = (TimerAction) -> Unit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimerScreen() {
+fun TimerScreen(viewModel: TimerViewModel) {
 
-    val viewModel = koinViewModel<TimerViewModel>()
     val snackbarMessageBus = koinInject<SnackbarMessageBus>()
 
     val calenderState by viewModel.calendarState.collectAsStateWithLifecycle()
