@@ -145,7 +145,15 @@ fun DrawerContent(
                 label = { Text(text = item.title) },
                 selected = isSelected,
                 onClick = {
-                    if (!isSelected) navController.navigate(item.destiny)
+                    if (!isSelected) {
+                        navController.navigate(item.destiny) {
+                            if(navigationItems.first() == item) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    }
                     scope.launch {
                         if (drawerState.isOpen) drawerState.close()
                     }
