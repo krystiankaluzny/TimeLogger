@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.core.cache.Cache
 import org.obywatelgcc.timelogger.core.cache.TimedCache
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
+import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.CalendarEvent
 import org.obywatelgcc.timelogger.core.model.CalendarRepository
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
@@ -33,7 +34,8 @@ class StatisticsViewModel(
     private val statisticsStateManager =
         StatisticsStateManager(viewModelScope, savedStateHandle, dataSoreManager, StatisticsState())
 
-    private val calendarEventCache: Cache<ZonedDateTimeRange, List<CalendarEvent>> = TimedCache.expiringEveryMinutes(5L)
+    private val calendarEventCache: Cache<Pair<Calendar, ZonedDateTimeRange>, List<CalendarEvent>> =
+        TimedCache.expiringEveryMinutes(5L)
 
     private val _initialized = MutableStateFlow(false)
     val initialized = _initialized
@@ -84,10 +86,11 @@ class StatisticsViewModel(
             filterState.collect {
                 val selectedCalendar = it.selectedCalendar
                 val queryTimeRange = it.timeRange
-                val events = calendarEventCache.get(queryTimeRange)
+                val key = selectedCalendar to queryTimeRange
+                val events = calendarEventCache.get(key)
                     ?: calendarRepository.findEventsInTimeRange(selectedCalendar, queryTimeRange)
                         .also { fetchedEvents ->
-                            calendarEventCache.put(queryTimeRange, fetchedEvents)
+                            calendarEventCache.put(key, fetchedEvents)
                         }
 
                 statisticsStateManager.recalculate(queryTimeRange, events)
