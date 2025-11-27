@@ -1,6 +1,7 @@
 package org.obywatelgcc.timelogger.core.model
 
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
@@ -9,6 +10,7 @@ import android.provider.CalendarContract
 import androidx.core.database.getStringOrNull
 import org.obywatelgcc.timelogger.utils.logDebug
 import java.time.Instant
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
@@ -38,6 +40,7 @@ class CalendarRepositoryImpl(
         val CALENDAR_URI: Uri = CalendarContract.Calendars.CONTENT_URI
         val EVENT_URI: Uri = CalendarContract.Events.CONTENT_URI
         val COLOR_URI: Uri = CalendarContract.Colors.CONTENT_URI
+        val INSTANCE_URI: Uri = CalendarContract.Instances.CONTENT_URI
 
         private val calendarsProjection: Projection = Projection(
             listOf(
@@ -63,10 +66,20 @@ class CalendarRepositoryImpl(
                 CalendarContract.Events.DTSTART,
                 CalendarContract.Events.DTEND,
                 CalendarContract.Events.TITLE,
-                CalendarContract.Events.DESCRIPTION,
                 CalendarContract.Events.CALENDAR_ID,
                 CalendarContract.Events.EVENT_TIMEZONE,
                 CalendarContract.Events.EVENT_COLOR_KEY
+            )
+        )
+
+        private val instancesProjection: Projection = Projection(
+            listOf(
+                CalendarContract.Instances.BEGIN,
+                CalendarContract.Instances.END,
+                CalendarContract.Instances.TITLE,
+                CalendarContract.Instances.CALENDAR_ID,
+                CalendarContract.Instances.EVENT_TIMEZONE,
+                CalendarContract.Instances.EVENT_COLOR_KEY
             )
         )
     }
@@ -183,13 +196,11 @@ class CalendarRepositoryImpl(
         val selection =
             """(
                 | ${CalendarContract.Events.CALENDAR_ID} = ?
-                | AND ${CalendarContract.Events.DTSTART} >= ?
-                | AND ${CalendarContract.Events.DTSTART} <= ? 
                 | AND ${CalendarContract.Events.TITLE} LIKE '%$title%'
                 | )""".trimMargin()
-        val selectionArgs = arrayOf(calendar.id.toString(), from.toString(), now.toString())
-
-        var result = queryEvents(calendar, selection, selectionArgs)
+        val selectionArgs = arrayOf(calendar.id.toString())
+        val range = ZonedDateTimeRange.of(from, now, ZoneId.systemDefault().id)
+        var result = queryEventInstances(calendar, range, selection, selectionArgs)
 
         logDebug("findEventsContainsTitle: size: ${result.size} - $result")
 
@@ -210,29 +221,36 @@ class CalendarRepositoryImpl(
         timeRange: ZonedDateTimeRange
     ): List<CalendarEvent> {
 
-
-        val from = timeRange.fromMillis()
-        val to = timeRange.toMillis()
-
         val selection =
             """(
                 | ${CalendarContract.Events.CALENDAR_ID} = ?
-                | AND ${CalendarContract.Events.DTSTART} <= ?
-                | AND ${CalendarContract.Events.DTEND} >= ? 
                 | )""".trimMargin()
-        val selectionArgs = arrayOf(calendar.id.toString(), to.toString(), from.toString())
-
-        return queryEvents(calendar, selection, selectionArgs)
+        val selectionArgs = arrayOf(calendar.id.toString())
+        return queryEventInstances(calendar, timeRange, selection, selectionArgs)
     }
 
-    private fun queryEvents(calendar: Calendar, selection: String, selectionArgs: Array<String>): List<CalendarEvent> {
+    private fun queryEventInstances(
+        calendar: Calendar,
+        timeRange: ZonedDateTimeRange,
+        selection: String,
+        selectionArgs: Array<String>
+    ): List<CalendarEvent> {
         val result = mutableListOf<CalendarEvent>()
 
+        val builder: Uri.Builder = INSTANCE_URI.buildUpon()
+        val fromMillis = timeRange.fromMillis()
+        val toMillis = timeRange.toMillis()
+        ContentUris.appendId(builder, fromMillis)
+        ContentUris.appendId(builder, toMillis)
+
+        val uri = builder.build()
         val eventCursor: Cursor? =
-            contentResolver.query(EVENT_URI, eventsProjection.projection, selection, selectionArgs, null)
+            contentResolver.query(uri, instancesProjection.projection, selection, selectionArgs, null)
+
         eventCursor?.apply {
             while (moveToNext()) {
-                val eventColorKey = getString(eventsProjection.index(CalendarContract.Events.EVENT_COLOR_KEY))
+                val eventColorKey =
+                    getStringOrNull(instancesProjection.index(CalendarContract.Instances.EVENT_COLOR_KEY))
 
                 val color =
                     lastLoadedColors.firstOrNull {
@@ -243,10 +261,10 @@ class CalendarRepositoryImpl(
 
                 result.add(
                     CalendarEvent.of(
-                        getStringOrNull(eventsProjection.index(CalendarContract.Events.TITLE)) ?: "",
-                        getLong(eventsProjection.index(CalendarContract.Events.DTSTART)),
-                        getLong(eventsProjection.index(CalendarContract.Events.DTEND)),
-                        getStringOrNull(eventsProjection.index(CalendarContract.Events.EVENT_TIMEZONE)) ?: "UTC",
+                        getStringOrNull(instancesProjection.index(CalendarContract.Instances.TITLE)) ?: "",
+                        getLong(instancesProjection.index(CalendarContract.Instances.BEGIN)),
+                        getLong(instancesProjection.index(CalendarContract.Instances.END)),
+                        getStringOrNull(instancesProjection.index(CalendarContract.Instances.EVENT_TIMEZONE)) ?: "UTC",
                         color
                     )
                 )
