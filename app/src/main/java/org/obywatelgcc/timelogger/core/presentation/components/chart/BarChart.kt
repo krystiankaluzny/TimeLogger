@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.statistics.components.chart
+package org.obywatelgcc.timelogger.core.presentation.components.chart
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
@@ -28,12 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import org.obywatelgcc.timelogger.statistics.components.chart.drawer.BarAxisDrawer
-import org.obywatelgcc.timelogger.statistics.components.chart.drawer.BarDrawer
-import org.obywatelgcc.timelogger.statistics.components.chart.drawer.SimpleBarAxisDrawer
-import org.obywatelgcc.timelogger.statistics.components.chart.drawer.SimpleBarDrawer
-import org.obywatelgcc.timelogger.statistics.components.chart.model.Data
-import org.obywatelgcc.timelogger.statistics.components.chart.model.Scale
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.BarAxisDrawer
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.BarDrawer
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.SimpleBarAxisDrawer
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.SimpleBarDrawer
+import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Data
+import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Scale
 import java.lang.Math.clamp
 
 @Composable

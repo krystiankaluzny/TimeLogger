@@ -35,10 +35,10 @@ import org.obywatelgcc.timelogger.statistics.StatisticsAction.PreviousRange
 import org.obywatelgcc.timelogger.statistics.StatisticsAction.ResetRange
 import org.obywatelgcc.timelogger.statistics.StatisticsAction.SelectCalendar
 import org.obywatelgcc.timelogger.statistics.StatisticsAction.SelectTimeRangeType
-import org.obywatelgcc.timelogger.statistics.components.chart.BarChart
-import org.obywatelgcc.timelogger.statistics.components.chart.BarChartProperties
-import org.obywatelgcc.timelogger.statistics.components.chart.model.Data
-import org.obywatelgcc.timelogger.statistics.components.chart.model.DurationScale
+import org.obywatelgcc.timelogger.core.presentation.components.chart.BarChart
+import org.obywatelgcc.timelogger.core.presentation.components.chart.BarChartProperties
+import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Data
+import org.obywatelgcc.timelogger.core.presentation.components.chart.model.DurationScale
 import org.obywatelgcc.timelogger.statistics.presentation.filter.FilterTimeRangeType
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsState
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme

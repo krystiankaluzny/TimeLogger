@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.statistics.components.chart.model
+package org.obywatelgcc.timelogger.core.presentation.components.chart.model
 
 import kotlin.math.floor
 import kotlin.math.log10

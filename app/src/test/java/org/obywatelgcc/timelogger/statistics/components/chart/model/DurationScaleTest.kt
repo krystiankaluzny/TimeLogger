@@ -3,6 +3,9 @@ package org.obywatelgcc.timelogger.statistics.components.chart.model
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.core.test.TestScope
 import io.kotest.matchers.shouldBe
+import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Data
+import org.obywatelgcc.timelogger.core.presentation.components.chart.model.DurationScale
+import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Scale
 import java.time.Duration
 
 class DurationScaleTest : ShouldSpec({

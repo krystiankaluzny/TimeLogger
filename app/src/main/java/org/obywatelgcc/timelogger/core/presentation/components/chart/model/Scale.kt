@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.statistics.components.chart.model
+package org.obywatelgcc.timelogger.core.presentation.components.chart.model
 
 interface Scale<T> {
     var domain: ValueDomain<T>

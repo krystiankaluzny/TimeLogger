@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.statistics.components.chart.model
+package org.obywatelgcc.timelogger.core.presentation.components.chart.model
 
 class NumericScale<T : Number>(override var domain: Scale.ValueDomain<T>) : Scale<T> {
     override fun adjust(data: List<Data<T>>) {

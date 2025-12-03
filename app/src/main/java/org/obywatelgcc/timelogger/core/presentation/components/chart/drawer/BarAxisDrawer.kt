@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.statistics.components.chart.drawer
+package org.obywatelgcc.timelogger.core.presentation.components.chart.drawer
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.obywatelgcc.timelogger.statistics.components.chart.model.Scale
+import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Scale
 
 interface BarAxisDrawer<T> {
     fun baseAxisSafeSpace(drawScope: DrawScope): Float = 0f
