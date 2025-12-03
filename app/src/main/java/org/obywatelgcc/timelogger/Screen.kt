@@ -12,5 +12,8 @@ sealed class Screen {
     object Statistics : Screen()
 
     @Serializable
+    object Categories : Screen()
+
+    @Serializable
     object Settings : Screen()
 }

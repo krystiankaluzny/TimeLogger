@@ -35,9 +35,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStoreOwner
@@ -51,6 +52,8 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.obywatelgcc.timelogger.categories.CategoriesScreen
+import org.obywatelgcc.timelogger.categories.CategoriesViewModel
 import org.obywatelgcc.timelogger.core.presentation.SnackbarMessageBus
 import org.obywatelgcc.timelogger.core.presentation.components.ObserveAsEvents
 import org.obywatelgcc.timelogger.settings.SettingsScreen
@@ -64,17 +67,22 @@ import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 private val navItems = listOf(
     NavigationItem(
         title = "Time Logger",
-        icon = Icons.Filled.Clock,
+        iconResId = R.drawable.nav_time_logger,
         destiny = Screen.TimeLogger
     ),
     NavigationItem(
         title = "Statistics",
-        icon = Icons.Filled.Info,
+        iconResId = R.drawable.nav_statistics,
         destiny = Screen.Statistics
     ),
     NavigationItem(
+        title = "Categories",
+        iconResId = R.drawable.nav_categories,
+        destiny = Screen.Categories
+    ),
+    NavigationItem(
         title = "Settings",
-        icon = Icons.Filled.Settings,
+        iconResId = R.drawable.nav_settings,
         destiny = Screen.Settings
     )
 )
@@ -141,7 +149,7 @@ fun DrawerContent(
         navigationItems.forEach { item ->
             val isSelected = navBackStackEntry?.destination?.hasRoute(item.destiny::class) == true
             NavigationDrawerItem(
-                icon = { Icon(item.icon, contentDescription = item.title) },
+                icon = { Icon(painterResource(id = item.iconResId), contentDescription = item.title) },
                 label = { Text(text = item.title) },
                 selected = isSelected,
                 onClick = {
@@ -217,6 +225,10 @@ private fun NavHostView(
                 val viewModel = koinViewModel<StatisticsViewModel>(viewModelStoreOwner = vmStoreOwner)
                 StatisticsScreen(viewModel)
             }
+            composable<Screen.Categories> {
+                val viewModel = koinViewModel<CategoriesViewModel>(viewModelStoreOwner = vmStoreOwner)
+                CategoriesScreen(viewModel)
+            }
             composable<Screen.Settings> {
                 SettingsScreen()
             }
@@ -233,6 +245,6 @@ fun rememberViewModelStoreOwner(): ViewModelStoreOwner {
 
 data class NavigationItem(
     val title: String,
-    val icon: ImageVector,
+    val iconResId: Int,
     val destiny: Screen
 )

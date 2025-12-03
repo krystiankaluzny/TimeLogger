@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal"
+    >
+
+    <!-- Oś Y (pionowa) i grot strzałki -->
+    <path
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M3,21V3L5,5 M3,3L1,5" />
+
+    <!-- Oś X (pozioma) i grot strzałki -->
+    <path
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M3,21H21L19,19 M21,21L19,23" />
+
+    <!-- Słupek 1 (niski) -->
+    <path
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M8,17V12" />
+
+    <!-- Słupek 2 (wysoki) -->
+    <path
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M12,17V8" />
+
+    <!-- Słupek 3 (średni) -->
+    <path
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M16,17V14" />
+</vector>

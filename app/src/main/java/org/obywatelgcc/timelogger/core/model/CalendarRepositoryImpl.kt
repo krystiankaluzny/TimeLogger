@@ -189,7 +189,6 @@ class CalendarRepositoryImpl(
         title: String
     ): List<CalendarEvent> {
 
-
         val now = Instant.now().toEpochMilli()
         val from = Instant.now().minus(100, ChronoUnit.DAYS).toEpochMilli()
 
