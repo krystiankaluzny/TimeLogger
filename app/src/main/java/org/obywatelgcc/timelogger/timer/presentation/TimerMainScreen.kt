@@ -2,6 +2,7 @@ package org.obywatelgcc.timelogger.timer.presentation
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,7 +22,6 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuBoxScope
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.SpanStyle
@@ -45,15 +46,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
+import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
 import org.obywatelgcc.timelogger.timer.presentation.components.DateTimePickersView
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
 import org.obywatelgcc.timelogger.timer.presentation.title.TitleState
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
-import kotlin.collections.forEach
 
 
 @Composable
@@ -93,7 +93,9 @@ private fun TimeLoggerPortraitScreen(
         val selectedCalendar = calendarState.selectedCalendar
 
         CalendarDropdown(
-            Modifier.padding(16.dp).fillMaxWidth(),
+            Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
             calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
         TitleAndColorView(
             titleState,
@@ -121,21 +123,7 @@ private fun TimeLoggerPortraitScreen(
         }
 
         HorizontalDivider()
-        TimeLoggerButtonsView(timerState.runningState, onAction)
-
-        Spacer(Modifier.height(20.dp))
-
-        FilledTonalButton(
-            modifier = Modifier
-                .fillMaxWidth(0.4f)
-                .height(70.dp),
-            onClick = { onAction(TimerAction.TrySave) }
-        ) {
-            Text(
-                text = settingsState.savingType.description,
-                textAlign = TextAlign.Center
-            )
-        }
+        TimeLoggerButtonsView(timerState.runningState, settingsState, onAction)
     }
 }
 
@@ -159,7 +147,9 @@ private fun TimeLoggerLandscapeScreen(
 
             Box(modifier = Modifier.weight(1.0f)) {
                 CalendarDropdown(
-                    Modifier.padding(16.dp).fillMaxWidth(),
+                    Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
                     calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
             }
             Box(modifier = Modifier.weight(1.0f)) {
@@ -197,21 +187,7 @@ private fun TimeLoggerLandscapeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.height(10.dp))
-                TimeLoggerButtonsView(timerState.runningState, onAction)
-
-                Spacer(Modifier.height(10.dp))
-
-                FilledTonalButton(
-                    modifier = Modifier
-                        .fillMaxWidth(0.4f)
-                        .height(70.dp),
-                    onClick = { onAction(TimerAction.TrySave) }
-                ) {
-                    Text(
-                        text = settingsState.savingType.description,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                TimeLoggerButtonsView(timerState.runningState, settingsState, onAction)
             }
         }
     }
@@ -255,7 +231,7 @@ private fun RowScope.EventTitleTextField(
     }
     var expanded by remember { mutableStateOf(false) }
 
-    if(eventTitle != titleFieldValue.text) {
+    if (eventTitle != titleFieldValue.text) {
         //restore cursor position
         titleFieldValue = TextFieldValue(eventTitle, selection = TextRange(eventTitle.length))
     }
@@ -438,7 +414,13 @@ private fun DurationView(durationStr: String) {
 }
 
 @Composable
-private fun TimeLoggerButtonsView(timerRunningState: TimerState.RunningState, onAction: OnAction) {
+private fun TimeLoggerButtonsView(
+    timerRunningState: TimerState.RunningState,
+    settingsState: SettingsState,
+    onAction: OnAction
+) {
+    val buttonElevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp)
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -448,8 +430,6 @@ private fun TimeLoggerButtonsView(timerRunningState: TimerState.RunningState, on
         val buttonModifier = Modifier
             .weight(0.5f)
             .height(50.dp)
-
-        val buttonElevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp)
 
         ElevatedButton(
             modifier = buttonModifier,
@@ -499,5 +479,33 @@ private fun TimeLoggerButtonsView(timerRunningState: TimerState.RunningState, on
                 Text(text = "Resume")
             }
         }
+    }
+
+    Spacer(Modifier.height(15.dp))
+
+    ElevatedButton(
+        modifier = Modifier
+            .fillMaxWidth(0.4f)
+            .border(
+                width = 4.dp,
+                brush = Brush.verticalGradient(
+                    0.0f to Color.Transparent,
+                    0.8f to TimeLoggerTheme.extendedColors.saveButton,
+                    1f to TimeLoggerTheme.extendedColors.saveButtonBorder
+                ),
+                shape = ButtonDefaults.elevatedShape
+            )
+            .height(70.dp),
+        onClick = { onAction(TimerAction.TrySave) },
+        elevation = buttonElevation,
+        colors = ButtonDefaults.elevatedButtonColors(
+            containerColor = TimeLoggerTheme.extendedColors.saveButton,
+            contentColor = TimeLoggerTheme.extendedColors.saveButtonContent
+        )
+    ) {
+        Text(
+            text = settingsState.savingType.description,
+            textAlign = TextAlign.Center
+        )
     }
 }
