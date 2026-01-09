@@ -149,8 +149,15 @@ class TimerViewModel(
                         timerStateManager.reset()
                     }
 
-                    SettingsState.SavingType.SaveAndStartNew -> {
+                    SettingsState.SavingType.SaveAndStartFromNow -> {
                         timerStateManager.reset()
+                        titleStateManager.clearTitle()
+                        timerStateManager.start()
+                        calendarStateManager.shiftColor()
+                    }
+
+                    SettingsState.SavingType.SaveAndStartFromLastEvent -> {
+                        timerStateManager.reset(startDateTime = result.entry.timeRange.to.toLocalDateTime())
                         titleStateManager.clearTitle()
                         timerStateManager.start()
                         calendarStateManager.shiftColor()

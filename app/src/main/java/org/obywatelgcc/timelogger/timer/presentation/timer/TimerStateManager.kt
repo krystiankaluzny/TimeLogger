@@ -86,12 +86,12 @@ class TimerStateManager(
         }
     }
 
-    fun reset() {
+    fun reset(startDateTime: LocalDateTime? = null) {
         val now = currentLocalDateTime()
         state.update {
             it.copy(
                 runningState = RunningState.READY_TO_START,
-                startDateTime = now,
+                startDateTime = startDateTime ?: now,
                 endDateTime = now
             )
         }

@@ -12,6 +12,8 @@ data class SettingsState(
         @Serializable
         object SaveOnly : SavingType("Save only")
         @Serializable
-        object SaveAndStartNew : SavingType("Save and start new event")
+        object SaveAndStartFromNow : SavingType("Save and start new event")
+        @Serializable
+        object SaveAndStartFromLastEvent : SavingType("Save and start new event")
     }
 }
