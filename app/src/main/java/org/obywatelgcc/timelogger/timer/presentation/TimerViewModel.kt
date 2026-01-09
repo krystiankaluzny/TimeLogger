@@ -19,6 +19,7 @@ import org.obywatelgcc.timelogger.core.model.CalendarRepository
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarStateManager
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
+import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState.SavingType
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsStateManager
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerStateManager
@@ -95,6 +96,9 @@ class TimerViewModel(
         timerStateManager.init()
         titleStateManager.init()
         settingsStateManager.init()
+
+        settingsStateManager.updateSavingType(SavingType.SaveAndStartFromLastEvent)
+
         _initialized.update { true }
     }
 
