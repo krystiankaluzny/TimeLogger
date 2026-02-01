@@ -490,7 +490,7 @@ private fun TimeLoggerButtonsView(
                 width = 4.dp,
                 brush = Brush.verticalGradient(
                     0.0f to Color.Transparent,
-                    0.8f to TimeLoggerTheme.extendedColors.saveButton,
+                    TimeLoggerTheme.values.saveButtonBorderGradientStop to TimeLoggerTheme.extendedColors.saveButton,
                     1f to TimeLoggerTheme.extendedColors.saveButtonBorder
                 ),
                 shape = ButtonDefaults.elevatedShape

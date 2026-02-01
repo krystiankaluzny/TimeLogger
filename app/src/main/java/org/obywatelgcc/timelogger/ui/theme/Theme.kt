@@ -69,11 +69,13 @@ val LocalExtendedColors = staticCompositionLocalOf {
 @Immutable
 data class ExtendedValues(
     val selectedColorBorder: Dp,
+    val saveButtonBorderGradientStop: Float,
 )
 
 val LocalExtendedValues = staticCompositionLocalOf {
     ExtendedValues(
-        selectedColorBorder = 0.dp
+        selectedColorBorder = 0.dp,
+        saveButtonBorderGradientStop = 0.8f
     )
 }
 
@@ -113,9 +115,9 @@ fun TimeLoggerTheme(
                 timerToStartButton = Color(0xB58BC34A),
                 timerToStopButton = Color(0xB0E13325),
                 timerToResumeButton = Color(0xBF13BED3),
-                saveButtonContent = Color(0xBCD0EEDC),
-                saveButton = Color(0xB59256D5),
-                saveButtonBorder =Color(0x4D6DC5D3),
+                saveButtonContent = Color(0xEB0F0F10),
+                saveButton = Color(0xB7A057FA),
+                saveButtonBorder = Color(0x806DC5D3),
                 suggestionMatch = Color(0xFF086AB2)
             )
         }
@@ -124,10 +126,12 @@ fun TimeLoggerTheme(
         if (darkTheme)
             ExtendedValues(
                 selectedColorBorder = 3.dp,
+                saveButtonBorderGradientStop = 0.8f
             )
         else {
             ExtendedValues(
                 selectedColorBorder = 1.dp,
+                saveButtonBorderGradientStop = 0.5f
             )
         }
 
