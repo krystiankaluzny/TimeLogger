@@ -2,6 +2,7 @@ package org.obywatelgcc.timelogger.timer.presentation
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -252,7 +253,9 @@ private fun RowScope.EventTitleTextField(
             },
             label = { Text(text = "Event title") },
             singleLine = true,
-            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable)
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(MenuAnchorType.PrimaryEditable)
         )
 
         if (titleSuggestions.isNotEmpty()) {
