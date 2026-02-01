@@ -35,7 +35,7 @@ data class Calendar(
             return accountName
         }
 
-        return "$accountName - $displayName"
+        return "$displayName - $accountName"
     }
 }
 
