@@ -26,7 +26,7 @@ class StatisticsStateManager(
 
     companion object {
         const val OTHERS_LABEL = "Others"
-        const val OTHERS_THRESHOLD = 9
+        const val OTHERS_THRESHOLD = 40
     }
 
     fun recalculate(queryTimeRange: ZonedDateTimeRange, calendarEvents: List<CalendarEvent>) {
