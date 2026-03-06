@@ -287,6 +287,7 @@ private fun RowScope.EventTitleTextField(
                                         }
                                         append(suggestion.suffix)
                                     },
+                                    fontSize = TimeLoggerTheme.values.textFieldFontSize,
                                     modifier = Modifier
                                         .weight(1.0f)
                                 )
