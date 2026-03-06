@@ -2,7 +2,6 @@ package org.obywatelgcc.timelogger.timer.presentation
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuBoxScope
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -46,7 +46,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
@@ -252,6 +251,7 @@ private fun RowScope.EventTitleTextField(
                 expanded = true
             },
             label = { Text(text = "Event title") },
+            textStyle = LocalTextStyle.current.copy(fontSize = TimeLoggerTheme.values.textFieldFontSize),
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -412,7 +412,7 @@ private fun DurationView(durationStr: String) {
     Text(
         text = "Duration: $durationStr",
         modifier = Modifier.padding(16.dp),
-        fontSize = 20.sp
+        fontSize = TimeLoggerTheme.values.durationTextFontSize
     )
 }
 
@@ -432,7 +432,7 @@ private fun TimeLoggerButtonsView(
 
         val buttonModifier = Modifier
             .weight(0.5f)
-            .height(50.dp)
+            .height(TimeLoggerTheme.values.loggerButtonHeight)
 
         ElevatedButton(
             modifier = buttonModifier,
@@ -440,7 +440,7 @@ private fun TimeLoggerButtonsView(
             elevation = buttonElevation,
             enabled = true
         ) {
-            Text(text = "Restart")
+            Text(text = "Restart", fontSize = TimeLoggerTheme.values.loggerButtonFontSize)
         }
 
         Spacer(Modifier.width(16.dp))
@@ -455,7 +455,7 @@ private fun TimeLoggerButtonsView(
                     contentColor = TimeLoggerTheme.extendedColors.timerButtonContent
                 )
             ) {
-                Text(text = "Start")
+                Text(text = "Start", fontSize = TimeLoggerTheme.values.loggerButtonFontSize)
             }
 
             TimerState.RunningState.STARTED -> ElevatedButton(
@@ -467,7 +467,7 @@ private fun TimeLoggerButtonsView(
                     contentColor = TimeLoggerTheme.extendedColors.timerButtonContent
                 )
             ) {
-                Text(text = "Stop")
+                Text(text = "Stop", fontSize = TimeLoggerTheme.values.loggerButtonFontSize)
             }
 
             TimerState.RunningState.STOPPED -> ElevatedButton(
@@ -479,7 +479,7 @@ private fun TimeLoggerButtonsView(
                     contentColor = TimeLoggerTheme.extendedColors.timerButtonContent
                 )
             ) {
-                Text(text = "Resume")
+                Text(text = "Resume", fontSize = TimeLoggerTheme.values.loggerButtonFontSize)
             }
         }
     }
@@ -498,7 +498,7 @@ private fun TimeLoggerButtonsView(
                 ),
                 shape = ButtonDefaults.elevatedShape
             )
-            .height(70.dp),
+            .height(TimeLoggerTheme.values.saveButtonHeight),
         onClick = { onAction(TimerAction.TrySave) },
         elevation = buttonElevation,
         colors = ButtonDefaults.elevatedButtonColors(
@@ -508,7 +508,8 @@ private fun TimeLoggerButtonsView(
     ) {
         Text(
             text = settingsState.savingType.description,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            fontSize = TimeLoggerTheme.values.saveButtonFontSize
         )
     }
 }

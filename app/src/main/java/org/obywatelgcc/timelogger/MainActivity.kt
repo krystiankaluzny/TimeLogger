@@ -8,6 +8,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
@@ -15,7 +18,7 @@ import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 class MainActivity : ComponentActivity() {
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val callbackId = 42
@@ -25,8 +28,9 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            TimeLoggerTheme {
-                MainScreen()
+            val windowSizeClass: WindowSizeClass = calculateWindowSizeClass(activity = this)
+            TimeLoggerTheme(windowSizeClass) {
+                MainScreen(windowSizeClass)
             }
         }
     }

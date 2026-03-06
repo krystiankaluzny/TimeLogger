@@ -3,14 +3,12 @@ package org.obywatelgcc.timelogger.timer.presentation.components
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -24,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.rexmtorres.android.composedatepicker.datepicker.DatePicker
 import io.github.rexmtorres.android.composedatepicker.datepicker.data.DefaultDatePickerConfig
 import io.github.rexmtorres.android.composedatepicker.datepicker.data.model.DatePickerDate
@@ -279,23 +276,26 @@ fun CheckableTextButton(checked: Boolean, text: String, onClick: () -> Unit) {
                 containerColor = containerColor
             )
     ) {
-        Text(text = text, fontSize = 18.sp)
+        Text(text = text, fontSize = TimeLoggerTheme.values.dateTimePickerTextFieldFontSize)
     }
 }
 
 @Composable
 fun OffsetButton(offsetButtonValue: Long, onClick: () -> Unit) {
 
-    val sign = if(offsetButtonValue < 0) "-" else "+"
+    val sign = if (offsetButtonValue < 0) "-" else "+"
 
-    val offsetButtonModifier =  Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+    val offsetButtonModifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
     val offsetButtonElevation = CustomButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp)
 
-    org.obywatelgcc.timelogger.core.presentation.components.ElevatedButton (
+    org.obywatelgcc.timelogger.core.presentation.components.ElevatedButton(
         modifier = offsetButtonModifier,
         onClick = onClick,
         elevation = offsetButtonElevation
     ) {
-        Text(text = "${sign}${offsetButtonValue.absoluteValue}m")
+        Text(
+            text = "${sign}${offsetButtonValue.absoluteValue}m",
+            fontSize = TimeLoggerTheme.values.dateTimePickerOffsetButtonFontSize
+        )
     }
 }

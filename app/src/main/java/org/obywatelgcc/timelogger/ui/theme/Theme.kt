@@ -9,6 +9,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -16,7 +18,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -70,17 +74,34 @@ val LocalExtendedColors = staticCompositionLocalOf {
 data class ExtendedValues(
     val selectedColorBorder: Dp,
     val saveButtonBorderGradientStop: Float,
+    val textFieldFontSize: TextUnit,
+    val dateTimePickerTextFieldFontSize: TextUnit,
+    val dateTimePickerOffsetButtonFontSize: TextUnit,
+    val durationTextFontSize: TextUnit,
+    val loggerButtonFontSize: TextUnit,
+    val saveButtonFontSize: TextUnit,
+    val loggerButtonHeight: Dp,
+    val saveButtonHeight: Dp,
 )
 
 val LocalExtendedValues = staticCompositionLocalOf {
     ExtendedValues(
         selectedColorBorder = 0.dp,
-        saveButtonBorderGradientStop = 0.8f
+        saveButtonBorderGradientStop = 0.8f,
+        textFieldFontSize = 16.sp,
+        dateTimePickerTextFieldFontSize = 18.sp,
+        dateTimePickerOffsetButtonFontSize = 16.sp,
+        durationTextFontSize = 20.sp,
+        loggerButtonFontSize = 16.sp,
+        saveButtonFontSize = 14.sp,
+        loggerButtonHeight = 50.dp,
+        saveButtonHeight = 70.dp,
     )
 }
 
 @Composable
 fun TimeLoggerTheme(
+    windowSizeClass: WindowSizeClass,
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
@@ -106,7 +127,7 @@ fun TimeLoggerTheme(
                 timerToResumeButton = Color(0xD2143F73),
                 saveButtonContent = Color(0xBCD0EEDC),
                 saveButton = Color(0xB59256D5),
-                saveButtonBorder =Color(0x4D6DC5D3),
+                saveButtonBorder = Color(0x4D6DC5D3),
                 suggestionMatch = Color(0xFFE07727)
             )
         else {
@@ -123,15 +144,32 @@ fun TimeLoggerTheme(
         }
 
     val extendedValues =
-        if (darkTheme)
+
+        if (windowSizeClass.isWidthExpanded()) {
             ExtendedValues(
-                selectedColorBorder = 3.dp,
-                saveButtonBorderGradientStop = 0.8f
+                selectedColorBorder = if (darkTheme) 3.dp else 1.dp,
+                saveButtonBorderGradientStop = if (darkTheme) 0.8f else 0.5f,
+                textFieldFontSize = 20.sp,
+                dateTimePickerTextFieldFontSize = 22.sp,
+                dateTimePickerOffsetButtonFontSize = 20.sp,
+                durationTextFontSize = 24.sp,
+                loggerButtonFontSize = 20.sp,
+                saveButtonFontSize = 20.sp,
+                loggerButtonHeight = 70.dp,
+                saveButtonHeight = 90.dp,
             )
-        else {
+        } else {
             ExtendedValues(
-                selectedColorBorder = 1.dp,
-                saveButtonBorderGradientStop = 0.5f
+                selectedColorBorder = if (darkTheme) 3.dp else 1.dp,
+                saveButtonBorderGradientStop = if (darkTheme) 0.8f else 0.5f,
+                textFieldFontSize = 16.sp,
+                dateTimePickerTextFieldFontSize = 18.sp,
+                dateTimePickerOffsetButtonFontSize = 16.sp,
+                durationTextFontSize = 20.sp,
+                loggerButtonFontSize = 14.sp,
+                saveButtonFontSize = 14.sp,
+                loggerButtonHeight = 50.dp,
+                saveButtonHeight = 70.dp,
             )
         }
 
@@ -163,4 +201,8 @@ object TimeLoggerTheme {
     val values: ExtendedValues
         @Composable
         get() = LocalExtendedValues.current
+}
+
+fun WindowSizeClass.isWidthExpanded(): Boolean {
+    return this.widthSizeClass == WindowWidthSizeClass.Expanded
 }
