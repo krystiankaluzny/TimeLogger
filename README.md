@@ -7,13 +7,13 @@ TimeLogger is like a stopwatch for tasks.
 Events are saved in the selected calendar, so you can browse it on you favourite calendar app or using web browser.
 
 <p>
- <img src="https://github.com/krystiankaluzny/TimeLogger/blob/master/doc/TimeLogger-main.jpg" width=60% height=60%>
- <img src="https://github.com/krystiankaluzny/TimeLogger/blob/master/doc/Calendar.jpg" width=60% height=60% hspace="20"> 
+ <img src="https://github.com/krystiankaluzny/TimeLogger/blob/master/doc/TimeLogger-main.jpg" width=35% height=35%>
+ <img src="https://github.com/krystiankaluzny/TimeLogger/blob/master/doc/Calendar.jpg" width=35% height=35% hspace="10"> 
 </p>
 
 I you want to view simple barchart aggregation you can use Statistics screen.
 
-<img src="https://github.com/krystiankaluzny/TimeLogger/blob/master/doc/TimeLogger-statistics.jpg" width=60% height=60%>
+<img src="https://github.com/krystiankaluzny/TimeLogger/blob/master/doc/TimeLogger-statistics.jpg" width=35% height=35%>
 
 
 Demo:
