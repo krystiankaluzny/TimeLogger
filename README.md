@@ -4,17 +4,20 @@ If you want to simply tracking how long you are doing things, without creating w
 
 TimeLogger is like a stopwatch for tasks.
 
-![Main Screen](doc/TimeLogger-main.jpg)
-
 Events are saved in the selected calendar, so you can browse it on you favourite calendar app or using web browser.
 
-![Calendar Screen](doc/Calendar.jpg)
+<p>
+ <img src="https://github.com/krystiankaluzny/TimeLogger/blob/master/doc/TimeLogger-main.jpg" width=25% height=25%>
+ <img src="https://github.com/krystiankaluzny/TimeLogger/blob/master/doc/Calendar.jpg" width=25% height=25% hspace="20"> 
+</p>
 
-I you want to view simple barchart aggregation you can use Statistics screen. 
+I you want to view simple barchart aggregation you can use Statistics screen.
 
-![Statistics Screen](doc/TimeLogger-statistics.jpg)
+<img src="https://github.com/krystiankaluzny/TimeLogger/blob/master/doc/TimeLogger-statistics.jpg" width=25% height=25%>
 
 
 Demo:
- - [Saving new event](doc/TimeLogger-base.mp4)
- - [Browse statistics](doc/TimeLogger-statistics.mp4)
+
+![TimeLogger-base.gif](doc/TimeLogger-base.gif)
+
+![TimeLogger-statistics.gif](doc/TimeLogger-statistics.gif)
