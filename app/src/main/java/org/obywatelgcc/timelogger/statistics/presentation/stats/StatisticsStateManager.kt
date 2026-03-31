@@ -10,6 +10,7 @@ import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
 import org.obywatelgcc.timelogger.settings.model.SleepWindowSettings
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsState.StatisticItem
+import org.obywatelgcc.timelogger.utils.logDebug
 import java.time.Duration
 import java.time.ZonedDateTime
 
@@ -41,7 +42,9 @@ class StatisticsStateManager(
         val statisticItems = calendarEvents.groupingBy { it.title }
             .aggregate { key: String, acc: DataHolder?, event: CalendarEvent, first: Boolean ->
 
-                val dataHolder = if (first || acc == null) { DataHolder() } else acc
+                val dataHolder = if (first || acc == null) {
+                    DataHolder()
+                } else acc
 
                 //Cut event duration to query time range
                 val eventDuration = Duration.between(
@@ -82,40 +85,59 @@ class StatisticsStateManager(
         events: List<CalendarEvent>,
         sleepWindowSettings: SleepWindowSettings
     ): Duration {
+        val now = ZonedDateTime.now()
         var totalSleep = Duration.ZERO
         val zone = queryTimeRange.from.zone
         var day = queryTimeRange.from.toLocalDate().minusDays(1)
 
+        val sortedEvents = events.sortedBy { it.timeRange.from }
+
+        var eventIndex = 0
+
+        val minimalGap = Duration.ofHours(3)
+        //checking night windows
         while (true) {
+            if(eventIndex >= sortedEvents.size) break
+
+            var maxGapDurationInWindow = Duration.ZERO
             val nightWindowStart = day.atTime(sleepWindowSettings.start).atZone(zone)
             val nightWindowEnd = day.plusDays(1).atTime(sleepWindowSettings.end).atZone(zone)
 
             if (nightWindowStart >= queryTimeRange.to) break
 
             val effectiveWindowStart = max(nightWindowStart, queryTimeRange.from)
-            val effectiveWindowEnd = min(nightWindowEnd, queryTimeRange.to)
+            val effectiveWindowEnd = min(min(nightWindowEnd, queryTimeRange.to), now)
 
             if (effectiveWindowEnd > effectiveWindowStart) {
-                val lastEvent = events
-                    .filter { it.timeRange.to <= nightWindowEnd }
-                    .maxByOrNull { it.timeRange.to }
+                while(eventIndex < sortedEvents.size - 1) {
+                    val event1 = sortedEvents[eventIndex]
+                    val event2 = sortedEvents[eventIndex + 1]
 
-                val firstEvent = events
-                    .filter { it.timeRange.from >= nightWindowStart }
-                    .minByOrNull { it.timeRange.from }
+                    //before night window, continue until event2 starts in night window
+                    if(event2.timeRange.from < effectiveWindowStart) {
+                        eventIndex++
+                        continue
+                    }
 
-                val gapStart = if (lastEvent != null)
-                    max(lastEvent.timeRange.to, effectiveWindowStart)
-                else
-                    effectiveWindowStart
+                    //after night window, nothing to do
+                    if (event1.timeRange.to > effectiveWindowEnd) break
 
-                val gapEnd = if (firstEvent != null)
-                    min(firstEvent.timeRange.from, effectiveWindowEnd)
-                else
-                    effectiveWindowEnd
+                    //in night window, calculate gap between event1 and event2
+                    val gapStart = max(event1.timeRange.to, effectiveWindowStart)
+                    val gapEnd = min(event2.timeRange.from, effectiveWindowEnd)
 
-                if (gapEnd > gapStart) {
-                    totalSleep = totalSleep.plus(Duration.between(gapStart, gapEnd))
+                    val gap = Duration.between(gapStart, gapEnd)
+                    if (gap > minimalGap && gap > maxGapDurationInWindow) {
+                        maxGapDurationInWindow = gap
+                    }
+
+                    eventIndex++
+                }
+
+                if(maxGapDurationInWindow > Duration.ZERO) {
+                    totalSleep = totalSleep.plus(maxGapDurationInWindow)
+                } else {
+                    totalSleep = totalSleep.plus(Duration.between(effectiveWindowStart, effectiveWindowEnd))
                 }
             }
 
