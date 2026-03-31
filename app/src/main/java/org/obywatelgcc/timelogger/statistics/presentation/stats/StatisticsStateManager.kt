@@ -8,6 +8,7 @@ import org.obywatelgcc.timelogger.core.model.CalendarEvent
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
+import org.obywatelgcc.timelogger.settings.model.SleepWindowSettings
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsState.StatisticItem
 import java.time.Duration
 import java.time.ZonedDateTime
@@ -26,11 +27,17 @@ class StatisticsStateManager(
 
     companion object {
         const val OTHERS_LABEL = "Others"
+        val OTHERS_COLOR = CalendarEventColor("Others", "#FF0101010", "", "", "")
+        const val SLEEP_LABEL = "Sleep"
+        val SLEEP_COLOR = CalendarEventColor("Sleep", "#FFE06707", "", "", "")
         const val OTHERS_THRESHOLD = 40
     }
 
-    fun recalculate(queryTimeRange: ZonedDateTimeRange, calendarEvents: List<CalendarEvent>) {
-
+    fun recalculate(
+        queryTimeRange: ZonedDateTimeRange,
+        calendarEvents: List<CalendarEvent>,
+        sleepWindowSettings: SleepWindowSettings
+    ) {
         val statisticItems = calendarEvents.groupingBy { it.title }
             .aggregate { key: String, acc: DataHolder?, event: CalendarEvent, first: Boolean ->
 
@@ -52,23 +59,70 @@ class StatisticsStateManager(
             .map {
                 StatisticItem(it.key, it.value.totalDuration, it.value.color)
             }
+            .toMutableList()
 
-        val sorted = statisticItems.sortedByDescending { it.totalDuration }
-
-        val result = if(sorted.size > OTHERS_THRESHOLD) {
-            val othersDuration = sorted.subList(OTHERS_THRESHOLD, sorted.size)
-                .fold(Duration.ZERO) { acc, item -> acc.plus(item.totalDuration) }
-
-            sorted.subList(0, OTHERS_THRESHOLD) + StatisticItem(OTHERS_LABEL, othersDuration, sorted[OTHERS_THRESHOLD].color)
-        } else {
-            sorted
+        if (sleepWindowSettings.enabled) {
+            val sleepDuration = calculateSleepDuration(queryTimeRange, calendarEvents, sleepWindowSettings)
+            if (!sleepDuration.isZero) {
+                statisticItems.add(StatisticItem(SLEEP_LABEL, sleepDuration, SLEEP_COLOR))
+            }
         }
+
+        val result = statisticItems.sortedByDescending { it.totalDuration }
 
         state.update {
             it.copy(
                 statisticItems = result
             )
         }
+    }
+
+    private fun calculateSleepDuration(
+        queryTimeRange: ZonedDateTimeRange,
+        events: List<CalendarEvent>,
+        sleepWindowSettings: SleepWindowSettings
+    ): Duration {
+        var totalSleep = Duration.ZERO
+        val zone = queryTimeRange.from.zone
+        var day = queryTimeRange.from.toLocalDate().minusDays(1)
+
+        while (true) {
+            val nightWindowStart = day.atTime(sleepWindowSettings.start).atZone(zone)
+            val nightWindowEnd = day.plusDays(1).atTime(sleepWindowSettings.end).atZone(zone)
+
+            if (nightWindowStart >= queryTimeRange.to) break
+
+            val effectiveWindowStart = max(nightWindowStart, queryTimeRange.from)
+            val effectiveWindowEnd = min(nightWindowEnd, queryTimeRange.to)
+
+            if (effectiveWindowEnd > effectiveWindowStart) {
+                val lastEvent = events
+                    .filter { it.timeRange.to <= nightWindowEnd }
+                    .maxByOrNull { it.timeRange.to }
+
+                val firstEvent = events
+                    .filter { it.timeRange.from >= nightWindowStart }
+                    .minByOrNull { it.timeRange.from }
+
+                val gapStart = if (lastEvent != null)
+                    max(lastEvent.timeRange.to, effectiveWindowStart)
+                else
+                    effectiveWindowStart
+
+                val gapEnd = if (firstEvent != null)
+                    min(firstEvent.timeRange.from, effectiveWindowEnd)
+                else
+                    effectiveWindowEnd
+
+                if (gapEnd > gapStart) {
+                    totalSleep = totalSleep.plus(Duration.between(gapStart, gapEnd))
+                }
+            }
+
+            day = day.plusDays(1)
+        }
+
+        return totalSleep
     }
 
     private fun min(a: ZonedDateTime, b: ZonedDateTime) = if (a.isBefore(b)) a else b
@@ -79,4 +133,3 @@ data class DataHolder(
     var totalDuration: Duration = Duration.ZERO,
     var color: CalendarEventColor? = null
 )
-

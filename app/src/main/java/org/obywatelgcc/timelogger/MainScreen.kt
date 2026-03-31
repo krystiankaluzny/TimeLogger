@@ -52,6 +52,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.obywatelgcc.timelogger.settings.SettingsViewModel
 import org.obywatelgcc.timelogger.categories.CategoriesScreen
 import org.obywatelgcc.timelogger.categories.CategoriesViewModel
 import org.obywatelgcc.timelogger.core.presentation.SnackbarMessageBus
@@ -267,6 +268,8 @@ private fun NavHostView(
     ) {
         val vmStoreOwner = rememberViewModelStoreOwner()
 
+        val settingsViewModel = koinViewModel<SettingsViewModel>(viewModelStoreOwner = vmStoreOwner)
+
         NavHost(
             navController = navController,
             startDestination = Screen.TimeLogger
@@ -284,7 +287,7 @@ private fun NavHostView(
                 CategoriesScreen(viewModel)
             }
             composable<Screen.Settings> {
-                SettingsScreen()
+                SettingsScreen(settingsViewModel)
             }
         }
     }

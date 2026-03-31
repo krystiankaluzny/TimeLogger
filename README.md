@@ -16,7 +16,11 @@ I you want to view simple barchart aggregation you can use Statistics screen.
 <img src="https://github.com/krystiankaluzny/TimeLogger/blob/master/doc/TimeLogger-statistics.jpg" width=35% height=35%>
 
 
-Demo:
+## TODO
+- Calculate sleep time eg. as time between last event of previous day and first event of current day. 
+- Calculate untracked time - sum of all gaps between saved events
+
+## Demo:
 
 ![TimeLogger-base.gif](doc/TimeLogger-base.gif)
 

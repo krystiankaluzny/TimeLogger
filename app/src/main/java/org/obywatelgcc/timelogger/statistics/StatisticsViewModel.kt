@@ -17,6 +17,7 @@ import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.CalendarEvent
 import org.obywatelgcc.timelogger.core.model.CalendarRepository
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
+import org.obywatelgcc.timelogger.settings.model.SettingsProvider
 import org.obywatelgcc.timelogger.statistics.presentation.filter.FilterState
 import org.obywatelgcc.timelogger.statistics.presentation.filter.FilterStateManager
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsState
@@ -26,7 +27,8 @@ import org.obywatelgcc.timelogger.utils.logDebug
 class StatisticsViewModel(
     savedStateHandle: SavedStateHandle,
     dataSoreManager: DataStoreManager,
-    private val calendarRepository: CalendarRepository
+    private val settingsProvider: SettingsProvider,
+    private val calendarRepository: CalendarRepository,
 ) : ViewModel() {
 
     private val filterStateManager =
@@ -50,52 +52,63 @@ class StatisticsViewModel(
         filterStateManager.init(
             calendarRepository.findAllCalendars()
         )
-        refreshStatisticsData()
+        viewModelScope.launch {
+            settingsProvider.sleepWindowsSettings.collect {
+                refreshStatisticsData()
+            }
+        }
+        launchRefreshStatisticsData()
         _initialized.update { true }
     }
 
     fun onAction(action: StatisticsAction) = when (action) {
         is StatisticsAction.SelectCalendar -> {
             filterStateManager.selectCalendar(action.calendar)
-            refreshStatisticsData()
+            launchRefreshStatisticsData()
         }
 
         is StatisticsAction.SelectTimeRangeType -> {
             filterStateManager.selectTimeRangeType(action.type)
-            refreshStatisticsData()
+            launchRefreshStatisticsData()
         }
 
         StatisticsAction.PreviousRange -> {
             filterStateManager.calculatePreviousRange()
-            refreshStatisticsData()
+            launchRefreshStatisticsData()
         }
 
         StatisticsAction.NextRange -> {
             filterStateManager.calculateNextRange()
-            refreshStatisticsData()
+            launchRefreshStatisticsData()
         }
 
         StatisticsAction.ResetRange -> {
             filterStateManager.resetRange()
+            launchRefreshStatisticsData()
+        }
+    }
+
+    private fun launchRefreshStatisticsData() {
+        viewModelScope.launch {
             refreshStatisticsData()
         }
     }
 
-    private fun refreshStatisticsData() {
-        viewModelScope.launch {
-            filterState.collect {
-                val selectedCalendar = it.selectedCalendar
-                val queryTimeRange = it.timeRange
-                val key = selectedCalendar to queryTimeRange
-                val events = calendarEventCache.get(key)
-                    ?: calendarRepository.findEventsInTimeRange(selectedCalendar, queryTimeRange)
-                        .also { fetchedEvents ->
-                            calendarEventCache.put(key, fetchedEvents)
-                        }
+    private suspend fun refreshStatisticsData() {
+        val fs = filterState.value
+        val selectedCalendar = fs.selectedCalendar
+        val queryTimeRange = fs.timeRange
+        val key = selectedCalendar to queryTimeRange
+        val events = calendarEventCache.get(key)
+            ?: calendarRepository.findEventsInTimeRange(selectedCalendar, queryTimeRange)
+                .also { fetchedEvents ->
+                    calendarEventCache.put(key, fetchedEvents)
+                }
 
-                statisticsStateManager.recalculate(queryTimeRange, events)
-            }
-        }
+        statisticsStateManager.recalculate(
+            queryTimeRange,
+            events,
+            settingsProvider.sleepWindowsSettings.value
+        )
     }
-
 }
