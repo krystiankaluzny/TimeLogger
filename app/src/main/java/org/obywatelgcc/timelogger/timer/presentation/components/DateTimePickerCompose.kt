@@ -1,5 +1,7 @@
 package org.obywatelgcc.timelogger.timer.presentation.components
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,9 +15,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +35,7 @@ import io.github.rexmtorres.android.composedatepicker.timepicker.data.DefaultTim
 import io.github.rexmtorres.android.composedatepicker.timepicker.data.model.TimePickerTime
 import io.github.rexmtorres.android.composedatepicker.timepicker.enums.MinuteGap
 import io.github.rexmtorres.android.composedatepicker.timepicker.ui.model.TimePickerConfiguration
+import kotlinx.coroutines.delay
 import org.obywatelgcc.timelogger.core.presentation.components.CustomButtonDefaults
 import org.obywatelgcc.timelogger.core.presentation.components.CustomButtonDefaults.textButtonContentModifier
 import org.obywatelgcc.timelogger.core.presentation.components.TextButton
@@ -284,14 +289,41 @@ fun CheckableTextButton(checked: Boolean, text: String, onClick: () -> Unit) {
 fun OffsetButton(offsetButtonValue: Long, onClick: () -> Unit) {
 
     val sign = if (offsetButtonValue < 0) "-" else "+"
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    var isRepeating by remember { mutableStateOf(false) }
+    val currentOnClick by rememberUpdatedState(onClick)
 
-    val offsetButtonModifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-    val offsetButtonElevation = CustomButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp)
+    LaunchedEffect(isPressed) {
+        if (isPressed) {
+            isRepeating = false
+            delay(500L)
+            isRepeating = true
+
+            var currentDelay = 200L
+            val minDelay = 60L
+            val step = 5L
+
+            while (true) {
+                currentOnClick()
+                delay(currentDelay)
+
+                if (currentDelay > minDelay) {
+                    currentDelay = (currentDelay - step).coerceAtLeast(minDelay)
+                }
+            }
+        } else {
+            // A short delay before reset to allow the standard onClick of the button to check the isRepeating state
+            delay(100L)
+            isRepeating = false
+        }
+    }
 
     org.obywatelgcc.timelogger.core.presentation.components.ElevatedButton(
-        modifier = offsetButtonModifier,
-        onClick = onClick,
-        elevation = offsetButtonElevation
+        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+        onClick = { if (!isRepeating) onClick() },
+        elevation = CustomButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp),
+        interactionSource = interactionSource
     ) {
         Text(
             text = "${sign}${offsetButtonValue.absoluteValue}m",
