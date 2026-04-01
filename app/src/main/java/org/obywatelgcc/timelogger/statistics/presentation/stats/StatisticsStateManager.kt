@@ -8,6 +8,7 @@ import org.obywatelgcc.timelogger.core.model.CalendarEvent
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
+import org.obywatelgcc.timelogger.settings.model.OtherSettings
 import org.obywatelgcc.timelogger.settings.model.SleepWindowSettings
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsState.StatisticItem
 import org.obywatelgcc.timelogger.utils.logDebug
@@ -31,13 +32,16 @@ class StatisticsStateManager(
         val OTHERS_COLOR = CalendarEventColor("Others", "#FF0101010", "", "", "")
         const val SLEEP_LABEL = "Sleep"
         val SLEEP_COLOR = CalendarEventColor("Sleep", "#FFE06707", "", "", "")
+        const val UNMEASURED_LABEL = "Unmeasured"
+        val UNMEASURED_COLOR = CalendarEventColor("Unmeasured", "#FFFFB014", "", "", "")
         const val OTHERS_THRESHOLD = 40
     }
 
     fun recalculate(
         queryTimeRange: ZonedDateTimeRange,
         calendarEvents: List<CalendarEvent>,
-        sleepWindowSettings: SleepWindowSettings
+        sleepWindowSettings: SleepWindowSettings,
+        otherSettings: OtherSettings
     ) {
         val statisticItems = calendarEvents.groupingBy { it.title }
             .aggregate { key: String, acc: DataHolder?, event: CalendarEvent, first: Boolean ->
@@ -64,10 +68,21 @@ class StatisticsStateManager(
             }
             .toMutableList()
 
+        val sortedEvents = calendarEvents.sortedBy { it.timeRange.from }
+
+        var sleepDuration = Duration.ZERO
         if (sleepWindowSettings.enabled) {
-            val sleepDuration = calculateSleepDuration(queryTimeRange, calendarEvents, sleepWindowSettings)
+            sleepDuration = calculateSleepDuration(queryTimeRange, sortedEvents, sleepWindowSettings)
             if (!sleepDuration.isZero) {
                 statisticItems.add(StatisticItem(SLEEP_LABEL, sleepDuration, SLEEP_COLOR))
+            }
+        }
+
+        if (otherSettings.countUnmeasuredGaps) {
+            val totalUnmeasuredDuration = calculateUnmeasuredDuration(queryTimeRange, sortedEvents)
+            val unmeasuredDuration = totalUnmeasuredDuration - sleepDuration
+            if (!unmeasuredDuration.isZero) {
+                statisticItems.add(StatisticItem(UNMEASURED_LABEL, unmeasuredDuration, UNMEASURED_COLOR))
             }
         }
 
@@ -82,15 +97,13 @@ class StatisticsStateManager(
 
     private fun calculateSleepDuration(
         queryTimeRange: ZonedDateTimeRange,
-        events: List<CalendarEvent>,
+        sortedEvents: List<CalendarEvent>,
         sleepWindowSettings: SleepWindowSettings
     ): Duration {
         val now = ZonedDateTime.now()
         var totalSleep = Duration.ZERO
         val zone = queryTimeRange.from.zone
         var day = queryTimeRange.from.toLocalDate().minusDays(1)
-
-        val sortedEvents = events.sortedBy { it.timeRange.from }
 
         var eventIndex = 0
 
@@ -145,6 +158,40 @@ class StatisticsStateManager(
         }
 
         return totalSleep
+    }
+
+    private fun calculateUnmeasuredDuration(
+        queryTimeRange: ZonedDateTimeRange,
+        sortedEvents: List<CalendarEvent>
+    ): Duration {
+        val now = ZonedDateTime.now()
+        val effectiveEnd = min(queryTimeRange.to, now)
+        if (!effectiveEnd.isAfter(queryTimeRange.from)) return Duration.ZERO
+
+        var unmeasured = Duration.ZERO
+        var previousEventEnd = queryTimeRange.from
+
+        for (event in sortedEvents) {
+            val eventStart = max(event.timeRange.from, queryTimeRange.from)
+            val eventEnd = min(event.timeRange.to, effectiveEnd)
+
+            if(eventStart > effectiveEnd) break
+
+            if (eventStart.isAfter(previousEventEnd)) {
+                val gap = Duration.between(previousEventEnd, eventStart)
+                logDebug("gap: $gap, event: ${event.title}")
+                if (!gap.isNegative) unmeasured = unmeasured.plus(gap)
+            }
+            if (eventEnd.isAfter(previousEventEnd)) previousEventEnd = eventEnd
+            if (!previousEventEnd.isBefore(effectiveEnd)) break
+        }
+
+        if (previousEventEnd.isBefore(effectiveEnd)) {
+            logDebug("gap end: ${Duration.between(previousEventEnd, effectiveEnd)}")
+            unmeasured = unmeasured.plus(Duration.between(previousEventEnd, effectiveEnd))
+        }
+
+        return unmeasured
     }
 
     private fun min(a: ZonedDateTime, b: ZonedDateTime) = if (a.isBefore(b)) a else b

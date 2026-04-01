@@ -4,4 +4,5 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface SettingsProvider {
     val sleepWindowsSettings: StateFlow<SleepWindowSettings>
+    val otherSettings: StateFlow<OtherSettings>
 }

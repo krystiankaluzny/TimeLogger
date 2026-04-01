@@ -57,6 +57,11 @@ class StatisticsViewModel(
                 refreshStatisticsData()
             }
         }
+        viewModelScope.launch {
+            settingsProvider.otherSettings.collect {
+                refreshStatisticsData()
+            }
+        }
         launchRefreshStatisticsData()
         _initialized.update { true }
     }
@@ -108,7 +113,8 @@ class StatisticsViewModel(
         statisticsStateManager.recalculate(
             queryTimeRange,
             events,
-            settingsProvider.sleepWindowsSettings.value
+            settingsProvider.sleepWindowsSettings.value,
+            settingsProvider.otherSettings.value
         )
     }
 }

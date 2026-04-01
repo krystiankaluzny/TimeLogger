@@ -24,6 +24,7 @@ class SettingsViewModel(
     val initialized = _initialized.asStateFlow()
 
     val sleepWindowSettings = settingsHolder.sleepWindowsSettings
+    val otherSettings = settingsHolder.otherSettings
 
     init {
         viewModelScope.launch {
@@ -40,5 +41,6 @@ class SettingsViewModel(
         is SettingsAction.SleepWindowEnabled -> settingsStateManager.setSleepWindowEnabled(action.enabled)
         is SettingsAction.SleepWindowStart -> settingsStateManager.setSleepWindowStart(action.time)
         is SettingsAction.SleepWindowEnd -> settingsStateManager.setSleepWindowEnd(action.time)
+        is SettingsAction.CountUnmeasuredGapsEnabled -> settingsStateManager.setCountUnmeasuredGaps(action.enabled)
     }
 }

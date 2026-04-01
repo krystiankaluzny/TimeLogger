@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.data.LocalTimeSerializer
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
+import org.obywatelgcc.timelogger.settings.model.OtherSettings
 import org.obywatelgcc.timelogger.settings.model.SettingsHolder
 import org.obywatelgcc.timelogger.settings.model.SleepWindowSettings
 import org.obywatelgcc.timelogger.utils.logInfo
@@ -34,6 +35,11 @@ class SettingsStateManager(
                 end = settingsPreferences.value.sleepWindowEnd
             )
         }
+        settingsHolder.updateOtherSettings {
+            OtherSettings(
+                countUnmeasuredGaps = settingsPreferences.value.countUnmeasuredGaps
+            )
+        }
     }
 
     fun setSleepWindowEnabled(enabled: Boolean) {
@@ -50,6 +56,11 @@ class SettingsStateManager(
         settingsPreferences.edit { it.copy(sleepWindowEnd = time) }
         settingsHolder.updateSleepWindow { it.copy(end = time) }
     }
+
+    fun setCountUnmeasuredGaps(enabled: Boolean) {
+        settingsPreferences.edit { it.copy(countUnmeasuredGaps = enabled) }
+        settingsHolder.updateOtherSettings { it.copy(countUnmeasuredGaps = enabled) }
+    }
 }
 
 @Serializable
@@ -58,5 +69,6 @@ data class SettingsPreferences(
     @Serializable(LocalTimeSerializer::class)
     val sleepWindowStart: LocalTime = LocalTime.of(22, 0),
     @Serializable(LocalTimeSerializer::class)
-    val sleepWindowEnd: LocalTime = LocalTime.of(10, 0)
+    val sleepWindowEnd: LocalTime = LocalTime.of(10, 0),
+    val countUnmeasuredGaps: Boolean = false
 )

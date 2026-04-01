@@ -1,5 +1,6 @@
 package org.obywatelgcc.timelogger.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
@@ -28,14 +30,15 @@ import java.time.LocalTime
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
     val sleepWindowSettings by viewModel.sleepWindowSettings.collectAsStateWithLifecycle()
+    val otherSettings by viewModel.otherSettings.collectAsStateWithLifecycle()
     val initialized by viewModel.initialized.collectAsStateWithLifecycle()
 
     if (initialized) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             Text(
                 text = "Sleep",
-                style = TimeLoggerTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
+                style = TimeLoggerTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 2.dp)
             )
 
             SleepEnabledRow(
@@ -55,6 +58,17 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     onTimeSelected = { viewModel.onAction(SettingsAction.SleepWindowEnd(it)) }
                 )
             }
+
+            Text(
+                text = "Others",
+                style = TimeLoggerTheme.typography.titleLarge,
+                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
+            )
+
+            CountUnmeasuredGapsRow(
+                enabled = otherSettings.countUnmeasuredGaps,
+                onToggle = { viewModel.onAction(SettingsAction.CountUnmeasuredGapsEnabled(it)) }
+            )
         }
     }
 
@@ -63,7 +77,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
 @Composable
 private fun SleepEnabledRow(enabled: Boolean, onToggle: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -88,7 +102,7 @@ private fun TimePickerRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { showDialog = true }
-            .padding(vertical = 12.dp),
+            .padding(start = 10.dp, top = 6.dp, bottom = 6.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -125,5 +139,20 @@ private fun TimePickerRow(
             },
             text = { TimePicker(state = state) }
         )
+    }
+}
+
+@Composable
+private fun CountUnmeasuredGapsRow(enabled: Boolean, onToggle: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Count unmeasured gaps",
+            modifier = Modifier.weight(1f),
+            style = TimeLoggerTheme.typography.bodyLarge
+        )
+        Switch(checked = enabled, onCheckedChange = onToggle)
     }
 }
