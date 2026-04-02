@@ -17,8 +17,6 @@ I you want to view simple barchart aggregation you can use Statistics screen.
 
 
 ## TODO
-- Calculate sleep time eg. as time between last event of previous day and first event of current day. 
-- Calculate untracked time - sum of all gaps between saved events
 
 ## Demo:
 

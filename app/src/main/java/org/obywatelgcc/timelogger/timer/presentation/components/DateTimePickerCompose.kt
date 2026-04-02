@@ -1,6 +1,7 @@
 package org.obywatelgcc.timelogger.timer.presentation.components
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import io.github.rexmtorres.android.composedatepicker.timepicker.data.model.Time
 import io.github.rexmtorres.android.composedatepicker.timepicker.enums.MinuteGap
 import io.github.rexmtorres.android.composedatepicker.timepicker.ui.model.TimePickerConfiguration
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import org.obywatelgcc.timelogger.core.presentation.components.CustomButtonDefaults
 import org.obywatelgcc.timelogger.core.presentation.components.CustomButtonDefaults.textButtonContentModifier
 import org.obywatelgcc.timelogger.core.presentation.components.TextButton
@@ -290,32 +292,36 @@ fun OffsetButton(offsetButtonValue: Long, onClick: () -> Unit) {
 
     val sign = if (offsetButtonValue < 0) "-" else "+"
     val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
     var isRepeating by remember { mutableStateOf(false) }
     val currentOnClick by rememberUpdatedState(onClick)
 
-    LaunchedEffect(isPressed) {
-        if (isPressed) {
-            isRepeating = false
-            delay(500L)
-            isRepeating = true
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collectLatest { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    isRepeating = false
+                    delay(500L)
+                    isRepeating = true
 
-            var currentDelay = 200L
-            val minDelay = 60L
-            val step = 5L
+                    var currentDelay = 200L
+                    val minDelay = 60L
+                    val step = 5L
 
-            while (true) {
-                currentOnClick()
-                delay(currentDelay)
+                    while (true) {
+                        currentOnClick()
+                        delay(currentDelay)
 
-                if (currentDelay > minDelay) {
-                    currentDelay = (currentDelay - step).coerceAtLeast(minDelay)
+                        if (currentDelay > minDelay) {
+                            currentDelay = (currentDelay - step).coerceAtLeast(minDelay)
+                        }
+                    }
+                }
+
+                is PressInteraction.Release, is PressInteraction.Cancel -> {
+                    delay(100L)
+                    isRepeating = false
                 }
             }
-        } else {
-            // A short delay before reset to allow the standard onClick of the button to check the isRepeating state
-            delay(100L)
-            isRepeating = false
         }
     }
 
