@@ -129,8 +129,14 @@ fun DateTimePickersView(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    OffsetButton(-5L, { onAction(TimerAction.OffsetEndTime(-5L, ChronoUnit.MINUTES)) })
-                    OffsetButton(+5L, { onAction(TimerAction.OffsetEndTime(+5L, ChronoUnit.MINUTES)) })
+                    OffsetButton(-5L, {
+                        onAction(TimerAction.StopTimer)
+                        onAction(TimerAction.OffsetEndTime(-5L, ChronoUnit.MINUTES))
+                    })
+                    OffsetButton(+5L, {
+                        onAction(TimerAction.StopTimer)
+                        onAction(TimerAction.OffsetEndTime(+5L, ChronoUnit.MINUTES))
+                    })
                 }
             }
         }
