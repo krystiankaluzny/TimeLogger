@@ -49,9 +49,7 @@ class StatisticsViewModel(
 
     private suspend fun initData() {
         logDebug("initData")
-        filterStateManager.init(
-            calendarRepository.findAllCalendars()
-        )
+        filterStateManager.init()
         viewModelScope.launch {
             settingsProvider.sleepWindowsSettings.collect {
                 refreshStatisticsData()
@@ -62,16 +60,16 @@ class StatisticsViewModel(
                 refreshStatisticsData()
             }
         }
+        viewModelScope.launch {
+            settingsProvider.calendarSettings.collect {
+                refreshStatisticsData()
+            }
+        }
         launchRefreshStatisticsData()
         _initialized.update { true }
     }
 
     fun onAction(action: StatisticsAction) = when (action) {
-        is StatisticsAction.SelectCalendar -> {
-            filterStateManager.selectCalendar(action.calendar)
-            launchRefreshStatisticsData()
-        }
-
         is StatisticsAction.SelectTimeRangeType -> {
             filterStateManager.selectTimeRangeType(action.type)
             launchRefreshStatisticsData()
@@ -100,9 +98,8 @@ class StatisticsViewModel(
     }
 
     private suspend fun refreshStatisticsData() {
-        val fs = filterState.value
-        val selectedCalendar = fs.selectedCalendar
-        val queryTimeRange = fs.timeRange
+        val selectedCalendar = settingsProvider.calendarSettings.value.selectedCalendar
+        val queryTimeRange = filterState.value.timeRange
         val key = selectedCalendar to queryTimeRange
         val events = calendarEventCache.get(key)
             ?: calendarRepository.findEventsInTimeRange(selectedCalendar, queryTimeRange)

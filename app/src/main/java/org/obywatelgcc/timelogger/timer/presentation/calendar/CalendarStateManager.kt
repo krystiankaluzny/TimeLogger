@@ -5,9 +5,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
-import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
 import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
+import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
+import org.obywatelgcc.timelogger.settings.model.CalendarSettings
 import org.obywatelgcc.timelogger.utils.logInfo
 
 class CalendarStateManager(
@@ -26,142 +27,97 @@ class CalendarStateManager(
     private var calendarPreferences =
         jsonDataStoreStateFlow(calendarPreferencesKey, CalendarPreferences())
 
-    suspend fun init(
-        calendars: List<Calendar>,
-        eventColors: List<CalendarEventColor>
-    ) {
+    suspend fun init(calendarSettings: CalendarSettings) {
         logInfo("init")
-
         calendarPreferences.loadFormDataStore()
-        updatePreferences(calendars, eventColors)
 
-        val colorsData = calendarPreferences.value.selectedCalendar.let { getColorsData(it) }
-
-        val availableColors = colorsData.colors
-        val selectedColor = colorsData.selectedColor
+        val colorsData = getOrCreateColorsData(calendarSettings.selectedCalendar, calendarSettings.availableColors)
 
         state.update {
             it.copy(
-                availableCalendars = calendars,
-                selectedCalendar = calendarPreferences.value.selectedCalendar,
-                availableColors = availableColors,
-                selectedColor = selectedColor
-            )
-        }
-    }
-
-    fun selectCalendar(calendar: Calendar) {
-        val colorsData = getColorsData(calendar)
-
-        calendarPreferences.edit { pref ->
-            pref.selectedCalendar = calendar
-            pref
-        }
-
-        return state.update {
-            it.copy(
-                selectedCalendar = calendar,
-                availableColors = colorsData.colors,
+                availableColors = calendarSettings.availableColors,
                 selectedColor = colorsData.selectedColor
             )
         }
     }
 
-
-    fun selectColor(color: CalendarEventColor) {
-        calendarPreferences.edit { pref ->
-            getColorsData(pref.selectedCalendar).selectedColor = color
-            pref
-        }
+    fun updateCalendar(calendarSettings: CalendarSettings) {
+        val colorsData = getOrCreateColorsData(calendarSettings.selectedCalendar, calendarSettings.availableColors)
 
         state.update {
             it.copy(
-                selectedColor = color
+                availableColors = calendarSettings.availableColors,
+                selectedColor = colorsData.selectedColor
             )
         }
     }
 
+    fun selectColor(color: CalendarEventColor) {
+        calendarPreferences.edit { pref ->
+            pref.dataMap[pref.currentCalendarId]?.selectedColor = color
+            pref
+        }
+
+        state.update {
+            it.copy(selectedColor = color)
+        }
+    }
+
     fun selectSuggestedColor(color: CalendarEventColor?) {
-        val colorsData = calendarPreferences.value.selectedCalendar.let { getColorsData(it) }
-        if(colorsData.colors.contains(color)) {
+        if (state.value.availableColors.contains(color)) {
             color?.let { selectColor(color) }
         }
     }
 
     fun shiftColor() {
-        val colorsData = calendarPreferences.value.selectedCalendar.let { getColorsData(it) }
-        val currentColorIndex = colorsData.colors.indexOf(colorsData.selectedColor)
+        val colors = state.value.availableColors
+        val currentColorIndex = colors.indexOf(state.value.selectedColor)
 
         if (currentColorIndex != -1) {
-            if (currentColorIndex == colorsData.colors.lastIndex) {
-                selectColor(colorsData.colors.first())
+            if (currentColorIndex == colors.lastIndex) {
+                selectColor(colors.first())
             } else {
-                selectColor(colorsData.colors[currentColorIndex + 1])
+                selectColor(colors[currentColorIndex + 1])
             }
         }
     }
 
-    private fun updatePreferences(
-        calendars: List<Calendar>,
-        eventColors: List<CalendarEventColor>
-    ) {
+    private fun getOrCreateColorsData(
+        calendar: Calendar,
+        availableColors: List<CalendarEventColor>
+    ): CalendarColorsData {
+        val existing = calendarPreferences.value.dataMap[calendar.id]
+        val colorsData = if (existing != null) {
+            if (!availableColors.contains(existing.selectedColor)) {
+                existing.selectedColor = availableColors.getOrElse(0) { CalendarEventColor.Empty }
+            }
+            existing
+        } else {
+            CalendarColorsData(
+                availableColors,
+                availableColors.getOrElse(0) { CalendarEventColor.Empty }
+            )
+        }
+
         calendarPreferences.edit { pref ->
-            if (!calendars.contains(pref.selectedCalendar)) {
-                pref.selectedCalendar = calendars.getOrElse(0, { Calendar.Empty })
-            }
-
-            val dataMap = pref.dataMap
-            val calendarIds = calendars.map { it.id }
-            dataMap.entries.removeIf { !calendarIds.contains(it.key) }
-
-            calendars.forEach { calendar ->
-                val availableColors = eventColors
-                    .filter {
-                        calendar.accountName == it.accountName
-                                && calendar.accountType == it.accountType
-                    }
-
-                val data = dataMap.getOrPut(calendar.id) {
-                    CalendarColorsData(
-                        calendar,
-                        availableColors,
-                        CalendarEventColor.Empty
-                    )
-                }
-
-                if (!availableColors.contains(data.selectedColor)) {
-                    data.selectedColor = availableColors.getOrElse(0) { CalendarEventColor.Empty }
-                }
-            }
-
-            if (pref.selectedCalendar == Calendar.Empty) {
-                dataMap.getOrPut(Calendar.Empty.id) {
-                    CalendarColorsData(
-                        Calendar.Empty,
-                        emptyList(),
-                        CalendarEventColor.Empty
-                    )
-                }
-            }
-
+            pref.currentCalendarId = calendar.id
+            pref.dataMap[calendar.id] = colorsData
             pref
         }
-    }
 
-    private fun getColorsData(calendar: Calendar): CalendarColorsData =
-        calendarPreferences.value.dataMap.getValue(calendar.id)
+        return colorsData
+    }
 }
 
 
 @Serializable
 private data class CalendarPreferences(
-    val dataMap: MutableMap<Long, CalendarColorsData> = mutableMapOf<Long, CalendarColorsData>(),
-    var selectedCalendar: Calendar = Calendar.Empty
+    val dataMap: MutableMap<Long, CalendarColorsData> = mutableMapOf(),
+    var currentCalendarId: Long = Calendar.Empty.id
 )
 
 @Serializable
 private class CalendarColorsData(
-    val calendar: Calendar,
     val colors: List<CalendarEventColor>,
     var selectedColor: CalendarEventColor
 )

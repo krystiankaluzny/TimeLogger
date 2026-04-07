@@ -47,7 +47,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
-import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
 import org.obywatelgcc.timelogger.timer.presentation.components.DateTimePickersView
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
@@ -89,14 +88,6 @@ private fun TimeLoggerPortraitScreen(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val calendars = calendarState.availableCalendars
-        val selectedCalendar = calendarState.selectedCalendar
-
-        CalendarDropdown(
-            Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
         TitleAndColorView(
             titleState,
             calendarState.availableColors,
@@ -142,16 +133,6 @@ private fun TimeLoggerLandscapeScreen(
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val calendars = calendarState.availableCalendars
-            val selectedCalendar = calendarState.selectedCalendar
-
-            Box(modifier = Modifier.weight(1.0f)) {
-                CalendarDropdown(
-                    Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    calendars, selectedCalendar, { onAction(TimerAction.SelectCalendar(it)) })
-            }
             Box(modifier = Modifier.weight(1.0f)) {
                 TitleAndColorView(
                     titleState,

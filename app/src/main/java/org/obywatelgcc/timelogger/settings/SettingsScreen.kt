@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 import java.time.LocalTime
 
@@ -31,10 +32,24 @@ import java.time.LocalTime
 fun SettingsScreen(viewModel: SettingsViewModel) {
     val sleepWindowSettings by viewModel.sleepWindowSettings.collectAsStateWithLifecycle()
     val otherSettings by viewModel.otherSettings.collectAsStateWithLifecycle()
+    val calendarSettings by viewModel.calendarSettings.collectAsStateWithLifecycle()
     val initialized by viewModel.initialized.collectAsStateWithLifecycle()
 
     if (initialized) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            Text(
+                text = "Calendar",
+                style = TimeLoggerTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 2.dp)
+            )
+
+            CalendarDropdown(
+                modifier = Modifier.fillMaxWidth(),
+                calendars = calendarSettings.availableCalendars,
+                selected = calendarSettings.selectedCalendar,
+                onSelect = { viewModel.onAction(SettingsAction.SelectCalendar(it)) }
+            )
+
             Text(
                 text = "Sleep",
                 style = TimeLoggerTheme.typography.titleLarge,

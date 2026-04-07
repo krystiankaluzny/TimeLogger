@@ -26,14 +26,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
-import org.obywatelgcc.timelogger.core.presentation.components.CalendarDropdown
 import org.obywatelgcc.timelogger.core.presentation.components.OutlinedTextField
 import org.obywatelgcc.timelogger.statistics.StatisticsAction.NextRange
 import org.obywatelgcc.timelogger.statistics.StatisticsAction.PreviousRange
 import org.obywatelgcc.timelogger.statistics.StatisticsAction.ResetRange
-import org.obywatelgcc.timelogger.statistics.StatisticsAction.SelectCalendar
 import org.obywatelgcc.timelogger.statistics.StatisticsAction.SelectTimeRangeType
 import org.obywatelgcc.timelogger.core.presentation.components.chart.BarChart
 import org.obywatelgcc.timelogger.core.presentation.components.chart.BarChartProperties
@@ -51,8 +48,6 @@ fun StatisticsScreen(viewModel: StatisticsViewModel) {
     val filterState by viewModel.filterState.collectAsStateWithLifecycle()
     val statisticsState by viewModel.statisticsState.collectAsStateWithLifecycle()
 
-    val calendars = filterState.availableCalendars
-    val selectedCalendar = filterState.selectedCalendar
     val timeRangeType = filterState.timeRangeType
     val timeRange = filterState.timeRange
 
@@ -60,8 +55,6 @@ fun StatisticsScreen(viewModel: StatisticsViewModel) {
 
     if (initialized) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CalendarDropdownView(calendars, selectedCalendar, viewModel::onAction)
-
             TimeRangeButtonsView(timeRangeType, viewModel::onAction)
 
             TimeRangeValeView(timeRange, timeRangeType, viewModel::onAction)
@@ -71,19 +64,6 @@ fun StatisticsScreen(viewModel: StatisticsViewModel) {
             StatisticsBarChartView(statisticsState)
         }
     }
-}
-
-@Composable
-private fun CalendarDropdownView(
-    calendars: List<Calendar>,
-    selectedCalendar: Calendar,
-    onAction: (StatisticsAction) -> Unit
-) {
-    CalendarDropdown(
-        Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
-        calendars,
-        selectedCalendar,
-        { onAction(SelectCalendar(it)) })
 }
 
 @Composable

@@ -1,6 +1,5 @@
 package org.obywatelgcc.timelogger.timer.presentation
 
-import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState.SavingType
 import org.obywatelgcc.timelogger.timer.presentation.title.TitleState.Suggestion
@@ -9,7 +8,6 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 sealed interface TimerAction {
-    data class SelectCalendar(val calendar: Calendar) : TimerAction
     data class SelectColor(val color: CalendarEventColor) : TimerAction
 
     data class UpdateTitle(val title: String) : TimerAction

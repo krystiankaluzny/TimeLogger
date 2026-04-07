@@ -8,13 +8,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
+import org.obywatelgcc.timelogger.core.model.CalendarRepository
 import org.obywatelgcc.timelogger.settings.model.SettingsHolder
 import org.obywatelgcc.timelogger.settings.presentation.SettingsStateManager
 
 class SettingsViewModel(
     savedStateHandle: SavedStateHandle,
     dataSoreManager: DataStoreManager,
-    settingsHolder: SettingsHolder
+    settingsHolder: SettingsHolder,
+    private val calendarRepository: CalendarRepository
 ) : ViewModel() {
 
     private val settingsStateManager =
@@ -23,6 +25,7 @@ class SettingsViewModel(
     private val _initialized = MutableStateFlow(false)
     val initialized = _initialized.asStateFlow()
 
+    val calendarSettings = settingsHolder.calendarSettings
     val sleepWindowSettings = settingsHolder.sleepWindowsSettings
     val otherSettings = settingsHolder.otherSettings
 
@@ -33,6 +36,10 @@ class SettingsViewModel(
     }
 
     private suspend fun initData() {
+        settingsStateManager.initCalendar(
+            calendarRepository.findAllCalendars(),
+            calendarRepository.findAllEventColors()
+        )
         settingsStateManager.init()
         _initialized.update { true }
     }
@@ -42,5 +49,6 @@ class SettingsViewModel(
         is SettingsAction.SleepWindowStart -> settingsStateManager.setSleepWindowStart(action.time)
         is SettingsAction.SleepWindowEnd -> settingsStateManager.setSleepWindowEnd(action.time)
         is SettingsAction.CountUnmeasuredGapsEnabled -> settingsStateManager.setCountUnmeasuredGaps(action.enabled)
+        is SettingsAction.SelectCalendar -> settingsStateManager.selectCalendar(action.calendar)
     }
 }

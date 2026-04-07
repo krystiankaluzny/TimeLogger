@@ -16,6 +16,7 @@ import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.CalendarEvent
 import org.obywatelgcc.timelogger.core.model.CalendarRepository
+import org.obywatelgcc.timelogger.settings.model.SettingsProvider
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
 import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarStateManager
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
@@ -30,7 +31,8 @@ import org.obywatelgcc.timelogger.utils.logDebug
 class TimerViewModel(
     savedStateHandle: SavedStateHandle,
     dataSoreManager: DataStoreManager,
-    private val calendarRepository: CalendarRepository
+    private val calendarRepository: CalendarRepository,
+    private val settingsProvider: SettingsProvider
 ) : ViewModel() {
 
     private val calendarStateManager =
@@ -61,11 +63,10 @@ class TimerViewModel(
 
     fun onAction(action: TimerAction) =
         when (action) {
-            is TimerAction.SelectCalendar -> calendarStateManager.selectCalendar(action.calendar)
             is TimerAction.SelectColor -> calendarStateManager.selectColor(action.color)
             is TimerAction.UpdateTitle -> titleStateManager.updateTitle(
                 action.title,
-                calendarState.value.selectedCalendar
+                settingsProvider.calendarSettings.value.selectedCalendar
             )
 
             is TimerAction.SelectSuggestion -> {
@@ -89,10 +90,14 @@ class TimerViewModel(
 
     private suspend fun initData() {
         logDebug("initData")
-        calendarStateManager.init(
-            calendarRepository.findAllCalendars(),
-            calendarRepository.findAllEventColors()
-        )
+        calendarStateManager.init(settingsProvider.calendarSettings.value)
+
+        viewModelScope.launch {
+            settingsProvider.calendarSettings.collect { calendarSettings ->
+                calendarStateManager.updateCalendar(calendarSettings)
+            }
+        }
+
         timerStateManager.init()
         titleStateManager.init()
         settingsStateManager.init()
@@ -104,7 +109,7 @@ class TimerViewModel(
 
 
     private fun trySave() {
-        val selectedCalendar = calendarState.value.selectedCalendar
+        val selectedCalendar = settingsProvider.calendarSettings.value.selectedCalendar
         var validationResult = ValidationResult.OK
 
         if (selectedCalendar == Calendar.Empty) {
