@@ -47,7 +47,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
-import org.obywatelgcc.timelogger.timer.presentation.calendar.CalendarState
 import org.obywatelgcc.timelogger.timer.presentation.components.DateTimePickersView
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
@@ -57,7 +56,6 @@ import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 @Composable
 fun TimerMainScreen(
-    calendarState: CalendarState,
     timerState: TimerState,
     titleState: TitleState,
     settingsState: SettingsState,
@@ -66,20 +64,18 @@ fun TimerMainScreen(
     val configuration = LocalConfiguration.current
     when (configuration.orientation) {
         Configuration.ORIENTATION_PORTRAIT -> TimeLoggerPortraitScreen(
-            calendarState,
             timerState,
             titleState,
             settingsState,
             onAction
         )
 
-        else -> TimeLoggerLandscapeScreen(calendarState, timerState, titleState, settingsState, onAction)
+        else -> TimeLoggerLandscapeScreen(timerState, titleState, settingsState, onAction)
     }
 }
 
 @Composable
 private fun TimeLoggerPortraitScreen(
-    calendarState: CalendarState,
     timerState: TimerState,
     titleState: TitleState,
     settingsState: SettingsState,
@@ -88,12 +84,7 @@ private fun TimeLoggerPortraitScreen(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TitleAndColorView(
-            titleState,
-            calendarState.availableColors,
-            calendarState.selectedColor,
-            onAction
-        )
+        TitleAndColorView(titleState, onAction)
 
         HorizontalDivider()
 
@@ -120,7 +111,6 @@ private fun TimeLoggerPortraitScreen(
 
 @Composable
 private fun TimeLoggerLandscapeScreen(
-    calendarState: CalendarState,
     timerState: TimerState,
     titleState: TitleState,
     settingsState: SettingsState,
@@ -134,12 +124,7 @@ private fun TimeLoggerLandscapeScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(modifier = Modifier.weight(1.0f)) {
-                TitleAndColorView(
-                    titleState,
-                    calendarState.availableColors,
-                    calendarState.selectedColor,
-                    onAction
-                )
+                TitleAndColorView(titleState, onAction)
             }
         }
         HorizontalDivider()
@@ -178,8 +163,6 @@ private fun TimeLoggerLandscapeScreen(
 @Composable
 private fun TitleAndColorView(
     titleState: TitleState,
-    colors: List<CalendarEventColor>,
-    selectedColor: CalendarEventColor,
     onAction: OnAction
 ) {
     Row(
@@ -189,7 +172,7 @@ private fun TitleAndColorView(
             .fillMaxWidth()
     ) {
         EventTitleTextField(titleState, onAction)
-        ColorDropdown(colors, selectedColor, { onAction(TimerAction.SelectColor(it)) })
+        ColorDropdown(titleState.availableColors, titleState.selectedColor, { onAction(TimerAction.SelectColor(it)) })
     }
 }
 

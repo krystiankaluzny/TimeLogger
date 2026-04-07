@@ -19,7 +19,6 @@ fun TimerScreen(viewModel: TimerViewModel) {
 
     val snackbarMessageBus = koinInject<SnackbarMessageBus>()
 
-    val calenderState by viewModel.calendarState.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
     val titleState by viewModel.titleState.collectAsStateWithLifecycle()
     val settingsState by viewModel.settingsState.collectAsStateWithLifecycle()
@@ -40,7 +39,7 @@ fun TimerScreen(viewModel: TimerViewModel) {
     val initialized by viewModel.initialized.collectAsStateWithLifecycle()
 
     if (initialized) {
-        TimerMainScreen(calenderState, timerState, titleState, settingsState, viewModel::onAction)
+        TimerMainScreen(timerState, titleState, settingsState, viewModel::onAction)
     } else {
         TimerLoadingScreen()
     }

@@ -51,17 +51,17 @@ class StatisticsViewModel(
         logDebug("initData")
         filterStateManager.init()
         viewModelScope.launch {
+            settingsProvider.calendarSettings.collect {
+                refreshStatisticsData()
+            }
+        }
+        viewModelScope.launch {
             settingsProvider.sleepWindowsSettings.collect {
                 refreshStatisticsData()
             }
         }
         viewModelScope.launch {
             settingsProvider.otherSettings.collect {
-                refreshStatisticsData()
-            }
-        }
-        viewModelScope.launch {
-            settingsProvider.calendarSettings.collect {
                 refreshStatisticsData()
             }
         }
