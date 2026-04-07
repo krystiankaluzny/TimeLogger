@@ -23,11 +23,7 @@ class SettingsStateManager(
     private val settingsHolder: SettingsHolder
 ) : BaseStateManager<Any>(coroutineScope, savedStateHandle, dataStoreManager, "") {
 
-    companion object {
-        const val PREFS_KEY = "settings_v1"
-    }
-
-    private val settingsPreferences = jsonDataStoreStateFlow(PREFS_KEY, SettingsPreferences())
+    private val settingsPreferences = jsonDataStoreStateFlow("settingsPreferences", SettingsPreferences())
 
     suspend fun init(availableCalendars: List<Calendar>, availableEventColors: List<CalendarEventColor>) {
         logInfo("SettingsStateManager init")

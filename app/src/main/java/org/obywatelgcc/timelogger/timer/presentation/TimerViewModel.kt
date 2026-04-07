@@ -87,6 +87,9 @@ class TimerViewModel(
         viewModelScope.launch {
             settingsProvider.calendarSettings.collect { calendarSettings ->
                 titleStateManager.updateCalendar(calendarSettings)
+                if (calendarSettings.selectedCalendar == Calendar.Empty) {
+                    _effectsChannel.send(TimerEffect.NoCalendarSelected)
+                }
             }
         }
 
@@ -102,10 +105,11 @@ class TimerViewModel(
         val selectedCalendar = settingsProvider.calendarSettings.value.selectedCalendar
         var validationResult = ValidationResult.OK
 
-        if (selectedCalendar == Calendar.Empty) {
-            validationResult = ValidationResult.INVALID_CALENDAR
-        } else {
-            viewModelScope.launch {
+
+        viewModelScope.launch {
+            if (selectedCalendar == Calendar.Empty) {
+                validationResult = ValidationResult.INVALID_CALENDAR
+            } else {
                 timerStateManager.stop()
                 validationResult = checkData()
 
@@ -122,10 +126,10 @@ class TimerViewModel(
 
                     val result = calendarRepository.addEventToCalendar(selectedCalendar, event)
                     handleSaveResult(result)
-                } else {
-                    handleValidationResult(validationResult)
                 }
             }
+
+            handleValidationResult(validationResult)
         }
     }
 
@@ -169,11 +173,11 @@ class TimerViewModel(
 
     private suspend fun handleValidationResult(validationResult: ValidationResult) {
         when (validationResult) {
-            ValidationResult.OK -> TODO()
+            ValidationResult.OK -> {}
             ValidationResult.EMPTY_TITLE -> _effectsChannel.send(TimerEffect.ValidationError("Empty title"))
             ValidationResult.DURATION_TOO_SHORT -> _effectsChannel.send(TimerEffect.ValidationError("Duration too short"))
             ValidationResult.END_BEFORE_START -> _effectsChannel.send(TimerEffect.ValidationError("End before start"))
-            ValidationResult.INVALID_CALENDAR -> TODO()
+            ValidationResult.INVALID_CALENDAR -> _effectsChannel.send(TimerEffect.NoCalendarSelected)
         }
     }
 }
