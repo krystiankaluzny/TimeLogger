@@ -15,6 +15,9 @@ class SettingsHolder(): SettingsProvider {
     private val _calendarSettings = MutableStateFlow<CalendarSettings>(CalendarSettings())
     override val calendarSettings: StateFlow<CalendarSettings> = _calendarSettings.asStateFlow()
 
+    private val _availableCalendarSettings = MutableStateFlow<AvailableCalendarSettings>(AvailableCalendarSettings())
+    override val availableCalendarSettings: StateFlow<AvailableCalendarSettings> = _availableCalendarSettings.asStateFlow()
+
     fun updateSleepWindow(function: (SleepWindowSettings) -> SleepWindowSettings) {
         _sleepWindowsSettings.update(function)
     }
@@ -25,5 +28,9 @@ class SettingsHolder(): SettingsProvider {
 
     fun updateCalendarSettings(function: (CalendarSettings) -> CalendarSettings) {
         _calendarSettings.update(function)
+    }
+
+    fun updateAvailableCalendarSettings(function: (AvailableCalendarSettings) -> AvailableCalendarSettings) {
+        _availableCalendarSettings.update(function)
     }
 }

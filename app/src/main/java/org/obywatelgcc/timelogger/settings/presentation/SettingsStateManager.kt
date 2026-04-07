@@ -8,6 +8,7 @@ import org.obywatelgcc.timelogger.core.data.LocalTimeSerializer
 import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
+import org.obywatelgcc.timelogger.settings.model.AvailableCalendarSettings
 import org.obywatelgcc.timelogger.settings.model.CalendarSettings
 import org.obywatelgcc.timelogger.settings.model.OtherSettings
 import org.obywatelgcc.timelogger.settings.model.SettingsHolder
@@ -28,11 +29,27 @@ class SettingsStateManager(
 
     private val settingsPreferences = jsonDataStoreStateFlow(PREFS_KEY, SettingsPreferences())
 
-    private var allEventColors: List<CalendarEventColor> = emptyList()
-
-    suspend fun init() {
+    suspend fun init(availableCalendars: List<Calendar>, availableEventColors: List<CalendarEventColor>) {
         logInfo("SettingsStateManager init")
         settingsPreferences.loadFormDataStore()
+        settingsHolder.updateAvailableCalendarSettings {
+            AvailableCalendarSettings(
+                allCalendars = availableCalendars,
+                allColors = availableEventColors
+            )
+        }
+
+        val persistedCalendar = settingsPreferences.value.selectedCalendar
+        val selectedCalendar = if (availableCalendars.contains(persistedCalendar)) persistedCalendar else Calendar.Empty
+        val availableCalendarColors = colorsForCalendar(selectedCalendar)
+
+        settingsHolder.updateCalendarSettings {
+            CalendarSettings(
+                selectedCalendar = selectedCalendar,
+                calendarColors = availableCalendarColors
+            )
+        }
+
         settingsHolder.updateSleepWindow {
             SleepWindowSettings(
                 enabled = settingsPreferences.value.sleepWindowEnabled,
@@ -41,42 +58,15 @@ class SettingsStateManager(
             )
         }
         settingsHolder.updateOtherSettings {
-            OtherSettings(
-                countUnmeasuredGaps = settingsPreferences.value.countUnmeasuredGaps
-            )
-        }
-    }
-
-    suspend fun initCalendar(calendars: List<Calendar>, eventColors: List<CalendarEventColor>) {
-        logInfo("SettingsStateManager initCalendar")
-        allEventColors = eventColors
-
-        val persisted = settingsPreferences.value.selectedCalendar
-        val selected = if (calendars.contains(persisted)) persisted
-                       else calendars.getOrElse(0) { Calendar.Empty }
-
-        if (selected != persisted) {
-            settingsPreferences.edit { it.copy(selectedCalendar = selected) }
-        }
-
-        val colors = colorsForCalendar(selected)
-        settingsHolder.updateCalendarSettings {
-            CalendarSettings(
-                selectedCalendar = selected,
-                availableCalendars = calendars,
-                availableColors = colors
-            )
+            OtherSettings(countUnmeasuredGaps = settingsPreferences.value.countUnmeasuredGaps)
         }
     }
 
     fun selectCalendar(calendar: Calendar) {
-        settingsPreferences.edit { it.copy(selectedCalendar = calendar) }
         val colors = colorsForCalendar(calendar)
+        settingsPreferences.edit { it.copy(selectedCalendar = calendar, selectedCalendarColors = colors) }
         settingsHolder.updateCalendarSettings {
-            it.copy(
-                selectedCalendar = calendar,
-                availableColors = colors
-            )
+            it.copy(selectedCalendar = calendar, calendarColors = colors)
         }
     }
 
@@ -101,18 +91,19 @@ class SettingsStateManager(
     }
 
     private fun colorsForCalendar(calendar: Calendar): List<CalendarEventColor> =
-        allEventColors.filter {
+        settingsHolder.availableCalendarSettings.value.allColors.filter {
             it.accountName == calendar.accountName && it.accountType == calendar.accountType
         }
 }
 
 @Serializable
 data class SettingsPreferences(
+    val selectedCalendar: Calendar = Calendar.Empty,
+    val selectedCalendarColors: List<CalendarEventColor> = emptyList(),
     val sleepWindowEnabled: Boolean = false,
     @Serializable(LocalTimeSerializer::class)
     val sleepWindowStart: LocalTime = LocalTime.of(22, 0),
     @Serializable(LocalTimeSerializer::class)
     val sleepWindowEnd: LocalTime = LocalTime.of(10, 0),
-    val countUnmeasuredGaps: Boolean = false,
-    val selectedCalendar: Calendar = Calendar.Empty
+    val countUnmeasuredGaps: Boolean = false
 )

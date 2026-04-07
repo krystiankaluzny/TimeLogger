@@ -6,4 +6,5 @@ interface SettingsProvider {
     val sleepWindowsSettings: StateFlow<SleepWindowSettings>
     val otherSettings: StateFlow<OtherSettings>
     val calendarSettings: StateFlow<CalendarSettings>
+    val availableCalendarSettings: StateFlow<AvailableCalendarSettings>
 }

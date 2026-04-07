@@ -3,7 +3,7 @@ package org.obywatelgcc.timelogger.settings.model
 import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 
-data class CalendarSettings(
-    val selectedCalendar: Calendar = Calendar.Empty,
-    val calendarColors: List<CalendarEventColor> = emptyList()
+data class AvailableCalendarSettings(
+    val allCalendars: List<Calendar> = emptyList(),
+    val allColors: List<CalendarEventColor> = emptyList()
 )

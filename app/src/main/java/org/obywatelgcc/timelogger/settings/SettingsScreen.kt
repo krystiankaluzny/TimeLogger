@@ -33,6 +33,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     val sleepWindowSettings by viewModel.sleepWindowSettings.collectAsStateWithLifecycle()
     val otherSettings by viewModel.otherSettings.collectAsStateWithLifecycle()
     val calendarSettings by viewModel.calendarSettings.collectAsStateWithLifecycle()
+    val availableCalendars by viewModel.availableCalendars.collectAsStateWithLifecycle()
     val initialized by viewModel.initialized.collectAsStateWithLifecycle()
 
     if (initialized) {
@@ -44,8 +45,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             )
 
             CalendarDropdown(
-                modifier = Modifier.fillMaxWidth(),
-                calendars = calendarSettings.availableCalendars,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                calendars = availableCalendars.allCalendars,
                 selected = calendarSettings.selectedCalendar,
                 onSelect = { viewModel.onAction(SettingsAction.SelectCalendar(it)) }
             )

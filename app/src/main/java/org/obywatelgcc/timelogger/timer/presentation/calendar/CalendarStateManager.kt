@@ -31,22 +31,22 @@ class CalendarStateManager(
         logInfo("init")
         calendarPreferences.loadFormDataStore()
 
-        val colorsData = getOrCreateColorsData(calendarSettings.selectedCalendar, calendarSettings.availableColors)
+        val colorsData = getOrCreateColorsData(calendarSettings.selectedCalendar, calendarSettings.calendarColors)
 
         state.update {
             it.copy(
-                availableColors = calendarSettings.availableColors,
+                availableColors = calendarSettings.calendarColors,
                 selectedColor = colorsData.selectedColor
             )
         }
     }
 
     fun updateCalendar(calendarSettings: CalendarSettings) {
-        val colorsData = getOrCreateColorsData(calendarSettings.selectedCalendar, calendarSettings.availableColors)
+        val colorsData = getOrCreateColorsData(calendarSettings.selectedCalendar, calendarSettings.calendarColors)
 
         state.update {
             it.copy(
-                availableColors = calendarSettings.availableColors,
+                availableColors = calendarSettings.calendarColors,
                 selectedColor = colorsData.selectedColor
             )
         }
