@@ -1,7 +1,10 @@
 package org.obywatelgcc.timelogger.statistics
 
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,15 +57,39 @@ fun StatisticsScreen(viewModel: StatisticsViewModel) {
 
     val initialized by viewModel.initialized.collectAsStateWithLifecycle()
 
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     if (initialized) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            TimeRangeButtonsView(timeRangeType, viewModel::onAction)
-
-            TimeRangeValeView(timeRange, timeRangeType, viewModel::onAction)
-
-            StatisticsInfoView(statisticsState)
-
-            StatisticsBarChartView(statisticsState)
+        if (isLandscape) {
+            Row {
+                Column(
+                    modifier = Modifier
+                        .weight(3f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    TimeRangeButtonsView(timeRangeType, viewModel::onAction)
+                    TimeRangeValeView(timeRange, timeRangeType, viewModel::onAction)
+                    StatisticsInfoView(statisticsState)
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(4f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    StatisticsBarChartView(statisticsState)
+                }
+            }
+        } else {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                TimeRangeButtonsView(timeRangeType, viewModel::onAction)
+                TimeRangeValeView(timeRange, timeRangeType, viewModel::onAction)
+                StatisticsInfoView(statisticsState)
+                StatisticsBarChartView(statisticsState)
+            }
         }
     }
 }
