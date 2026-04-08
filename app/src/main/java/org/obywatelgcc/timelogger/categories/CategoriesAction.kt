@@ -1,0 +1,18 @@
+package org.obywatelgcc.timelogger.categories
+
+sealed interface CategoriesAction {
+    data class SelectCategory(val index: Int) : CategoriesAction
+    data class AddCategory(val name: String) : CategoriesAction
+    data class RenameCategory(val categoryId: String, val newName: String) : CategoriesAction
+    data class DeleteCategory(val categoryId: String) : CategoriesAction
+
+    data class AddItem(val categoryId: String, val name: String) : CategoriesAction
+    data class RenameItem(val categoryId: String, val itemId: String, val newName: String) : CategoriesAction
+    data class DeleteItem(val categoryId: String, val itemId: String) : CategoriesAction
+    data class SetItemColor(val categoryId: String, val itemId: String, val colorHex: String) : CategoriesAction
+
+    data class AddPattern(val categoryId: String, val itemId: String, val pattern: String) : CategoriesAction
+    data class RemovePattern(val categoryId: String, val itemId: String, val pattern: String) : CategoriesAction
+
+    data object ToggleManageMode : CategoriesAction
+}
