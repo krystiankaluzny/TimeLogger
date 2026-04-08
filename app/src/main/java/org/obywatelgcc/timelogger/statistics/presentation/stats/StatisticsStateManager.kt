@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.update
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
+import org.obywatelgcc.timelogger.core.data.minOf
+import org.obywatelgcc.timelogger.core.data.maxOf
 import org.obywatelgcc.timelogger.core.model.CalendarEvent
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
@@ -52,8 +54,8 @@ class StatisticsStateManager(
 
                 //Cut event duration to query time range
                 val eventDuration = Duration.between(
-                    max(event.timeRange.from, queryTimeRange.from),
-                    min(event.timeRange.to, queryTimeRange.to)
+                    maxOf(event.timeRange.from, queryTimeRange.from),
+                    minOf(event.timeRange.to, queryTimeRange.to)
                 )
 
                 if (!eventDuration.isNegative) {
@@ -118,8 +120,8 @@ class StatisticsStateManager(
 
             if (nightWindowStart >= queryTimeRange.to) break
 
-            val effectiveWindowStart = max(nightWindowStart, queryTimeRange.from)
-            val effectiveWindowEnd = min(min(nightWindowEnd, queryTimeRange.to), now)
+            val effectiveWindowStart = maxOf(nightWindowStart, queryTimeRange.from)
+            val effectiveWindowEnd = minOf(minOf(nightWindowEnd, queryTimeRange.to), now)
 
             if (effectiveWindowEnd > effectiveWindowStart) {
                 while(eventIndex < sortedEvents.size - 1) {
@@ -136,8 +138,8 @@ class StatisticsStateManager(
                     if (event1.timeRange.to > effectiveWindowEnd) break
 
                     //in night window, calculate gap between event1 and event2
-                    val gapStart = max(event1.timeRange.to, effectiveWindowStart)
-                    val gapEnd = min(event2.timeRange.from, effectiveWindowEnd)
+                    val gapStart = maxOf(event1.timeRange.to, effectiveWindowStart)
+                    val gapEnd = minOf(event2.timeRange.from, effectiveWindowEnd)
 
                     val gap = Duration.between(gapStart, gapEnd)
                     if (gap > minimalGap && gap > maxGapDurationInWindow) {
@@ -165,15 +167,15 @@ class StatisticsStateManager(
         sortedEvents: List<CalendarEvent>
     ): Duration {
         val now = ZonedDateTime.now()
-        val effectiveEnd = min(queryTimeRange.to, now)
+        val effectiveEnd = minOf(queryTimeRange.to, now)
         if (!effectiveEnd.isAfter(queryTimeRange.from)) return Duration.ZERO
 
         var unmeasured = Duration.ZERO
         var previousEventEnd = queryTimeRange.from
 
         for (event in sortedEvents) {
-            val eventStart = max(event.timeRange.from, queryTimeRange.from)
-            val eventEnd = min(event.timeRange.to, effectiveEnd)
+            val eventStart = maxOf(event.timeRange.from, queryTimeRange.from)
+            val eventEnd = minOf(event.timeRange.to, effectiveEnd)
 
             if(eventStart > effectiveEnd) break
 
@@ -193,9 +195,6 @@ class StatisticsStateManager(
 
         return unmeasured
     }
-
-    private fun min(a: ZonedDateTime, b: ZonedDateTime) = if (a.isBefore(b)) a else b
-    private fun max(a: ZonedDateTime, b: ZonedDateTime) = if (a.isAfter(b)) a else b
 }
 
 data class DataHolder(

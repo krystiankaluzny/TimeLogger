@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.statistics.presentation.filter
+package org.obywatelgcc.timelogger.core.presentation.filter
 
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
@@ -7,26 +7,27 @@ import kotlinx.serialization.Serializable
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
+import org.obywatelgcc.timelogger.core.presentation.components.filter.FilterTimeRangeType
 import org.obywatelgcc.timelogger.utils.logInfo
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.time.temporal.WeekFields
 
-class FilterStateManager(
+class FilterTimeRangeStateManager(
     coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
     dataStoreManager: DataStoreManager,
-    initialState: FilterState
-) : BaseStateManager<FilterState>(
+    initialState: FilterTimeRangeState,
+    preferencesKey: String = "filtersPreferences_v1"
+) : BaseStateManager<FilterTimeRangeState>(
     coroutineScope,
     savedStateHandle,
     dataStoreManager,
     initialState
 ) {
 
-    private val filterPreferencesKey = "filtersPreferences_v1"
-    private var filterPreferences =
-        jsonDataStoreStateFlow(filterPreferencesKey, FilterPreferences())
+    private val filterPreferencesKey = preferencesKey
+    private var filterPreferences = jsonDataStoreStateFlow(filterPreferencesKey, FilterPreferences())
 
     suspend fun init() {
         logInfo("init")

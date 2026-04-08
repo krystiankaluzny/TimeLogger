@@ -17,9 +17,10 @@ import org.obywatelgcc.timelogger.core.model.Calendar
 import org.obywatelgcc.timelogger.core.model.CalendarEvent
 import org.obywatelgcc.timelogger.core.model.CalendarRepository
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
+import org.obywatelgcc.timelogger.core.presentation.components.filter.FilterTimeRangeAction
+import org.obywatelgcc.timelogger.core.presentation.filter.FilterTimeRangeState
+import org.obywatelgcc.timelogger.core.presentation.filter.FilterTimeRangeStateManager
 import org.obywatelgcc.timelogger.settings.model.SettingsProvider
-import org.obywatelgcc.timelogger.statistics.presentation.filter.FilterState
-import org.obywatelgcc.timelogger.statistics.presentation.filter.FilterStateManager
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsState
 import org.obywatelgcc.timelogger.statistics.presentation.stats.StatisticsStateManager
 import org.obywatelgcc.timelogger.utils.logDebug
@@ -31,8 +32,8 @@ class StatisticsViewModel(
     private val calendarRepository: CalendarRepository,
 ) : ViewModel() {
 
-    private val filterStateManager =
-        FilterStateManager(viewModelScope, savedStateHandle, dataSoreManager, FilterState())
+    private val filterTimeRangeStateManager =
+        FilterTimeRangeStateManager(viewModelScope, savedStateHandle, dataSoreManager, FilterTimeRangeState(), "statsFilterPref")
     private val statisticsStateManager =
         StatisticsStateManager(viewModelScope, savedStateHandle, dataSoreManager, StatisticsState())
 
@@ -44,12 +45,12 @@ class StatisticsViewModel(
         .onStart { initData() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    val filterState = filterStateManager.state.asStateFlow()
+    val filterState = filterTimeRangeStateManager.state.asStateFlow()
     val statisticsState = statisticsStateManager.state.asStateFlow()
 
     private suspend fun initData() {
         logDebug("initData")
-        filterStateManager.init()
+        filterTimeRangeStateManager.init()
         viewModelScope.launch {
             settingsProvider.calendarSettings.collect {
                 refreshStatisticsData()
@@ -69,24 +70,24 @@ class StatisticsViewModel(
         _initialized.update { true }
     }
 
-    fun onAction(action: StatisticsAction) = when (action) {
-        is StatisticsAction.SelectTimeRangeType -> {
-            filterStateManager.selectTimeRangeType(action.type)
+    fun onFilterAction(action: FilterTimeRangeAction) = when (action) {
+        is FilterTimeRangeAction.SelectTimeRangeType -> {
+            filterTimeRangeStateManager.selectTimeRangeType(action.type)
             launchRefreshStatisticsData()
         }
 
-        StatisticsAction.PreviousRange -> {
-            filterStateManager.calculatePreviousRange()
+        FilterTimeRangeAction.PreviousRange -> {
+            filterTimeRangeStateManager.calculatePreviousRange()
             launchRefreshStatisticsData()
         }
 
-        StatisticsAction.NextRange -> {
-            filterStateManager.calculateNextRange()
+        FilterTimeRangeAction.NextRange -> {
+            filterTimeRangeStateManager.calculateNextRange()
             launchRefreshStatisticsData()
         }
 
-        StatisticsAction.ResetRange -> {
-            filterStateManager.resetRange()
+        FilterTimeRangeAction.ResetRange -> {
+            filterTimeRangeStateManager.resetRange()
             launchRefreshStatisticsData()
         }
     }
