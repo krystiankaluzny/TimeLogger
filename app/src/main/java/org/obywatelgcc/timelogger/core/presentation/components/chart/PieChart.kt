@@ -46,8 +46,7 @@ fun <T> PieChart(
             .graphicsLayer {}
     ) {
         drawIntoCanvas { canvas ->
-            val chartAreas = Rect(Offset(0f, 0f), size * 0.9f)
-
+            val chartAreas = Rect(Offset(0f, 0f), size)
             pieDrawer.draw(this, canvas, data, chartAreas, transitionAnimation.value)
         }
     }
