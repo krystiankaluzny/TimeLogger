@@ -2,8 +2,7 @@ package org.obywatelgcc.timelogger.categories
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,15 +16,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -85,7 +80,9 @@ fun CategoriesScreen(categoriesViewModel: CategoriesViewModel) {
         ) {
             CategorySelectorRow(categoryState, categoriesViewModel::onCategoryAction)
             FilterTimeRangeView(filterState.timeRange, filterState.timeRangeType, categoriesViewModel::onFilterAction)
-            CategoryPieChartView(categoryState, Modifier.weight(2f).padding(vertical = 35.dp))
+            CategoryPieChartView(categoryState, Modifier
+                .weight(2f)
+                .padding(vertical = 35.dp))
             CategoryLegendView(categoryState, Modifier.weight(1f))
         }
     }
@@ -99,44 +96,30 @@ private fun CategorySelectorRow(
     onAction: (CategoriesAction) -> Unit
 ) {
     var showEditDialog by rememberSaveable { mutableStateOf(false) }
-    var showAddDialog by rememberSaveable { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = state.selectedCategory?.name ?: "No category",
-            style = TimeLoggerTheme.typography.titleLarge,
-            modifier = Modifier
-                .weight(1f)
-                .clickable(
-                    enabled = state.selectedCategory != null,
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { showEditDialog = true }
-        )
-
-        IconButton(onClick = { showAddDialog = true }) {
-            Icon(Icons.Filled.Add, contentDescription = "Add category")
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth(0.9f),
+            onClick = { showEditDialog = true }
+        ) {
+            Text(
+                text = state.selectedCategory?.name ?: "No category",
+                style = TimeLoggerTheme.typography.titleLarge
+            )
         }
     }
 
-    if (showEditDialog && state.selectedCategory != null) {
+    if (showEditDialog) {
         CategoryGroupDialog(
-            group = state.selectedCategory,
+            state = state,
             onAction = onAction,
             onDismiss = { showEditDialog = false }
-        )
-    }
-
-    if (showAddDialog) {
-        CategoryGroupDialog(
-            group = null,
-            onAction = onAction,
-            onDismiss = { showAddDialog = false }
         )
     }
 }
@@ -146,14 +129,14 @@ private fun CategorySelectorRow(
 @Composable
 private fun CategoryPieChartView(state: CategoryState, modifier: Modifier) {
     val data = state.itemStats
-            .filter { !it.duration.isZero }
-            .map { stat ->
-                Data(
-                    label = stat.itemName,
-                    value = stat.duration,
-                    color = colorFromHex(stat.colorHex)
-                )
-            }
+        .filter { !it.duration.isZero }
+        .map { stat ->
+            Data(
+                label = stat.itemName,
+                value = stat.duration,
+                color = colorFromHex(stat.colorHex)
+            )
+        }
 
     if (data.isEmpty()) {
         Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

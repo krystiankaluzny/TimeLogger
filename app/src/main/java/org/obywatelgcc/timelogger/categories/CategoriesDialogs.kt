@@ -46,17 +46,19 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import org.obywatelgcc.timelogger.categories.model.CategoryGroup
 import org.obywatelgcc.timelogger.categories.model.CategoryItem
+import org.obywatelgcc.timelogger.categories.presentation.category.CategoryState
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 // --- Combined add / edit dialog for a category group ---
 
 @Composable
 internal fun CategoryGroupDialog(
-    group: CategoryGroup?,   // null → add mode, non-null → edit mode
+    state: CategoryState,
     onAction: (CategoriesAction) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val isAddMode = group == null
+    val group = state.selectedCategory
+    val isAddMode = state.selectedCategory == null
 
     // Title editing state
     var titleText by rememberSaveable { mutableStateOf(group?.name ?: "") }
