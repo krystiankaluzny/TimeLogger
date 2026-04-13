@@ -86,24 +86,25 @@ fun CategoriesScreen(categoriesViewModel: CategoriesViewModel) {
         Row(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
-                    .weight(2f)
+                    .weight(4f)
                     .fillMaxHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                CategoryTabsRow(categoryState, categoriesViewModel::onCategoryAction)
-                FilterTimeRangeView(filterState.timeRange, filterState.timeRangeType, categoriesViewModel::onFilterAction)
-                CategoryLegendView(categoryState, Modifier.weight(1f))
+                CategorySelectorRow(categoryState, categoriesViewModel::onCategoryAction)
+                FilterTimeRangeView(
+                    filterState.timeRange,
+                    filterState.timeRangeType,
+                    categoriesViewModel::onFilterAction
+                )
+                CategoryLegendView(categoryState, Modifier)
             }
             Column(
                 modifier = Modifier
-                    .weight(3f)
+                    .weight(5f)
                     .fillMaxHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                CategoryPieChartView(categoryState, Modifier.weight(1f))
-                AnimatedVisibility(visible = categoryState.isManageMode) {
-                    CategoryManagePanel(categoryState, categoriesViewModel::onCategoryAction)
-                }
+                CategoryPieChartView(categoryState, Modifier.padding(top = 0.dp, bottom = 30.dp))
             }
         }
     } else {
@@ -111,13 +112,10 @@ fun CategoriesScreen(categoriesViewModel: CategoriesViewModel) {
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            CategoryTabsRow(categoryState, categoriesViewModel::onCategoryAction)
+            CategorySelectorRow(categoryState, categoriesViewModel::onCategoryAction)
             FilterTimeRangeView(filterState.timeRange, filterState.timeRangeType, categoriesViewModel::onFilterAction)
-            CategoryPieChartView(categoryState, Modifier.height(240.dp))
+            CategoryPieChartView(categoryState, Modifier.weight(2f).padding(vertical = 35.dp))
             CategoryLegendView(categoryState, Modifier.weight(1f))
-            AnimatedVisibility(visible = categoryState.isManageMode) {
-                CategoryManagePanel(categoryState, categoriesViewModel::onCategoryAction)
-            }
         }
     }
 }
