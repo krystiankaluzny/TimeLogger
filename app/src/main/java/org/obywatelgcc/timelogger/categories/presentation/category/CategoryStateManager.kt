@@ -95,12 +95,6 @@ class CategoryStateManager(
         mutateItem(categoryId, itemId) { it.copy(titlePatterns = it.titlePatterns - pattern) }
     }
 
-    // --- UI state ---
-
-    fun toggleManageMode() {
-        state.update { it.copy(isManageMode = !it.isManageMode) }
-    }
-
     // --- Statistics calculation ---
 
     fun recalculate(queryTimeRange: ZonedDateTimeRange, events: List<CalendarEvent>) {

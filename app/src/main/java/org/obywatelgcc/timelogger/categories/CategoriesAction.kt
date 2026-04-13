@@ -13,6 +13,4 @@ sealed interface CategoriesAction {
 
     data class AddPattern(val categoryId: String, val itemId: String, val pattern: String) : CategoriesAction
     data class RemovePattern(val categoryId: String, val itemId: String, val pattern: String) : CategoriesAction
-
-    data object ToggleManageMode : CategoriesAction
 }

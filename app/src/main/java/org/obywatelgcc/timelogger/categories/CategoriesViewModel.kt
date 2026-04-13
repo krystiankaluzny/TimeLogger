@@ -108,7 +108,6 @@ class CategoriesViewModel(
             categoryStateManager.removePattern(action.categoryId, action.itemId, action.pattern)
             launchRefreshData()
         }
-        CategoriesAction.ToggleManageMode -> categoryStateManager.toggleManageMode()
     }
 
     private fun launchRefreshData() {

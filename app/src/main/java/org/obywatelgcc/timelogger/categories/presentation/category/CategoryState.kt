@@ -7,8 +7,7 @@ data class CategoryState(
     val categories: List<CategoryGroup> = emptyList(),
     val selectedCategoryIndex: Int = 0,
     val itemStats: List<CategoryItemStat> = emptyList(),
-    val unmatchedDuration: Duration = Duration.ZERO,
-    val isManageMode: Boolean = false
+    val unmatchedDuration: Duration = Duration.ZERO
 ) {
     data class CategoryItemStat(
         val itemId: String,
