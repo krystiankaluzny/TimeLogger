@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.core.presentation.components.chart.drawer
+package org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect

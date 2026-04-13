@@ -2,37 +2,47 @@ package org.obywatelgcc.timelogger.core.presentation.components.chart.model
 
 import java.time.Duration
 import java.util.Locale
+import kotlin.Double
+import kotlin.text.toLong
 
 class DurationScale(
-    override var domain: Scale.ValueDomain<Duration> = DEFAULT_DOMAIN
+    override var domain: Scale.ValueDomain<Duration> = DEFAULT_DOMAIN,
 ) : Scale<Duration> {
 
     companion object {
         private val EMPTY_DATA = Data(Duration.ZERO, "")
         private val DEFAULT_DOMAIN = Scale.ValueDomain(Duration.ZERO, Duration.ofHours(1L))
         private const val GAP_SCALE = 0.1
-    }
 
-    override fun adjust(data: List<Data<Duration>>) {
-        if (domain != DEFAULT_DOMAIN) return
+        fun minMaxDomain(
+            data: List<Data<Duration>>,
+            gapScale: Double = GAP_SCALE
+        ): Scale.ValueDomain<Duration> {
+            val min = data.minByOrNull { it.value } ?: EMPTY_DATA
+            val max = data.maxByOrNull { it.value } ?: EMPTY_DATA
 
-        val min = data.minByOrNull { it.value } ?: EMPTY_DATA
-        val max = data.maxByOrNull { it.value } ?: EMPTY_DATA
+            if (min == EMPTY_DATA) {
+                return DEFAULT_DOMAIN
+            }
 
-        if (min == EMPTY_DATA) {
-            domain = DEFAULT_DOMAIN
-            return
+            val maxInMillis = max.value.toMillis()
+            val minInMillis = min.value.toMillis()
+
+            val gap = if(maxInMillis != minInMillis) maxInMillis - minInMillis else minInMillis
+
+            return Scale.ValueDomain<Duration>(
+                Duration.ofMillis(0.0.coerceAtLeast(minInMillis - gap * gapScale).toLong()),
+                Duration.ofMillis((maxInMillis + gap * gapScale).toLong())
+            )
         }
 
-        val maxInMillis = max.value.toMillis()
-        val minInMillis = min.value.toMillis()
+        fun totalDurationDomain(data: List<Data<Duration>>): Scale.ValueDomain<Duration> {
+            val totalDuration = data
+                .map { it.value }
+                .fold(Duration.ZERO) { currentSum, duration -> currentSum.plus(duration) }
 
-        val gap = if(maxInMillis != minInMillis) maxInMillis - minInMillis else minInMillis
-
-        domain = Scale.ValueDomain<Duration>(
-            Duration.ofMillis(0.0.coerceAtLeast(minInMillis - gap * GAP_SCALE).toLong()),
-            Duration.ofMillis((maxInMillis + gap * GAP_SCALE).toLong())
-        )
+            return Scale.ValueDomain<Duration>(Duration.ZERO, totalDuration);
+        }
     }
 
     override fun valueToString(value: Duration): String {

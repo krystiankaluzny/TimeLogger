@@ -1,4 +1,4 @@
-package org.obywatelgcc.timelogger.core.presentation.components.chart.drawer
+package org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar
 
 
 import androidx.compose.ui.geometry.Rect
@@ -13,11 +13,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.BarDrawer.DrawingResult
-import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.BarDrawer.Offset
-import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.DrawingElements.Bar
-import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.DrawingElements.Text
-import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.DrawingElements.VisibleBar
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar.BarDrawer.DrawingResult
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar.BarDrawer.Offset
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar.DrawingElements.Bar
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar.DrawingElements.Text
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar.DrawingElements.VisibleBar
 import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Data
 import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Scale
 import java.lang.Math.clamp

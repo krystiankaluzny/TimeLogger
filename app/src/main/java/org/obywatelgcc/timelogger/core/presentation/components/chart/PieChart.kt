@@ -8,41 +8,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
-
-data class PieSlice(
-    val label: String,
-    val value: Float,
-    val color: Color
-)
+import androidx.compose.material3.MaterialTheme
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.pie.SimplePieDrawer
+import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Data
+import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Scale
 
 data class PieChartProperties(
-    val donutHoleRatio: Float = 0.5f,
-    val gapDegrees: Float = 2f,
+    val donutHoleRatio: Float = 0.4f,
+    val gapWidth: Float = 20f,
     val animationDurationMs: Int = 800
 )
 
 @Composable
-fun PieChart(
+fun <T> PieChart(
     modifier: Modifier = Modifier,
-    slices: List<PieSlice>,
+    data: List<Data<T>>,
+    scale: Scale<T>,
     properties: PieChartProperties = PieChartProperties()
 ) {
-    if (slices.isEmpty()) return
+    if (data.isEmpty()) return
 
-    val total = slices.sumOf { it.value.toDouble() }.toFloat()
-    if (total <= 0f) return
+    val transitionAnimation = remember(data) { Animatable(initialValue = 0f) }
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val pieDrawer = SimplePieDrawer(scale, properties.donutHoleRatio, properties.gapWidth, backgroundColor)
 
-    val sweepAnimation = remember(slices) { Animatable(0f) }
-    LaunchedEffect(slices) {
-        sweepAnimation.snapTo(0f)
-        sweepAnimation.animateTo(
-            targetValue = 1f,
-            animationSpec = TweenSpec(durationMillis = properties.animationDurationMs)
-        )
+    LaunchedEffect(data) {
+        transitionAnimation.animateTo(1f, animationSpec = TweenSpec<Float>(durationMillis = properties.animationDurationMs))
     }
 
     Canvas(
@@ -50,39 +45,10 @@ fun PieChart(
             .fillMaxSize()
             .graphicsLayer {}
     ) {
-        val diameter = minOf(size.width, size.height) * 0.9f
-        val radius = diameter / 2f
-        val holeRadius = radius * properties.donutHoleRatio
-        val topLeftX = (size.width - diameter) / 2f
-        val topLeftY = (size.height - diameter) / 2f
-        val progress = sweepAnimation.value
+        drawIntoCanvas { canvas ->
+            val chartAreas = Rect(Offset(0f, 0f), size * 0.9f)
 
-        var startAngle = -90f
-
-        slices.forEach { slice ->
-            val sweepAngle = (slice.value / total) * 360f * progress
-            val effectiveSweep = (sweepAngle - properties.gapDegrees).coerceAtLeast(0f)
-
-            drawArc(
-                color = slice.color,
-                startAngle = startAngle + properties.gapDegrees / 2f,
-                sweepAngle = effectiveSweep,
-                useCenter = false,
-                topLeft = androidx.compose.ui.geometry.Offset(topLeftX, topLeftY),
-                size = androidx.compose.ui.geometry.Size(diameter, diameter),
-                style = androidx.compose.ui.graphics.drawscope.Fill
-            )
-
-            startAngle += sweepAngle
-        }
-
-        if (properties.donutHoleRatio > 0f) {
-            drawCircle(
-                color = Color.Transparent,
-                radius = holeRadius,
-                center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f),
-                blendMode = BlendMode.Clear
-            )
+            pieDrawer.draw(this, canvas, data, chartAreas, transitionAnimation.value)
         }
     }
 }

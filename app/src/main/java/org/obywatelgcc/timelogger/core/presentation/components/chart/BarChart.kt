@@ -28,10 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.BarAxisDrawer
-import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.BarDrawer
-import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.SimpleBarAxisDrawer
-import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.SimpleBarDrawer
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar.BarAxisDrawer
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar.BarDrawer
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar.SimpleBarAxisDrawer
+import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.bar.SimpleBarDrawer
 import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Data
 import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Scale
 import java.lang.Math.clamp
@@ -51,8 +51,6 @@ fun <T> BarChart(
     var drawingResult by remember(data) { mutableStateOf(BarDrawer.DrawingResult.EMPTY) }
     val transitionAnimation = remember(data) { Animatable(initialValue = 0f) }
     val horizontalOffsetAnimation = remember(data) { Animatable(initialValue = 0.0f) }
-
-    scale.adjust(data)
 
     val barDrawer = SimpleBarDrawer<T>(
         scale = scale,

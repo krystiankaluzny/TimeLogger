@@ -94,7 +94,7 @@ fun StatisticsBarChartView(statisticsState: StatisticsState) {
         BarChart(
             modifier = Modifier.padding(horizontal = 22.dp),
             data = data,
-            scale = DurationScale(),
+            scale = DurationScale(domain = DurationScale.minMaxDomain(data)),
             properties = BarChartProperties.of(
                 textColor = TimeLoggerTheme.colorScheme.onSurface,
                 axisLineColor = TimeLoggerTheme.colorScheme.onSurface

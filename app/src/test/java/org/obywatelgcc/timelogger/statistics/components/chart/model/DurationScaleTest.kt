@@ -13,29 +13,27 @@ class DurationScaleTest : ShouldSpec({
         should("calculate domain with padding") {
             //given
             val initialData = listOf(dataOfMinutes(110), dataOfMinutes(40))
-            val scale = DurationScale()
 
             //when
-            scale.adjust(initialData)
+            val domain = DurationScale.minMaxDomain(initialData)
 
             //then
             val expectedPadding = 7L // (110 - 40) / 10
-            scale.domain.from shouldBe Duration.ofMinutes(40L - expectedPadding)
-            scale.domain.to shouldBe Duration.ofMinutes(110L + expectedPadding)
+            domain.from shouldBe Duration.ofMinutes(40L - expectedPadding)
+            domain.to shouldBe Duration.ofMinutes(110L + expectedPadding)
         }
 
         should("calculate domain with padding but not less than 0") {
             //given
             val initialData = listOf(dataOfMinutes(1010), dataOfMinutes(10))
-            val scale = DurationScale()
 
             //when
-            scale.adjust(initialData)
+            val domain = DurationScale.minMaxDomain(initialData)
 
             //then
             val expectedPadding = 100L // (1010 - 10) / 10
-            scale.domain.from shouldBe Duration.ofMinutes(0)
-            scale.domain.to shouldBe Duration.ofMinutes(1010L + expectedPadding)
+            domain.from shouldBe Duration.ofMinutes(0)
+            domain.to shouldBe Duration.ofMinutes(1010L + expectedPadding)
         }
     }
 
@@ -45,9 +43,9 @@ class DurationScaleTest : ShouldSpec({
             val from = 40L
             val to = 110L
             val initialData = listOf(dataOfMinutes(to), dataOfMinutes(from))
-            val scale = DurationScale()
+            val domain = DurationScale.minMaxDomain(initialData)
+            val scale = DurationScale(domain = domain)
             val segment = Scale.SpaceSegment(100f, 1000f)
-            scale.adjust(initialData)
 
             //when
             val ticks = scale.ticksInSpaceSegment(segment)

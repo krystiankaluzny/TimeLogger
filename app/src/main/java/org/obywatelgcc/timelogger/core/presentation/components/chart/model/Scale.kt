@@ -3,8 +3,6 @@ package org.obywatelgcc.timelogger.core.presentation.components.chart.model
 interface Scale<T> {
     var domain: ValueDomain<T>
 
-    fun adjust(data: List<Data<T>>)
-
     fun valueToString(value: T): String = value.toString()
 
     fun scaleToSpaceSegment(data: Data<T>, targetSpaceSegment: SpaceSegment) : SpaceSegment
