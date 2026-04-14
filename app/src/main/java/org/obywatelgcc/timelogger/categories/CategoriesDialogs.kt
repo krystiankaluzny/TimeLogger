@@ -86,6 +86,7 @@ private fun CategoryTitleComboBox(
             placeholder = { Text("Category name", style = TimeLoggerTheme.typography.bodyMedium) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
             textStyle = TimeLoggerTheme.typography.bodyMedium,
+            modifier = Modifier.menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable),
         )
         ExposedDropdownMenu(
             expanded = dropdownExpanded,
