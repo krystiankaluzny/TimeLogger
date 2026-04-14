@@ -130,25 +130,20 @@ internal fun CategoryDialog(
             shape = TimeLoggerTheme.shapes.medium,
             tonalElevation = 3.dp
         ) {
-            Column(modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                // --- Top row: combo-box + add + delete icons ---
-                Row(
+                // --- Top row: combo-box ---
+                CategoryTitleComboBox(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CategoryTitleComboBox(
-                        modifier = Modifier,
-                        selectedCategoryTitle = category?.name,
-                        categories = state.categories,
-                        onCategorySelected = { category ->
-                            onAction(CategoriesAction.SelectCategory(category))
-                        }
-                    )
-
-                }
+                    selectedCategoryTitle = category?.name,
+                    categories = state.categories,
+                    onCategorySelected = { category ->
+                        onAction(CategoriesAction.SelectCategory(category))
+                    }
+                )
 
                 // --- Items list (visible when a category is selected) ---
                 if (!isAddMode && category != null) {
@@ -228,7 +223,10 @@ internal fun CategoryDialog(
                             )
                         }
 
-                        IconButton(onClick = { showEditCategoryDialog = true }) {
+                        IconButton(
+                            onClick = { showEditCategoryDialog = true },
+                            enabled = category != null
+                        ) {
                             Icon(
                                 imageVector = Icons.Filled.Edit,
                                 contentDescription = "Edit category group"
@@ -254,8 +252,44 @@ internal fun CategoryDialog(
 
     // Nested dialogs
 
-    if(showAddCategoryDialog) {
+    if (showAddCategoryDialog) {
+        CategoryNameDialog(
+            title = "New Item",
+            onConfirm = { name ->
+                onAction(CategoriesAction.AddCategory(name))
+                showAddCategoryDialog = false
+            },
+            onDismiss = { showAddCategoryDialog = false }
+        )
+    }
 
+    if (showEditCategoryDialog && category != null) {
+        CategoryNameDialog(
+            title = category.name,
+            initialValue = category.name,
+            onConfirm = { name ->
+                onAction(CategoriesAction.RenameCategory(category.id, name))
+                showEditCategoryDialog = false
+            },
+            onDismiss = { showEditCategoryDialog = false }
+        )
+    }
+
+        if (showDeleteConfirmDialog && category != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            title = { Text("Delete \"${category.name}\"?") },
+            text = { Text("This will remove the category and all its items.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onAction(CategoriesAction.DeleteCategory(category.id))
+                    showDeleteConfirmDialog = false
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmDialog = false }) { Text("Cancel") }
+            }
+        )
     }
 
 //    if (showAddItemDialog && group != null) {
@@ -298,6 +332,38 @@ internal fun CategoryDialog(
 //        }
 //    }
 }
+
+@Composable
+internal fun CategoryNameDialog(
+    title: String,
+    initialValue: String = "",
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var text by rememberSaveable { mutableStateOf(initialValue) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            TextField(
+                value = text,
+                onValueChange = { text = it },
+                singleLine = true,
+                placeholder = { Text("Name") }
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (text.isNotBlank()) onConfirm(text.trim()) },
+                enabled = text.isNotBlank()
+            ) { Text("OK") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
 
 // --- Item edit dialog ---
 
@@ -456,37 +522,6 @@ internal fun CategoryItemDialog(
 }
 
 // --- Generic name input dialog ---
-
-@Composable
-internal fun AddNameDialog(
-    title: String,
-    initialValue: String = "",
-    onConfirm: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var text by rememberSaveable { mutableStateOf(initialValue) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            TextField(
-                value = text,
-                onValueChange = { text = it },
-                singleLine = true,
-                placeholder = { Text("Name") }
-            )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { if (text.isNotBlank()) onConfirm(text.trim()) },
-                enabled = text.isNotBlank()
-            ) { Text("OK") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        }
-    )
-}
 
 // --- Color swatch ---
 

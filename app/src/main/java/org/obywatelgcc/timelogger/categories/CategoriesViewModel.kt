@@ -81,7 +81,7 @@ class CategoriesViewModel(
 
     fun onCategoryAction(action: CategoriesAction) = when (action) {
         is CategoriesAction.SelectCategory -> {
-            categoryStateManager.selectCategory(action.index)
+            categoryStateManager.selectCategory(action.category)
             launchRefreshData()
         }
         is CategoriesAction.AddCategory -> categoryStateManager.addCategory(action.name)

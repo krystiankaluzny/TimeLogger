@@ -30,30 +30,29 @@ class CategoryStateManager(
 
     suspend fun init() {
         categoryPreferences.loadFormDataStore()
-        state.update { it.copy(categories = categoryPreferences.value.groups) }
+        state.update { it.copy(categories = categoryPreferences.value.categories) }
     }
 
     // --- Category CRUD ---
 
     fun addCategory(name: String) {
-        val newGroup = Category(id = UUID.randomUUID().toString(), name = name)
-        mutateGroups { it + newGroup }
+        val newCategory = Category(id = UUID.randomUUID().toString(), name = name)
+        mutateCategories { it + newCategory }
     }
 
     fun renameCategory(categoryId: String, newName: String) {
-        mutateGroups { groups ->
-            groups.map { if (it.id == categoryId) it.copy(name = newName) else it }
+        mutateCategories { categories ->
+            categories.map { if (it.id == categoryId) it.copy(name = newName) else it }
         }
     }
 
     fun deleteCategory(categoryId: String) {
-        mutateGroups { groups -> groups.filter { it.id != categoryId } }
+        mutateCategories { groups -> groups.filter { it.id != categoryId } }
     }
 
-    fun selectCategory(index: Int) {
-        state.update {
-            it.copy(selectedCategoryIndex = index.coerceIn(0, (it.categories.size - 1).coerceAtLeast(0)))
-        }
+    fun selectCategory(category: Category) {
+        state.update { it.copy(selectedCategory = category) }
+        categoryPreferences.edit { it.copy(selectedCategoryId = category.id) }
     }
 
     // --- Item CRUD ---
@@ -65,21 +64,21 @@ class CategoryStateManager(
             name = name,
             color = CategoryItem.paletteColorForIndex(newItemIndex)
         )
-        mutateGroupItems(categoryId) { it + newItem }
+        mutateCategoryItems(categoryId) { it + newItem }
     }
 
     fun renameItem(categoryId: String, itemId: String, newName: String) {
-        mutateGroupItems(categoryId) { items ->
+        mutateCategoryItems(categoryId) { items ->
             items.map { if (it.id == itemId) it.copy(name = newName) else it }
         }
     }
 
     fun deleteItem(categoryId: String, itemId: String) {
-        mutateGroupItems(categoryId) { items -> items.filter { it.id != itemId } }
+        mutateCategoryItems(categoryId) { items -> items.filter { it.id != itemId } }
     }
 
     fun setItemColor(categoryId: String, itemId: String, colorHex: String) {
-        mutateGroupItems(categoryId) { items ->
+        mutateCategoryItems(categoryId) { items ->
             items.map { if (it.id == itemId) it.copy(color = colorHex) else it }
         }
     }
@@ -137,29 +136,33 @@ class CategoryStateManager(
 
     // --- Private helpers ---
 
-    private fun mutateGroups(transform: (List<Category>) -> List<Category>) {
-        val newGroups = transform(state.value.categories)
+    private fun mutateCategories(transform: (List<Category>) -> List<Category>) {
+        val newCategories = transform(state.value.categories)
         state.update { s ->
             s.copy(
-                categories = newGroups,
-                selectedCategoryIndex = s.selectedCategoryIndex.coerceIn(
-                    0, (newGroups.size - 1).coerceAtLeast(0)
-                )
+                categories = newCategories,
+                selectedCategory = newCategories.find { it.id == s.selectedCategory?.id } ?: newCategories.firstOrNull()
             )
         }
-        categoryPreferences.edit { it.copy(groups = newGroups) }
+
+        categoryPreferences.edit {
+            it.copy(
+                selectedCategoryId = state.value.selectedCategory?.id ?: "",
+                categories = state.value.categories
+            )
+        }
     }
 
-    private fun mutateGroupItems(categoryId: String, transform: (List<CategoryItem>) -> List<CategoryItem>) {
-        mutateGroups { groups ->
-            groups.map { group ->
-                if (group.id == categoryId) group.copy(items = transform(group.items)) else group
+    private fun mutateCategoryItems(categoryId: String, transform: (List<CategoryItem>) -> List<CategoryItem>) {
+        mutateCategories { categories ->
+            categories.map { category ->
+                if (category.id == categoryId) category.copy(items = transform(category.items)) else category
             }
         }
     }
 
     private fun mutateItem(categoryId: String, itemId: String, transform: (CategoryItem) -> CategoryItem) {
-        mutateGroupItems(categoryId) { items ->
+        mutateCategoryItems(categoryId) { items ->
             items.map { if (it.id == itemId) transform(it) else it }
         }
     }
@@ -174,5 +177,6 @@ class CategoryStateManager(
 
 @Serializable
 private data class CategoryPreferences(
-    val groups: List<Category> = emptyList()
+    val selectedCategoryId: String = "",
+    val categories: List<Category> = emptyList()
 )

@@ -109,7 +109,7 @@ private fun CategorySelectorRow(
             onClick = { showEditDialog = true }
         ) {
             Text(
-                text = state.selectedCategory?.name ?: "No category",
+                text = state.selectedCategory?.name ?: "Click to add",
                 style = TimeLoggerTheme.typography.titleLarge
             )
         }
