@@ -116,7 +116,7 @@ private fun CategorySelectorRow(
     }
 
     if (showEditDialog) {
-        CategoryGroupDialog(
+        CategoryDialog(
             state = state,
             onAction = onAction,
             onDismiss = { showEditDialog = false }

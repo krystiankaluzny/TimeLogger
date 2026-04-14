@@ -18,16 +18,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -53,15 +50,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.toColorInt
-import org.obywatelgcc.timelogger.categories.model.CategoryGroup
+import org.obywatelgcc.timelogger.categories.model.Category
 import org.obywatelgcc.timelogger.categories.model.CategoryItem
 import org.obywatelgcc.timelogger.categories.presentation.category.CategoryState
-import org.obywatelgcc.timelogger.core.presentation.components.CustomButtonDefaults.textButtonContentModifier
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 // --- Dialog state ---
 
-private class CategoryGroupDialogState(group: CategoryGroup?) {
+private class CategoryGroupDialogState(group: Category?) {
     var titleText by mutableStateOf(group?.name ?: "")
 }
 
@@ -72,8 +68,8 @@ private class CategoryGroupDialogState(group: CategoryGroup?) {
 private fun CategoryTitleComboBox(
     modifier: Modifier,
     selectedCategoryTitle: String?,
-    categories: List<CategoryGroup>,
-    onCategorySelect: (index: Int, name: String) -> Unit,
+    categories: List<Category>,
+    onCategorySelected: (Category) -> Unit,
 ) {
     var dropdownExpanded by remember { mutableStateOf(false) }
 
@@ -95,11 +91,11 @@ private fun CategoryTitleComboBox(
             expanded = dropdownExpanded,
             onDismissRequest = { dropdownExpanded = false }
         ) {
-            categories.forEachIndexed { index, category ->
+            categories.forEach { category ->
                 DropdownMenuItem(
                     text = { Text(category.name) },
                     onClick = {
-                        onCategorySelect(index, category.name)
+                        onCategorySelected(category)
                         dropdownExpanded = false
                     }
                 )
@@ -112,13 +108,13 @@ private fun CategoryTitleComboBox(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun CategoryGroupDialog(
+internal fun CategoryDialog(
     state: CategoryState,
     onAction: (CategoriesAction) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val group = state.selectedCategory
-    val isAddMode = group == null
+    val category = state.selectedCategory
+    val isAddMode = category == null
 
     // Nested dialogs shown from within this dialog
     var showAddCategoryDialog by rememberSaveable { mutableStateOf(false) }
@@ -145,17 +141,17 @@ internal fun CategoryGroupDialog(
                 ) {
                     CategoryTitleComboBox(
                         modifier = Modifier,
-                        selectedCategoryTitle = group?.name,
+                        selectedCategoryTitle = category?.name,
                         categories = state.categories,
-                        onCategorySelect = { index, _ ->
-                            onAction(CategoriesAction.SelectCategory(index))
+                        onCategorySelected = { category ->
+                            onAction(CategoriesAction.SelectCategory(category))
                         }
                     )
 
                 }
 
                 // --- Items list (visible when a category is selected) ---
-                if (!isAddMode && group != null) {
+                if (!isAddMode && category != null) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                     Text("Items", style = TimeLoggerTheme.typography.labelLarge)
@@ -166,7 +162,7 @@ internal fun CategoryGroupDialog(
                             .height(220.dp)
                             .padding(top = 4.dp)
                     ) {
-                        items(group.items) { item ->
+                        items(category.items) { item ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -196,7 +192,7 @@ internal fun CategoryGroupDialog(
                                     )
                                 }
                                 IconButton(
-                                    onClick = { onAction(CategoriesAction.DeleteItem(group.id, item.id)) },
+                                    onClick = { onAction(CategoriesAction.DeleteItem(category.id, item.id)) },
                                     modifier = Modifier.size(32.dp)
                                 ) {
                                     Icon(
@@ -235,13 +231,13 @@ internal fun CategoryGroupDialog(
                         IconButton(onClick = { showEditCategoryDialog = true }) {
                             Icon(
                                 imageVector = Icons.Filled.Edit,
-                                contentDescription = "Add category group"
+                                contentDescription = "Edit category group"
                             )
                         }
 
                         IconButton(
                             onClick = { showDeleteConfirmDialog = true },
-                            enabled = group != null
+                            enabled = category != null
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Delete,

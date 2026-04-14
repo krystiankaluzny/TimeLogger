@@ -4,14 +4,13 @@ import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
-import org.obywatelgcc.timelogger.categories.model.CategoryGroup
+import org.obywatelgcc.timelogger.categories.model.Category
 import org.obywatelgcc.timelogger.categories.model.CategoryItem
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.model.CalendarEvent
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
 import java.time.Duration
-import java.time.ZonedDateTime
 import java.util.UUID
 
 class CategoryStateManager(
@@ -37,7 +36,7 @@ class CategoryStateManager(
     // --- Category CRUD ---
 
     fun addCategory(name: String) {
-        val newGroup = CategoryGroup(id = UUID.randomUUID().toString(), name = name)
+        val newGroup = Category(id = UUID.randomUUID().toString(), name = name)
         mutateGroups { it + newGroup }
     }
 
@@ -138,7 +137,7 @@ class CategoryStateManager(
 
     // --- Private helpers ---
 
-    private fun mutateGroups(transform: (List<CategoryGroup>) -> List<CategoryGroup>) {
+    private fun mutateGroups(transform: (List<Category>) -> List<Category>) {
         val newGroups = transform(state.value.categories)
         state.update { s ->
             s.copy(
@@ -175,5 +174,5 @@ class CategoryStateManager(
 
 @Serializable
 private data class CategoryPreferences(
-    val groups: List<CategoryGroup> = emptyList()
+    val groups: List<Category> = emptyList()
 )

@@ -1,10 +1,10 @@
 package org.obywatelgcc.timelogger.categories.presentation.category
 
-import org.obywatelgcc.timelogger.categories.model.CategoryGroup
+import org.obywatelgcc.timelogger.categories.model.Category
 import java.time.Duration
 
 data class CategoryState(
-    val categories: List<CategoryGroup> = emptyList(),
+    val categories: List<Category> = emptyList(),
     val selectedCategoryIndex: Int = 0,
     val itemStats: List<CategoryItemStat> = emptyList(),
     val unmatchedDuration: Duration = Duration.ZERO
@@ -16,7 +16,7 @@ data class CategoryState(
         val duration: Duration
     )
 
-    val selectedCategory: CategoryGroup?
+    val selectedCategory: Category?
         get() = categories.getOrNull(selectedCategoryIndex)
 
     val totalDuration: Duration

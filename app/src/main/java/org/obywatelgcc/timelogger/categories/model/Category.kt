@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import java.util.UUID
 
 @Serializable
-data class CategoryGroup(
+data class Category(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
     val items: List<CategoryItem> = emptyList()
