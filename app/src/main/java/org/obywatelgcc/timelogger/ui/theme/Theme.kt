@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -193,6 +194,10 @@ object TimeLoggerTheme {
     val colorScheme: ColorScheme
         @Composable
         get() = MaterialTheme.colorScheme
+
+    val shapes: Shapes
+        @Composable
+        get() = MaterialTheme.shapes
 
     val extendedColors: ExtendedColors
         @Composable

@@ -18,13 +18,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -32,6 +35,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -47,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.toColorInt
 import org.obywatelgcc.timelogger.categories.model.CategoryGroup
 import org.obywatelgcc.timelogger.categories.model.CategoryItem
@@ -117,60 +122,41 @@ internal fun CategoryGroupDialog(
 
     // Nested dialogs shown from within this dialog
     var showAddCategoryDialog by rememberSaveable { mutableStateOf(false) }
+    var showEditCategoryDialog by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirmDialog by rememberSaveable { mutableStateOf(false) }
 
     var showAddItemDialog by rememberSaveable { mutableStateOf(false) }
 
     var editingItem by remember { mutableStateOf<CategoryItem?>(null) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Row(modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = TimeLoggerTheme.shapes.medium,
+            tonalElevation = 3.dp
+        ) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
             ) {
-                CategoryTitleComboBox(
-                    modifier = Modifier.weight(1f),
-                    selectedCategoryTitle = group?.name,
-                    categories = state.categories,
-                    onCategorySelect = { index, name ->
-                        onAction(CategoriesAction.SelectCategory(index))
-                    }
-                )
-
-                Spacer(modifier = Modifier.width(2.dp))
-
-                org.obywatelgcc.timelogger.core.presentation.components.TextButton(
-                    modifier = Modifier.padding(2.dp),
-                    contentModifier = Modifier.textButtonContentModifier(horizontal = 3.dp, vertical = 3.dp),
-                    onClick = { showAddCategoryDialog = true },
+                // --- Top row: combo-box + add + delete icons ---
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        modifier = Modifier.size(26.dp),
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = "Add category group")
-                }
-
-                org.obywatelgcc.timelogger.core.presentation.components.TextButton(
-                    modifier = Modifier.padding(2.dp),
-                    contentModifier = Modifier.textButtonContentModifier(horizontal = 3.dp, vertical = 3.dp),
-                    onClick = { showDeleteConfirmDialog = true },
-                    enabled = group != null
-                ) {
-                    Icon(
-                        modifier = Modifier.size(26.dp),
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete category group",
+                    CategoryTitleComboBox(
+                        modifier = Modifier,
+                        selectedCategoryTitle = group?.name,
+                        categories = state.categories,
+                        onCategorySelect = { index, _ ->
+                            onAction(CategoriesAction.SelectCategory(index))
+                        }
                     )
+
                 }
-            }
 
-
-        },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
+                // --- Items list (visible when a category is selected) ---
                 if (!isAddMode && group != null) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                     Text("Items", style = TimeLoggerTheme.typography.labelLarge)
 
@@ -230,12 +216,45 @@ internal fun CategoryGroupDialog(
                         }
                     }
                 }
+
+                // --- Buttons row ---
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.weight(1f)) {
+
+                        IconButton(onClick = { showAddCategoryDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "Add category group"
+                            )
+                        }
+
+                        IconButton(onClick = { showEditCategoryDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Add category group"
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { showDeleteConfirmDialog = true },
+                            enabled = group != null
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "Delete category group"
+                            )
+                        }
+                    }
+
+                    TextButton(onClick = onDismiss) { Text("Close") }
+                }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
         }
-    )
+    }
 
     // Nested dialogs
 
