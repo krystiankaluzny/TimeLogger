@@ -26,7 +26,7 @@ class CategoryStateManager(
 ) {
 
     private val categoryPreferences =
-        jsonDataStoreStateFlow("categoryPreferences_v1", CategoryPreferences())
+        jsonDataStoreStateFlow("categoryPreferences_v2", CategoryPreferences())
 
     suspend fun init() {
         categoryPreferences.loadFormDataStore()

@@ -44,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -52,6 +51,7 @@ import androidx.core.graphics.toColorInt
 import org.obywatelgcc.timelogger.categories.model.Category
 import org.obywatelgcc.timelogger.categories.model.CategoryItem
 import org.obywatelgcc.timelogger.categories.presentation.category.CategoryState
+import org.obywatelgcc.timelogger.core.presentation.components.ColorButton
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 // --- Dialog state ---
@@ -82,7 +82,7 @@ private fun CategoryTitleComboBox(
             onValueChange = { },
             readOnly = true,
             singleLine = true,
-            placeholder = { Text("Category name", style = TimeLoggerTheme.typography.bodyMedium) },
+            placeholder = { Text(text = "Category name", style = TimeLoggerTheme.typography.bodyMedium) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
             textStyle = TimeLoggerTheme.typography.bodyMedium,
             modifier = Modifier.menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable),
@@ -199,7 +199,7 @@ internal fun CategoryDialog(
                             TextButton(onClick = { showAddItemDialog = true }) {
                                 Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text("Add Item")
+                                Text(text = "Add Item")
                             }
                         }
                     }
@@ -241,7 +241,7 @@ internal fun CategoryDialog(
                         }
                     }
 
-                    TextButton(onClick = onDismiss) { Text("Close") }
+                    TextButton(onClick = onDismiss) { Text(text = "Close") }
                 }
             }
         }
@@ -296,7 +296,7 @@ internal fun CategoryDialog(
         itemToEdit?.let { item ->
             CategoryItemDialog(
                 categoryId = category.id,
-                item = item,
+                sourceItem = item,
                 onAction = onAction,
                 onDismiss = { itemToEdit = null }
             )
@@ -387,79 +387,80 @@ private fun DeleteActionDialog(
 @Composable
 internal fun CategoryItemDialog(
     categoryId: String,
-    item: CategoryItem,
+    sourceItem: CategoryItem,
     onAction: (CategoriesAction) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val palette = listOf(
+        "#F44336", "#E91E63", "#9C27B0", "#673AB7",
+        "#2196F3", "#00BCD4", "#4CAF50", "#FF9800"
+    )
+
+
+    var name by rememberSaveable { mutableStateOf(sourceItem.name) }
+    var color by rememberSaveable { mutableStateOf(palette.find { it == sourceItem.color } ?: palette.random()) }
+    var titlePatterns by rememberSaveable { mutableStateOf(sourceItem.titlePatterns) }
+
     var showAddPatternField by rememberSaveable { mutableStateOf(false) }
     var newPatternText by rememberSaveable { mutableStateOf("") }
-    var itemNameText by rememberSaveable { mutableStateOf(item.name) }
+
     var isNameEditing by rememberSaveable { mutableStateOf(false) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = TimeLoggerTheme.shapes.medium,
+            tonalElevation = 4.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(14.dp)
-                        .clip(CircleShape)
-                        .background(colorFromHex(item.color))
+                TextField(
+                    modifier = Modifier.weight(1f),
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
                 )
-                Spacer(Modifier.width(8.dp))
-                if (isNameEditing) {
-                    TextField(
-                        value = itemNameText,
-                        onValueChange = { itemNameText = it },
-                        singleLine = true,
-                        modifier = Modifier
-                            .weight(1f)
-                            .onFocusChanged { focusState ->
-                                if (!focusState.isFocused) {
-                                    val trimmed = itemNameText.trim()
-                                    if (trimmed.isNotBlank() && trimmed != item.name) {
-                                        onAction(CategoriesAction.RenameItem(categoryId, item.id, trimmed))
-                                    }
-                                    isNameEditing = false
-                                }
-                            }
-                    )
-                } else {
-                    Text(
-                        text = itemNameText,
-                        style = TimeLoggerTheme.typography.titleMedium,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) { isNameEditing = true }
-                    )
-                }
-            }
-        },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                // Color palette
-                Text("Color", style = TimeLoggerTheme.typography.labelLarge)
+
                 Row(
-                    modifier = Modifier.padding(top = 6.dp, bottom = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    CategoryItem.DEFAULT_PALETTE.forEach { colorHex ->
-                        ColorSwatch(
-                            colorHex = colorHex,
-                            isSelected = item.color == colorHex,
-                            onClick = { onAction(CategoriesAction.SetItemColor(categoryId, item.id, colorHex)) }
+                    palette.forEach { hex ->
+                        ColorButton(
+                            color = colorFromHex(hex),
+                            modifier = Modifier
+                                .size(14.dp),
+                            onClick = { color = hex },
+                            showBorder = (hex == color)
                         )
                     }
                 }
 
-                // Patterns
-                Text("Title patterns", style = TimeLoggerTheme.typography.labelLarge)
+
+                Text(text = "Title patterns", style = TimeLoggerTheme.typography.labelLarge)
+
+                //TODO filter suggestions
+                TextField(
+                    value = newPatternText,
+                    onValueChange = { newPatternText = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Event title pattern") },
+                    singleLine = true
+                )
+
+                //TODO ADD pattern
+
+                IconButton(
+                    onClick = { showAddPatternField = !showAddPatternField },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Add pattern", modifier = Modifier.size(18.dp))
+                }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -467,7 +468,7 @@ internal fun CategoryItemDialog(
                         .padding(top = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    item.titlePatterns.forEach { pattern ->
+                    titlePatterns.forEach { pattern ->
                         InputChip(
                             selected = false,
                             onClick = {},
@@ -476,11 +477,7 @@ internal fun CategoryItemDialog(
                                 IconButton(
                                     onClick = {
                                         onAction(
-                                            CategoriesAction.RemovePattern(
-                                                categoryId,
-                                                item.id,
-                                                pattern
-                                            )
+                                            TODO("CategoriesAction.RemovePattern")
                                         )
                                     },
                                     modifier = Modifier.size(18.dp)
@@ -495,72 +492,38 @@ internal fun CategoryItemDialog(
                             modifier = Modifier.padding(end = 4.dp)
                         )
                     }
-                    IconButton(
-                        onClick = { showAddPatternField = !showAddPatternField },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add pattern", modifier = Modifier.size(18.dp))
-                    }
-                }
 
-                if (showAddPatternField) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextField(
-                            value = newPatternText,
-                            onValueChange = { newPatternText = it },
-                            modifier = Modifier.weight(1f),
-                            placeholder = { Text("Event title pattern") },
-                            singleLine = true
-                        )
-                        TextButton(
-                            onClick = {
-                                if (newPatternText.isNotBlank()) {
-                                    onAction(CategoriesAction.AddPattern(categoryId, item.id, newPatternText.trim()))
-                                    newPatternText = ""
-                                    showAddPatternField = false
-                                }
-                            }
-                        ) {
-                            Text("Add")
-                        }
-                    }
+                    //TODO change detection, so when Close button is clicked then we show allert dialog
+                    TextButton(onClick = onDismiss) { Text(text = "Close") }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
         }
-    )
+    }
 }
 
 // --- Generic name input dialog ---
 
 // --- Color swatch ---
 
-@Composable
-internal fun ColorSwatch(colorHex: String, isSelected: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(if (isSelected) 22.dp else 16.dp)
-            .clip(CircleShape)
-            .background(colorFromHex(colorHex))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            )
-    )
-}
+    @Composable
+    internal fun ColorSwatch(colorHex: String, isSelected: Boolean, onClick: () -> Unit) {
+        Box(
+            modifier = Modifier
+                .size(if (isSelected) 22.dp else 16.dp)
+                .clip(CircleShape)
+                .background(colorFromHex(colorHex))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onClick
+                )
+        )
+    }
 
 // --- Shared utility ---
 
-internal fun colorFromHex(hex: String): Color = try {
-    Color(hex.toColorInt())
-} catch (_: IllegalArgumentException) {
-    Color.Gray
-}
+    internal fun colorFromHex(hex: String): Color = try {
+        Color(hex.toColorInt())
+    } catch (_: IllegalArgumentException) {
+        Color.Gray
+    }

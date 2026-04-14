@@ -1,7 +1,6 @@
 package org.obywatelgcc.timelogger.timer.presentation
 
 import android.content.res.Configuration
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -47,6 +45,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.obywatelgcc.timelogger.core.model.CalendarEventColor
+import org.obywatelgcc.timelogger.core.presentation.components.ColorButton
 import org.obywatelgcc.timelogger.timer.presentation.components.DateTimePickersView
 import org.obywatelgcc.timelogger.timer.presentation.settings.SettingsState
 import org.obywatelgcc.timelogger.timer.presentation.timer.TimerState
@@ -352,23 +351,13 @@ private fun ExposedDropdownMenuBoxScope.ColorHolder(
     onClick: () -> Unit,
     showBorder: Boolean = true
 ) {
-    val border = if (showBorder) BorderStroke(
-        TimeLoggerTheme.values.selectedColorBorder,
-        TimeLoggerTheme.colorScheme.secondary.copy(alpha = 1f)
-    ) else null
-
-    ElevatedButton(
-        onClick = onClick,
+    ColorButton(
+        color = color?.colorAsLong()?.let { Color(it) } ?: Color.White,
         modifier = Modifier
             .size(size)
             .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-        shape = CircleShape,
-        colors = ButtonDefaults.elevatedButtonColors(
-            containerColor = color?.colorAsLong()?.let { Color(it) } ?: Color.White
-        ),
-        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp),
-        border = border,
-        content = {}
+        onClick = onClick,
+        showBorder = showBorder
     )
 }
 

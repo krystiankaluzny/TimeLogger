@@ -19,9 +19,10 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonElevation
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
@@ -373,6 +374,28 @@ fun ElevatedButton(
         content = content
     )
 
+@Composable
+fun ColorButton(
+    color: Color,
+    modifier: Modifier,
+    onClick: () -> Unit,
+    showBorder: Boolean = true
+) {
+    val border = if (showBorder) BorderStroke(
+        TimeLoggerTheme.values.selectedColorBorder,
+        TimeLoggerTheme.colorScheme.secondary.copy(alpha = 1f)
+    ) else null
+
+    ElevatedButton(
+        onClick = onClick,
+        modifier = modifier,
+        shape = CircleShape,
+        colors = ButtonDefaults.elevatedButtonColors(containerColor = color),
+        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 6.dp),
+        border = border,
+        content = {}
+    )
+}
 
 fun ButtonColors.containerColor(enabled: Boolean): Color =
     if (enabled) containerColor else disabledContainerColor
