@@ -28,7 +28,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
@@ -115,16 +114,15 @@ internal fun CategoryDialog(
     onDismiss: () -> Unit
 ) {
     val category = state.selectedCategory
-    val isAddMode = category == null
 
     // Nested dialogs shown from within this dialog
     var showAddCategoryDialog by rememberSaveable { mutableStateOf(false) }
     var showEditCategoryDialog by rememberSaveable { mutableStateOf(false) }
-    var showDeleteConfirmDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteCategoryConfirmDialog by rememberSaveable { mutableStateOf(false) }
 
     var showAddItemDialog by rememberSaveable { mutableStateOf(false) }
-
-    var editingItem by remember { mutableStateOf<CategoryItem?>(null) }
+    var itemToEdit by remember { mutableStateOf<CategoryItem?>(null) }
+    var itemToDelete by remember { mutableStateOf<CategoryItem?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -147,11 +145,7 @@ internal fun CategoryDialog(
                 )
 
                 // --- Items list (visible when a category is selected) ---
-                if (!isAddMode && category != null) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                    Text("Items", style = TimeLoggerTheme.typography.labelLarge)
-
+                category?.let {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -177,8 +171,9 @@ internal fun CategoryDialog(
                                     modifier = Modifier.weight(1f),
                                     style = TimeLoggerTheme.typography.bodyMedium
                                 )
+
                                 IconButton(
-                                    onClick = { editingItem = item },
+                                    onClick = { itemToEdit = item },
                                     modifier = Modifier.size(32.dp)
                                 ) {
                                     Icon(
@@ -187,8 +182,9 @@ internal fun CategoryDialog(
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
+
                                 IconButton(
-                                    onClick = { onAction(CategoriesAction.DeleteItem(category.id, item.id)) },
+                                    onClick = { itemToDelete = item; },
                                     modifier = Modifier.size(32.dp)
                                 ) {
                                     Icon(
@@ -220,7 +216,7 @@ internal fun CategoryDialog(
                         IconButton(onClick = { showAddCategoryDialog = true }) {
                             Icon(
                                 imageVector = Icons.Filled.Add,
-                                contentDescription = "Add category group"
+                                contentDescription = "Add category"
                             )
                         }
 
@@ -230,17 +226,17 @@ internal fun CategoryDialog(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Edit,
-                                contentDescription = "Edit category group"
+                                contentDescription = "Edit category"
                             )
                         }
 
                         IconButton(
-                            onClick = { showDeleteConfirmDialog = true },
+                            onClick = { showDeleteCategoryConfirmDialog = true },
                             enabled = category != null
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Delete,
-                                contentDescription = "Delete category group"
+                                contentDescription = "Delete category"
                             )
                         }
                     }
@@ -254,9 +250,9 @@ internal fun CategoryDialog(
     // Nested dialogs
 
     if (showAddCategoryDialog) {
-        CategoryNameDialog(
+        NameActionDialog(
             title = "New Item",
-            onConfirm = { name ->
+            onNameConfirmed = { name ->
                 onAction(CategoriesAction.AddCategory(name))
                 showAddCategoryDialog = false
             },
@@ -264,63 +260,61 @@ internal fun CategoryDialog(
         )
     }
 
-    if (showEditCategoryDialog && category != null) {
-        CategoryNameDialog(
-            title = category.name,
-            initialValue = category.name,
-            onConfirm = { name ->
-                onAction(CategoriesAction.RenameCategory(category.id, name))
-                showEditCategoryDialog = false
-            },
-            onDismiss = { showEditCategoryDialog = false }
-        )
+    category?.let {
+        if (showEditCategoryDialog) {
+            NameActionDialog(
+                title = category.name,
+                initialValue = category.name,
+                onNameConfirmed = { name ->
+                    onAction(CategoriesAction.RenameCategory(category.id, name))
+                    showEditCategoryDialog = false
+                },
+                onDismiss = { showEditCategoryDialog = false }
+            )
+        }
+
+        if (showDeleteCategoryConfirmDialog) {
+            DeleteActionDialog(
+                title = category.name,
+                text = "This will remove the category and all its items.",
+                onConfirm = { onAction(CategoriesAction.DeleteCategory(category.id)) },
+                onDismiss = { showDeleteCategoryConfirmDialog = false }
+            )
+        }
+
+        if (showAddItemDialog) {
+            NameActionDialog(
+                title = "New Item",
+                onNameConfirmed = { name ->
+                    onAction(CategoriesAction.AddItem(category.id, name))
+                    showAddItemDialog = false
+                },
+                onDismiss = { showAddItemDialog = false }
+            )
+        }
+
+        itemToEdit?.let { item ->
+            CategoryItemDialog(
+                categoryId = category.id,
+                item = item,
+                onAction = onAction,
+                onDismiss = { itemToEdit = null }
+            )
+        }
+
+        itemToDelete?.let { item ->
+            DeleteActionDialog(
+                title = item.name,
+                text = "This will remove the item.",
+                onConfirm = { onAction(CategoriesAction.DeleteItem(category.id, item.id)) },
+                onDismiss = { itemToDelete = null }
+            )
+        }
     }
 
-        if (showDeleteConfirmDialog && category != null) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirmDialog = false },
-            title = { Text("Delete \"${category.name}\"?") },
-            text = { Text("This will remove the category and all its items.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    onAction(CategoriesAction.DeleteCategory(category.id))
-                    showDeleteConfirmDialog = false
-                }) { Text("Delete") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirmDialog = false }) { Text("Cancel") }
-            }
-        )
-    }
+}
 
-//    if (showAddItemDialog && group != null) {
-//        AddNameDialog(
-//            title = "New Item",
-//            onConfirm = { name ->
-//                onAction(CategoriesAction.AddItem(group.id, name))
-//                showAddItemDialog = false
-//            },
-//            onDismiss = { showAddItemDialog = false }
-//        )
-//    }
 
-//    if (showDeleteConfirm && group != null) {
-//        AlertDialog(
-//            onDismissRequest = { showDeleteConfirm = false },
-//            title = { Text("Delete \"${group.name}\"?") },
-//            text = { Text("This will remove the category and all its items.") },
-//            confirmButton = {
-//                TextButton(onClick = {
-//                    onAction(CategoriesAction.DeleteCategory(group.id))
-//                    showDeleteConfirm = false
-//                    onDismiss()
-//                }) { Text("Delete") }
-//            },
-//            dismissButton = {
-//                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
-//            }
-//        )
-//    }
 //
 //    editingItem?.let { item ->
 //        if (group != null) {
@@ -332,13 +326,13 @@ internal fun CategoryDialog(
 //            )
 //        }
 //    }
-}
+
 
 @Composable
-internal fun CategoryNameDialog(
+private fun NameActionDialog(
     title: String,
     initialValue: String = "",
-    onConfirm: (String) -> Unit,
+    onNameConfirmed: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var text by rememberSaveable { mutableStateOf(initialValue) }
@@ -355,7 +349,7 @@ internal fun CategoryNameDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { if (text.isNotBlank()) onConfirm(text.trim()) },
+                onClick = { if (text.isNotBlank()) onNameConfirmed(text.trim()) },
                 enabled = text.isNotBlank()
             ) { Text("OK") }
         },
@@ -365,6 +359,28 @@ internal fun CategoryNameDialog(
     )
 }
 
+@Composable
+private fun DeleteActionDialog(
+    title: String,
+    text: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Delete \"${title}\"?") },
+        text = { Text(text = text) },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm()
+                onDismiss()
+            }) { Text(text = "Delete") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(text = "Cancel") }
+        }
+    )
+}
 
 // --- Item edit dialog ---
 
