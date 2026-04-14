@@ -24,6 +24,10 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,10 +51,61 @@ import androidx.core.graphics.toColorInt
 import org.obywatelgcc.timelogger.categories.model.CategoryGroup
 import org.obywatelgcc.timelogger.categories.model.CategoryItem
 import org.obywatelgcc.timelogger.categories.presentation.category.CategoryState
+import org.obywatelgcc.timelogger.core.presentation.components.CustomButtonDefaults.textButtonContentModifier
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
+
+// --- Dialog state ---
+
+private class CategoryGroupDialogState(group: CategoryGroup?) {
+    var titleText by mutableStateOf(group?.name ?: "")
+}
+
+// --- Category title combo box ---
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CategoryTitleComboBox(
+    modifier: Modifier,
+    selectedCategoryTitle: String?,
+    categories: List<CategoryGroup>,
+    onCategorySelect: (index: Int, name: String) -> Unit,
+) {
+    var dropdownExpanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        modifier = modifier,
+        expanded = dropdownExpanded,
+        onExpandedChange = { dropdownExpanded = it }
+    ) {
+        TextField(
+            value = selectedCategoryTitle ?: "",
+            onValueChange = { },
+            readOnly = true,
+            singleLine = true,
+            placeholder = { Text("Category name", style = TimeLoggerTheme.typography.bodyMedium) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+            textStyle = TimeLoggerTheme.typography.bodyMedium,
+        )
+        ExposedDropdownMenu(
+            expanded = dropdownExpanded,
+            onDismissRequest = { dropdownExpanded = false }
+        ) {
+            categories.forEachIndexed { index, category ->
+                DropdownMenuItem(
+                    text = { Text(category.name) },
+                    onClick = {
+                        onCategorySelect(index, category.name)
+                        dropdownExpanded = false
+                    }
+                )
+            }
+        }
+    }
+}
 
 // --- Combined add / edit dialog for a category group ---
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CategoryGroupDialog(
     state: CategoryState,
@@ -58,66 +113,63 @@ internal fun CategoryGroupDialog(
     onDismiss: () -> Unit
 ) {
     val group = state.selectedCategory
-    val isAddMode = state.selectedCategory == null
-
-    // Title editing state
-    var titleText by rememberSaveable { mutableStateOf(group?.name ?: "") }
-    var isTitleEditing by rememberSaveable { mutableStateOf(isAddMode) }
+    val isAddMode = group == null
 
     // Nested dialogs shown from within this dialog
+    var showAddCategoryDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteConfirmDialog by rememberSaveable { mutableStateOf(false) }
+
     var showAddItemDialog by rememberSaveable { mutableStateOf(false) }
-    var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
+
     var editingItem by remember { mutableStateOf<CategoryItem?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            // Clickable title — click to edit inline
-            if (isTitleEditing) {
-                TextField(
-                    value = titleText,
-                    onValueChange = { titleText = it },
-                    singleLine = true,
-                    placeholder = { Text("Category name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onFocusChanged { focusState ->
-                            // Dispatch rename when focus leaves, if editing an existing group
-                            if (!focusState.isFocused && !isAddMode && group != null) {
-                                val trimmed = titleText.trim()
-                                if (trimmed.isNotBlank() && trimmed != group.name) {
-                                    onAction(CategoriesAction.RenameCategory(group.id, trimmed))
-                                }
-                                isTitleEditing = false
-                            }
-                        }
+            Row(modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CategoryTitleComboBox(
+                    modifier = Modifier.weight(1f),
+                    selectedCategoryTitle = group?.name,
+                    categories = state.categories,
+                    onCategorySelect = { index, name ->
+                        onAction(CategoriesAction.SelectCategory(index))
+                    }
                 )
-            } else {
-                Text(
-                    text = titleText.ifBlank { "Category name" },
-                    style = TimeLoggerTheme.typography.titleLarge,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { isTitleEditing = true }
-                )
+
+                Spacer(modifier = Modifier.width(2.dp))
+
+                org.obywatelgcc.timelogger.core.presentation.components.TextButton(
+                    modifier = Modifier.padding(2.dp),
+                    contentModifier = Modifier.textButtonContentModifier(horizontal = 3.dp, vertical = 3.dp),
+                    onClick = { showAddCategoryDialog = true },
+                ) {
+                    Icon(
+                        modifier = Modifier.size(26.dp),
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Add category group")
+                }
+
+                org.obywatelgcc.timelogger.core.presentation.components.TextButton(
+                    modifier = Modifier.padding(2.dp),
+                    contentModifier = Modifier.textButtonContentModifier(horizontal = 3.dp, vertical = 3.dp),
+                    onClick = { showDeleteConfirmDialog = true },
+                    enabled = group != null
+                ) {
+                    Icon(
+                        modifier = Modifier.size(26.dp),
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Delete category group",
+                    )
+                }
             }
+
+
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 if (!isAddMode && group != null) {
-                    // Delete button for existing group
-                    TextButton(
-                        onClick = { showDeleteConfirm = true },
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Delete category")
-                    }
-
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                     Text("Items", style = TimeLoggerTheme.typography.labelLarge)
@@ -181,69 +233,55 @@ internal fun CategoryGroupDialog(
             }
         },
         confirmButton = {
-            if (isAddMode) {
-                TextButton(
-                    onClick = {
-                        val name = titleText.trim()
-                        if (name.isNotBlank()) {
-                            onAction(CategoriesAction.AddCategory(name))
-                            onDismiss()
-                        }
-                    },
-                    enabled = titleText.isNotBlank()
-                ) {
-                    Text("Create")
-                }
-            } else {
-                TextButton(onClick = onDismiss) { Text("Close") }
-            }
-        },
-        dismissButton = if (isAddMode) {
-            { TextButton(onClick = onDismiss) { Text("Cancel") } }
-        } else null
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
     )
 
     // Nested dialogs
 
-    if (showAddItemDialog && group != null) {
-        AddNameDialog(
-            title = "New Item",
-            onConfirm = { name ->
-                onAction(CategoriesAction.AddItem(group.id, name))
-                showAddItemDialog = false
-            },
-            onDismiss = { showAddItemDialog = false }
-        )
+    if(showAddCategoryDialog) {
+
     }
 
-    if (showDeleteConfirm && group != null) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete \"${group.name}\"?") },
-            text = { Text("This will remove the category and all its items.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    onAction(CategoriesAction.DeleteCategory(group.id))
-                    showDeleteConfirm = false
-                    onDismiss()
-                }) { Text("Delete") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
-            }
-        )
-    }
+//    if (showAddItemDialog && group != null) {
+//        AddNameDialog(
+//            title = "New Item",
+//            onConfirm = { name ->
+//                onAction(CategoriesAction.AddItem(group.id, name))
+//                showAddItemDialog = false
+//            },
+//            onDismiss = { showAddItemDialog = false }
+//        )
+//    }
 
-    editingItem?.let { item ->
-        if (group != null) {
-            CategoryItemDialog(
-                categoryId = group.id,
-                item = item,
-                onAction = onAction,
-                onDismiss = { editingItem = null }
-            )
-        }
-    }
+//    if (showDeleteConfirm && group != null) {
+//        AlertDialog(
+//            onDismissRequest = { showDeleteConfirm = false },
+//            title = { Text("Delete \"${group.name}\"?") },
+//            text = { Text("This will remove the category and all its items.") },
+//            confirmButton = {
+//                TextButton(onClick = {
+//                    onAction(CategoriesAction.DeleteCategory(group.id))
+//                    showDeleteConfirm = false
+//                    onDismiss()
+//                }) { Text("Delete") }
+//            },
+//            dismissButton = {
+//                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
+//            }
+//        )
+//    }
+//
+//    editingItem?.let { item ->
+//        if (group != null) {
+//            CategoryItemDialog(
+//                categoryId = group.id,
+//                item = item,
+//                onAction = onAction,
+//                onDismiss = { editingItem = null }
+//            )
+//        }
+//    }
 }
 
 // --- Item edit dialog ---

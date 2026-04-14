@@ -27,7 +27,6 @@ import org.obywatelgcc.timelogger.core.presentation.components.filter.FilterTime
 import org.obywatelgcc.timelogger.core.presentation.components.filter.FilterTimeRangeAction.PreviousRange
 import org.obywatelgcc.timelogger.core.presentation.components.filter.FilterTimeRangeAction.ResetRange
 import org.obywatelgcc.timelogger.core.presentation.components.filter.FilterTimeRangeAction.SelectTimeRangeType
-import org.obywatelgcc.timelogger.core.presentation.components.filter.FilterTimeRangeType
 import java.time.format.DateTimeFormatter
 
 
