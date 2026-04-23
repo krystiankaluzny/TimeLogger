@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,7 +35,6 @@ import androidx.compose.material3.InputChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +52,7 @@ import org.obywatelgcc.timelogger.categories.model.Category
 import org.obywatelgcc.timelogger.categories.model.CategoryItem
 import org.obywatelgcc.timelogger.categories.presentation.category.CategoryState
 import org.obywatelgcc.timelogger.core.presentation.components.ColorButton
+import org.obywatelgcc.timelogger.core.presentation.components.TextField
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
 // --- Dialog state ---
@@ -156,12 +157,12 @@ internal fun CategoryDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
+                                    .padding(vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(12.dp)
+                                        .size(16.dp)
                                         .clip(CircleShape)
                                         .background(colorFromHex(item.color))
                                 )
@@ -179,7 +180,7 @@ internal fun CategoryDialog(
                                     Icon(
                                         Icons.Filled.Edit,
                                         contentDescription = "Edit item",
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
 
@@ -190,7 +191,7 @@ internal fun CategoryDialog(
                                     Icon(
                                         Icons.Filled.Delete,
                                         contentDescription = "Delete item",
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
@@ -314,20 +315,6 @@ internal fun CategoryDialog(
 
 }
 
-
-//
-//    editingItem?.let { item ->
-//        if (group != null) {
-//            CategoryItemDialog(
-//                categoryId = group.id,
-//                item = item,
-//                onAction = onAction,
-//                onDismiss = { editingItem = null }
-//            )
-//        }
-//    }
-
-
 @Composable
 private fun NameActionDialog(
     title: String,
@@ -417,10 +404,12 @@ internal fun CategoryItemDialog(
                     .padding(16.dp)
             ) {
                 TextField(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.height(48.dp),
+                    textStyle = TimeLoggerTheme.typography.bodyMedium,
                     value = name,
                     onValueChange = { name = it },
                     singleLine = true,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 )
 
                 Row(
@@ -433,32 +422,40 @@ internal fun CategoryItemDialog(
                         ColorButton(
                             color = colorFromHex(hex),
                             modifier = Modifier
-                                .size(14.dp),
+                                .size(24.dp),
                             onClick = { color = hex },
                             showBorder = (hex == color)
                         )
                     }
                 }
 
-
                 Text(text = "Title patterns", style = TimeLoggerTheme.typography.labelLarge)
 
-                //TODO filter suggestions
-                TextField(
-                    value = newPatternText,
-                    onValueChange = { newPatternText = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Event title pattern") },
-                    singleLine = true
-                )
-
-                //TODO ADD pattern
-
-                IconButton(
-                    onClick = { showAddPatternField = !showAddPatternField },
-                    modifier = Modifier.size(32.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Add pattern", modifier = Modifier.size(18.dp))
+                    //TODO filter suggestions
+                    TextField(
+                        value = newPatternText,
+                        onValueChange = { newPatternText = it },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        placeholder = { Text("Event title pattern") },
+                        singleLine = true,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    )
+
+                    //TODO ADD pattern
+
+                    IconButton(
+                        onClick = { showAddPatternField = !showAddPatternField },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = "Add pattern", modifier = Modifier.size(18.dp))
+                    }
                 }
 
                 Row(
