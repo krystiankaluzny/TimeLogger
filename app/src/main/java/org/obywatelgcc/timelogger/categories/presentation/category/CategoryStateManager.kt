@@ -10,6 +10,7 @@ import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.model.CalendarEvent
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
+import org.obywatelgcc.timelogger.utils.logDebug
 import java.time.Duration
 import java.util.UUID
 
@@ -111,7 +112,7 @@ class CategoryStateManager(
 
             val matchedItem = category.items.firstOrNull { item ->
                 item.titlePatterns.any { pattern ->
-                    event.title.contains(pattern, ignoreCase = true)
+                    event.title.equals(pattern, ignoreCase = true)
                 }
             }
 
@@ -131,7 +132,13 @@ class CategoryStateManager(
             )
         }
 
-        state.update { it.copy(itemStats = stats, unmatchedDuration = unmatchedDuration) }
+        val eventTitles = events
+            .map { it -> it.title }
+            .toSet()
+
+        logDebug("eventTitles: $eventTitles")
+
+        state.update { it.copy(itemStats = stats, eventTitles = eventTitles, unmatchedDuration = unmatchedDuration) }
     }
 
     // --- Private helpers ---

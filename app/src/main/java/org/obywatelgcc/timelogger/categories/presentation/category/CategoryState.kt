@@ -7,6 +7,7 @@ data class CategoryState(
     val selectedCategory: Category? = null,
     val categories: List<Category> = emptyList(),
     val itemStats: List<CategoryItemStat> = emptyList(),
+    val eventTitles: Set<String> = emptySet(),
     val unmatchedDuration: Duration = Duration.ZERO
 ) {
     data class CategoryItemStat(
@@ -15,7 +16,4 @@ data class CategoryState(
         val colorHex: String,
         val duration: Duration
     )
-
-    val totalDuration: Duration
-        get() = itemStats.fold(Duration.ZERO) { acc, s -> acc + s.duration } + unmatchedDuration
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +33,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,6 +47,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.toColorInt
@@ -55,57 +59,6 @@ import org.obywatelgcc.timelogger.core.presentation.components.ColorButton
 import org.obywatelgcc.timelogger.core.presentation.components.TextField
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 
-// --- Dialog state ---
-
-private class CategoryGroupDialogState(group: Category?) {
-    var titleText by mutableStateOf(group?.name ?: "")
-}
-
-// --- Category title combo box ---
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CategoryTitleComboBox(
-    modifier: Modifier,
-    selectedCategoryTitle: String?,
-    categories: List<Category>,
-    onCategorySelected: (Category) -> Unit,
-) {
-    var dropdownExpanded by remember { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(
-        modifier = modifier,
-        expanded = dropdownExpanded,
-        onExpandedChange = { dropdownExpanded = it }
-    ) {
-        TextField(
-            value = selectedCategoryTitle ?: "",
-            onValueChange = { },
-            readOnly = true,
-            singleLine = true,
-            placeholder = { Text(text = "Category name", style = TimeLoggerTheme.typography.bodyMedium) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
-            textStyle = TimeLoggerTheme.typography.bodyMedium,
-            modifier = Modifier.menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable),
-        )
-        ExposedDropdownMenu(
-            expanded = dropdownExpanded,
-            onDismissRequest = { dropdownExpanded = false }
-        ) {
-            categories.forEach { category ->
-                DropdownMenuItem(
-                    text = { Text(category.name) },
-                    onClick = {
-                        onCategorySelected(category)
-                        dropdownExpanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-// --- Combined add / edit dialog for a category group ---
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -298,6 +251,8 @@ internal fun CategoryDialog(
             CategoryItemDialog(
                 categoryId = category.id,
                 sourceItem = item,
+                allItems = category.items,
+                eventTitles = state.eventTitles,
                 onAction = onAction,
                 onDismiss = { itemToEdit = null }
             )
@@ -314,6 +269,49 @@ internal fun CategoryDialog(
     }
 
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CategoryTitleComboBox(
+    modifier: Modifier,
+    selectedCategoryTitle: String?,
+    categories: List<Category>,
+    onCategorySelected: (Category) -> Unit,
+) {
+    var dropdownExpanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        modifier = modifier,
+        expanded = dropdownExpanded,
+        onExpandedChange = { dropdownExpanded = it }
+    ) {
+        TextField(
+            value = selectedCategoryTitle ?: "",
+            onValueChange = { },
+            readOnly = true,
+            singleLine = true,
+            placeholder = { Text(text = "Category name", style = TimeLoggerTheme.typography.bodyMedium) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+            textStyle = TimeLoggerTheme.typography.bodyMedium,
+            modifier = Modifier.menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable),
+        )
+        ExposedDropdownMenu(
+            expanded = dropdownExpanded,
+            onDismissRequest = { dropdownExpanded = false }
+        ) {
+            categories.forEach { category ->
+                DropdownMenuItem(
+                    text = { Text(category.name) },
+                    onClick = {
+                        onCategorySelected(category)
+                        dropdownExpanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun NameActionDialog(
@@ -371,10 +369,13 @@ private fun DeleteActionDialog(
 
 // --- Item edit dialog ---
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CategoryItemDialog(
     categoryId: String,
     sourceItem: CategoryItem,
+    allItems: List<CategoryItem>,
+    eventTitles: Set<String>,
     onAction: (CategoriesAction) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -388,10 +389,13 @@ internal fun CategoryItemDialog(
     var color by rememberSaveable { mutableStateOf(palette.find { it == sourceItem.color } ?: palette.random()) }
     var titlePatterns by rememberSaveable { mutableStateOf(sourceItem.titlePatterns) }
 
-    var showAddPatternField by rememberSaveable { mutableStateOf(false) }
-    var newPatternText by rememberSaveable { mutableStateOf("") }
+    var allTitlePatterns by rememberSaveable { mutableStateOf(allItems.map { it.titlePatterns }.flatten()) }
+    var availableTitles by rememberSaveable { mutableStateOf(eventTitles - allTitlePatterns) }
+    var titleSuggestions by remember { mutableStateOf(emptyList<String>()) }
 
-    var isNameEditing by rememberSaveable { mutableStateOf(false) }
+    var newPatternTextFieldValue by remember { mutableStateOf(TextFieldValue("")) }
+
+    var titleSuggestionsExpanded by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -438,32 +442,95 @@ internal fun CategoryItemDialog(
                         .padding(top = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    //TODO filter suggestions
-                    TextField(
-                        value = newPatternText,
-                        onValueChange = { newPatternText = it },
-                        modifier = Modifier.weight(1f).height(48.dp),
-                        placeholder = { Text("Event title pattern") },
-                        singleLine = true,
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = titleSuggestionsExpanded,
+                        onExpandedChange = { titleSuggestionsExpanded = it },
+                        modifier = Modifier
+                            .weight(1.0f)
+                    ) {
+
+                        TextField(
+                            value = newPatternTextFieldValue,
+                            onValueChange = {
+                                newPatternTextFieldValue = it
+                                titleSuggestions = availableTitles.filter { title ->
+                                    title.contains(
+                                        newPatternTextFieldValue.text,
+                                        ignoreCase = true
+                                    )
+                                }
+                                titleSuggestionsExpanded = true
+                            },
+                            modifier = Modifier
+                                .height(48.dp)
+                                .menuAnchor(MenuAnchorType.PrimaryEditable),
+                            placeholder = { Text("Event title pattern") },
+                            singleLine = true,
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                        )
+
+                        if (titleSuggestions.isNotEmpty()) {
+                            ExposedDropdownMenu(
+                                expanded = titleSuggestionsExpanded,
+                                onDismissRequest = { titleSuggestionsExpanded = false }
+                            ) {
+                                titleSuggestions.forEach { suggestion ->
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            newPatternTextFieldValue =
+                                                TextFieldValue(suggestion, selection = TextRange(suggestion.length))
+                                            titleSuggestionsExpanded = false
+                                        },
+                                        text = {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                            ) {
+
+                                                Text(
+                                                    text = suggestion,
+                                                    fontSize = TimeLoggerTheme.values.textFieldFontSize,
+                                                    modifier = Modifier
+                                                        .weight(1.0f)
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                    }
 
                     //TODO ADD pattern
 
                     IconButton(
-                        onClick = { showAddPatternField = !showAddPatternField },
+                        onClick = {
+                            val newPatternText = newPatternTextFieldValue.text.trim()
+                            if (newPatternText.isNotBlank()) {
+                                titlePatterns += newPatternText
+                                allTitlePatterns += newPatternText
+                                availableTitles -= newPatternText
+                                titleSuggestions = emptyList()
+                                newPatternTextFieldValue = TextFieldValue("")
+                            }
+                        },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = "Add pattern", modifier = Modifier.size(18.dp))
                     }
+
+
                 }
 
-                Row(
+                FlowRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
                         .padding(top = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy((-10).dp),
                 ) {
                     titlePatterns.forEach { pattern ->
                         InputChip(
@@ -473,9 +540,9 @@ internal fun CategoryItemDialog(
                             trailingIcon = {
                                 IconButton(
                                     onClick = {
-                                        onAction(
-                                            TODO("CategoriesAction.RemovePattern")
-                                        )
+                                        titlePatterns -= pattern
+                                        allTitlePatterns -= pattern
+                                        availableTitles += pattern
                                     },
                                     modifier = Modifier.size(18.dp)
                                 ) {
@@ -485,13 +552,25 @@ internal fun CategoryItemDialog(
                                         modifier = Modifier.size(14.dp)
                                     )
                                 }
-                            },
-                            modifier = Modifier.padding(end = 4.dp)
+                            }
                         )
                     }
+                }
 
+                // --- Buttons row ---
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+
+                    Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.weight(1f)) {
+                        TextButton(onClick = onDismiss) { Text(text = "Close") }
+                    }
                     //TODO change detection, so when Close button is clicked then we show allert dialog
-                    TextButton(onClick = onDismiss) { Text(text = "Close") }
+
+
+                    TextButton(onClick = {}) { Text(text = "Save") }
                 }
             }
         }
@@ -502,25 +581,25 @@ internal fun CategoryItemDialog(
 
 // --- Color swatch ---
 
-    @Composable
-    internal fun ColorSwatch(colorHex: String, isSelected: Boolean, onClick: () -> Unit) {
-        Box(
-            modifier = Modifier
-                .size(if (isSelected) 22.dp else 16.dp)
-                .clip(CircleShape)
-                .background(colorFromHex(colorHex))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onClick
-                )
-        )
-    }
+@Composable
+internal fun ColorSwatch(colorHex: String, isSelected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(if (isSelected) 22.dp else 16.dp)
+            .clip(CircleShape)
+            .background(colorFromHex(colorHex))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
+    )
+}
 
 // --- Shared utility ---
 
-    internal fun colorFromHex(hex: String): Color = try {
-        Color(hex.toColorInt())
-    } catch (_: IllegalArgumentException) {
-        Color.Gray
-    }
+internal fun colorFromHex(hex: String): Color = try {
+    Color(hex.toColorInt())
+} catch (_: IllegalArgumentException) {
+    Color.Gray
+}
