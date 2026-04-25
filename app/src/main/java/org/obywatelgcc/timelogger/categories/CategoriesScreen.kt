@@ -38,6 +38,7 @@ import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Durat
 import org.obywatelgcc.timelogger.core.presentation.components.filter.FilterTimeRangeView
 import org.obywatelgcc.timelogger.ui.theme.TimeLoggerTheme
 import java.time.Duration
+import kotlin.math.roundToInt
 
 @Composable
 fun CategoriesScreen(categoriesViewModel: CategoriesViewModel) {
@@ -128,11 +129,12 @@ private fun CategorySelectorRow(
 
 @Composable
 private fun CategoryPieChartView(state: CategoryState, modifier: Modifier) {
+    val totalDurationSec = state.totalDuration.toSeconds()
     val data = state.itemStats
         .filter { !it.duration.isZero }
         .map { stat ->
             Data(
-                label = stat.itemName,
+                label = (stat.duration.toSeconds().toDouble() / totalDurationSec * 100).roundToInt().toString() + "%",
                 value = stat.duration,
                 color = colorFromHex(stat.colorHex)
             )
@@ -147,7 +149,9 @@ private fun CategoryPieChartView(state: CategoryState, modifier: Modifier) {
             modifier = modifier.fillMaxWidth(),
             data = data,
             scale = DurationScale(domain = DurationScale.totalDurationDomain(data)),
-            properties = PieChartProperties()
+            properties = PieChartProperties(
+                labelTextColor = TimeLoggerTheme.colorScheme.onSurface
+            )
         )
     }
 }

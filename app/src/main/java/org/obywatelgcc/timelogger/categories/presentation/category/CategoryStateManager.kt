@@ -95,13 +95,14 @@ class CategoryStateManager(
 
     fun recalculate(queryTimeRange: ZonedDateTimeRange, events: List<CalendarEvent>) {
         val category = state.value.selectedCategory ?: run {
-            state.update { it.copy(itemStats = emptyList(), unmatchedDuration = Duration.ZERO) }
+            state.update { it.copy(itemStats = emptyList(), totalDuration = Duration.ZERO) }
             return
         }
 
         val durationMap = mutableMapOf<String, Duration>()
         category.items.forEach { durationMap[it.id] = Duration.ZERO }
         var unmatchedDuration = Duration.ZERO
+        var totalDuration = Duration.ZERO
 
         for (event in events) {
             val eventDuration = clampedDuration(event.timeRange, queryTimeRange)
@@ -115,6 +116,7 @@ class CategoryStateManager(
 
             if (matchedItem != null) {
                 durationMap[matchedItem.id] = (durationMap[matchedItem.id] ?: Duration.ZERO) + eventDuration
+                totalDuration += eventDuration
             } else {
                 unmatchedDuration += eventDuration
             }
@@ -132,6 +134,8 @@ class CategoryStateManager(
             .toMutableList()
 
         if (category.showUncategorized && unmatchedDuration > Duration.ZERO) {
+            totalDuration += unmatchedDuration
+
             stats.add(
                 CategoryItemStat(
                     itemId = CategoryItem.UNCATEGORIZED_ID,
@@ -149,7 +153,7 @@ class CategoryStateManager(
             it.copy(
                 itemStats = stats.toList(),
                 eventTitles = eventTitles,
-                unmatchedDuration = unmatchedDuration
+                totalDuration = totalDuration
             )
         }
     }

@@ -8,7 +8,7 @@ data class CategoryState(
     val categories: List<Category> = emptyList(),
     val itemStats: List<CategoryItemStat> = emptyList(),
     val eventTitles: Set<String> = emptySet(),
-    val unmatchedDuration: Duration = Duration.ZERO
+    val totalDuration: Duration = Duration.ZERO
 ) {
     data class CategoryItemStat(
         val itemId: String,

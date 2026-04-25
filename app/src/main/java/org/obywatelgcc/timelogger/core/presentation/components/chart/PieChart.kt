@@ -13,6 +13,10 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Black
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import org.obywatelgcc.timelogger.core.presentation.components.chart.drawer.pie.SimplePieDrawer
 import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Data
 import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Scale
@@ -20,7 +24,10 @@ import org.obywatelgcc.timelogger.core.presentation.components.chart.model.Scale
 data class PieChartProperties(
     val donutHoleRatio: Float = 0.4f,
     val gapWidth: Float = 20f,
-    val animationDurationMs: Int = 800
+    val animationDurationMs: Int = 800,
+
+    val labelTextSize: TextUnit = 18.sp,
+    val labelTextColor: Color = Black
 )
 
 @Composable
@@ -34,7 +41,14 @@ fun <T> PieChart(
 
     val transitionAnimation = remember(data) { Animatable(initialValue = 0f) }
     val backgroundColor = MaterialTheme.colorScheme.background
-    val pieDrawer = SimplePieDrawer(scale, properties.donutHoleRatio, properties.gapWidth, backgroundColor)
+    val pieDrawer = SimplePieDrawer(
+        scale,
+        properties.donutHoleRatio,
+        properties.gapWidth,
+        backgroundColor,
+        properties.labelTextSize,
+        properties.labelTextColor
+    )
 
     LaunchedEffect(data) {
         transitionAnimation.animateTo(1f, animationSpec = TweenSpec<Float>(durationMillis = properties.animationDurationMs))
