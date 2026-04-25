@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -35,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -74,6 +76,8 @@ internal fun CategoryDialog(
     var showEditCategoryDialog by rememberSaveable { mutableStateOf(false) }
     var showDeleteCategoryConfirmDialog by rememberSaveable { mutableStateOf(false) }
 
+    var showUncategorizedItem by remember { mutableStateOf(category?.showUncategorized ?: false) }
+
     var showAddItemDialog by rememberSaveable { mutableStateOf(false) }
     var itemToEdit by remember { mutableStateOf<CategoryItem?>(null) }
     var itemToDelete by remember { mutableStateOf<CategoryItem?>(null) }
@@ -98,6 +102,20 @@ internal fun CategoryDialog(
                     }
                 )
 
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(checked = showUncategorizedItem, onCheckedChange = {
+                        onAction(CategoriesAction.ShowUncategorizedItem(category!!.id, it))
+                        showUncategorizedItem = it
+                    })
+                    Text(
+                        text = "Show Uncategorized",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
                 // --- Items list (visible when a category is selected) ---
                 category?.let {
                     LazyColumn(
@@ -110,7 +128,7 @@ internal fun CategoryDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
+                                    .padding(vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(

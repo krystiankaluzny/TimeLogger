@@ -7,6 +7,7 @@ import java.util.UUID
 data class Category(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
+    val showUncategorized: Boolean = false,
     val items: List<CategoryItem> = emptyList()
 )
 
@@ -19,5 +20,8 @@ data class CategoryItem(
 ) {
     companion object {
         const val DEFAULT_COLOR = "#F44336"
+        const val UNCATEGORIZED_NAME = "Uncategorized"
+        const val UNCATEGORIZED_ID = "UncategorizedId"
+        const val UNCATEGORIZED_COLOR = "#9E9E9E"
     }
 }

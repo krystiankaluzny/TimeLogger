@@ -65,14 +65,17 @@ class CategoriesViewModel(
             filterTimeRangeStateManager.selectTimeRangeType(action.type)
             launchRefreshData()
         }
+
         FilterTimeRangeAction.PreviousRange -> {
             filterTimeRangeStateManager.calculatePreviousRange()
             launchRefreshData()
         }
+
         FilterTimeRangeAction.NextRange -> {
             filterTimeRangeStateManager.calculateNextRange()
             launchRefreshData()
         }
+
         FilterTimeRangeAction.ResetRange -> {
             filterTimeRangeStateManager.resetRange()
             launchRefreshData()
@@ -84,21 +87,35 @@ class CategoriesViewModel(
             categoryStateManager.selectCategory(action.category)
             launchRefreshData()
         }
+
         is CategoriesAction.AddCategory -> categoryStateManager.addCategory(action.name)
         is CategoriesAction.RenameCategory -> categoryStateManager.renameCategory(action.categoryId, action.newName)
+        is CategoriesAction.ShowUncategorizedItem -> {
+            categoryStateManager.showUncategorized(action.categoryId, action.showUncategorized)
+            launchRefreshData()
+        }
+
         is CategoriesAction.DeleteCategory -> {
             categoryStateManager.deleteCategory(action.categoryId)
             launchRefreshData()
         }
+
         is CategoriesAction.AddItem -> {
             categoryStateManager.addItem(action.categoryId, action.name)
             launchRefreshData()
         }
+
         is CategoriesAction.UpdateItem -> {
             categoryStateManager.updateItem(action.categoryId, action.item)
             launchRefreshData()
         }
-        is CategoriesAction.RenameItem -> categoryStateManager.renameItem(action.categoryId, action.itemId, action.newName)
+
+        is CategoriesAction.RenameItem -> categoryStateManager.renameItem(
+            action.categoryId,
+            action.itemId,
+            action.newName
+        )
+
         is CategoriesAction.DeleteItem -> {
             categoryStateManager.deleteItem(action.categoryId, action.itemId)
             launchRefreshData()

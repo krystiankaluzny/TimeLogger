@@ -6,11 +6,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
 import org.obywatelgcc.timelogger.categories.model.Category
 import org.obywatelgcc.timelogger.categories.model.CategoryItem
+import org.obywatelgcc.timelogger.categories.presentation.category.CategoryState.CategoryItemStat
 import org.obywatelgcc.timelogger.core.data.DataStoreManager
 import org.obywatelgcc.timelogger.core.model.CalendarEvent
 import org.obywatelgcc.timelogger.core.model.ZonedDateTimeRange
 import org.obywatelgcc.timelogger.core.presentation.BaseStateManager
-import org.obywatelgcc.timelogger.utils.logDebug
 import java.time.Duration
 import java.util.UUID
 
@@ -55,6 +55,10 @@ class CategoryStateManager(
 
     fun deleteCategory(categoryId: String) {
         mutateCategories { groups -> groups.filter { it.id != categoryId } }
+    }
+
+    fun showUncategorized(categoryId: String, showUncategorized: Boolean) {
+        mutateCategory(categoryId) { it.copy(showUncategorized = showUncategorized) }
     }
 
     fun selectCategory(category: Category) {
@@ -105,7 +109,7 @@ class CategoryStateManager(
 
             val matchedItem = category.items.firstOrNull { item ->
                 item.titlePatterns.any { pattern ->
-                    event.title.equals(pattern, ignoreCase = true)
+                    event.title.trim().equals(pattern, ignoreCase = true)
                 }
             }
 
@@ -116,22 +120,38 @@ class CategoryStateManager(
             }
         }
 
-        val stats = category.items.map { item ->
-            CategoryState.CategoryItemStat(
-                itemId = item.id,
-                itemName = item.name,
-                colorHex = item.color,
-                duration = durationMap[item.id] ?: Duration.ZERO
+        val stats = category.items
+            .map { item ->
+                CategoryItemStat(
+                    itemId = item.id,
+                    itemName = item.name,
+                    colorHex = item.color,
+                    duration = durationMap[item.id] ?: Duration.ZERO
+                )
+            }
+            .toMutableList()
+
+        if (category.showUncategorized && unmatchedDuration > Duration.ZERO) {
+            stats.add(
+                CategoryItemStat(
+                    itemId = CategoryItem.UNCATEGORIZED_ID,
+                    itemName = CategoryItem.UNCATEGORIZED_NAME,
+                    colorHex = CategoryItem.UNCATEGORIZED_COLOR,
+                    duration = unmatchedDuration
+                )
             )
         }
-
         val eventTitles = events
-            .map { it -> it.title }
+            .map { it -> it.title.trim() }
             .toSet()
 
-        logDebug("eventTitles: $eventTitles")
-
-        state.update { it.copy(itemStats = stats, eventTitles = eventTitles, unmatchedDuration = unmatchedDuration) }
+        state.update {
+            it.copy(
+                itemStats = stats.toList(),
+                eventTitles = eventTitles,
+                unmatchedDuration = unmatchedDuration
+            )
+        }
     }
 
     // --- Private helpers ---
@@ -150,6 +170,12 @@ class CategoryStateManager(
                 selectedCategoryId = state.value.selectedCategory?.id ?: "",
                 categories = state.value.categories
             )
+        }
+    }
+
+    private fun mutateCategory(categoryId: String, transform: (Category) -> Category) {
+        mutateCategories { categories ->
+            categories.map { if (it.id == categoryId) transform(it) else it }
         }
     }
 
