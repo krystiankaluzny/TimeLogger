@@ -31,7 +31,13 @@ class CategoryStateManager(
 
     suspend fun init() {
         categoryPreferences.loadFormDataStore()
-        state.update { it.copy(categories = categoryPreferences.value.categories) }
+        state.update {
+            val prefValue = categoryPreferences.value
+            it.copy(
+                selectedCategory = prefValue.categories.find { it.id == prefValue.selectedCategoryId },
+                categories = prefValue.categories
+            )
+        }
     }
 
     // --- Category CRUD ---
@@ -59,13 +65,16 @@ class CategoryStateManager(
     // --- Item CRUD ---
 
     fun addItem(categoryId: String, name: String) {
-        val newItemIndex = state.value.categories.find { it.id == categoryId }?.items?.size ?: 0
         val newItem = CategoryItem(
             id = UUID.randomUUID().toString(),
             name = name,
-            color = CategoryItem.paletteColorForIndex(newItemIndex)
+            color = CategoryItem.DEFAULT_COLOR
         )
         mutateCategoryItems(categoryId) { it + newItem }
+    }
+
+    fun updateItem(categoryId: String, item: CategoryItem) {
+        mutateItem(categoryId, item.id) { item }
     }
 
     fun renameItem(categoryId: String, itemId: String, newName: String) {
@@ -76,22 +85,6 @@ class CategoryStateManager(
 
     fun deleteItem(categoryId: String, itemId: String) {
         mutateCategoryItems(categoryId) { items -> items.filter { it.id != itemId } }
-    }
-
-    fun setItemColor(categoryId: String, itemId: String, colorHex: String) {
-        mutateCategoryItems(categoryId) { items ->
-            items.map { if (it.id == itemId) it.copy(color = colorHex) else it }
-        }
-    }
-
-    // --- Pattern management ---
-
-    fun addPattern(categoryId: String, itemId: String, pattern: String) {
-        mutateItem(categoryId, itemId) { it.copy(titlePatterns = it.titlePatterns + pattern) }
-    }
-
-    fun removePattern(categoryId: String, itemId: String, pattern: String) {
-        mutateItem(categoryId, itemId) { it.copy(titlePatterns = it.titlePatterns - pattern) }
     }
 
     // --- Statistics calculation ---

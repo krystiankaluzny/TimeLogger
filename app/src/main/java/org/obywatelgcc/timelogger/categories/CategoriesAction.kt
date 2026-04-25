@@ -1,6 +1,7 @@
 package org.obywatelgcc.timelogger.categories
 
 import org.obywatelgcc.timelogger.categories.model.Category
+import org.obywatelgcc.timelogger.categories.model.CategoryItem
 
 sealed interface CategoriesAction {
     data class SelectCategory(val category: Category) : CategoriesAction
@@ -11,8 +12,6 @@ sealed interface CategoriesAction {
     data class AddItem(val categoryId: String, val name: String) : CategoriesAction
     data class RenameItem(val categoryId: String, val itemId: String, val newName: String) : CategoriesAction
     data class DeleteItem(val categoryId: String, val itemId: String) : CategoriesAction
-    data class SetItemColor(val categoryId: String, val itemId: String, val colorHex: String) : CategoriesAction
 
-    data class AddPattern(val categoryId: String, val itemId: String, val pattern: String) : CategoriesAction
-    data class RemovePattern(val categoryId: String, val itemId: String, val pattern: String) : CategoriesAction
+    data class UpdateItem(val categoryId: String, val item: CategoryItem) : CategoriesAction
 }

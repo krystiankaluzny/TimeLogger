@@ -397,6 +397,8 @@ internal fun CategoryItemDialog(
 
     var titleSuggestionsExpanded by remember { mutableStateOf(false) }
 
+    var showCancelConfirmationDialog by remember { mutableStateOf(false) }
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = TimeLoggerTheme.shapes.medium,
@@ -501,10 +503,7 @@ internal fun CategoryItemDialog(
                                 }
                             }
                         }
-
                     }
-
-                    //TODO ADD pattern
 
                     IconButton(
                         onClick = {
@@ -557,6 +556,10 @@ internal fun CategoryItemDialog(
                     }
                 }
 
+                val isItemModified = name != sourceItem.name ||
+                        color != sourceItem.color ||
+                        titlePatterns != sourceItem.titlePatterns
+
                 // --- Buttons row ---
                 Row(
                     modifier = Modifier
@@ -565,35 +568,51 @@ internal fun CategoryItemDialog(
                 ) {
 
                     Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.weight(1f)) {
-                        TextButton(onClick = onDismiss) { Text(text = "Close") }
+                        TextButton(
+                            onClick = {
+                                if (isItemModified) showCancelConfirmationDialog = true
+                                else onDismiss()
+                            }
+                        ) {
+                            Text(text = "Close")
+                        }
                     }
-                    //TODO change detection, so when Close button is clicked then we show allert dialog
 
-
-                    TextButton(onClick = {}) { Text(text = "Save") }
+                    TextButton(
+                        onClick = {
+                            val updatedItem = sourceItem.copy(name = name, color = color, titlePatterns = titlePatterns)
+                            onAction(CategoriesAction.UpdateItem(categoryId, updatedItem))
+                            onDismiss()
+                        },
+                        enabled = isItemModified
+                    ) {
+                        Text(text = "Save")
+                    }
                 }
             }
         }
     }
-}
 
-// --- Generic name input dialog ---
-
-// --- Color swatch ---
-
-@Composable
-internal fun ColorSwatch(colorHex: String, isSelected: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(if (isSelected) 22.dp else 16.dp)
-            .clip(CircleShape)
-            .background(colorFromHex(colorHex))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            )
-    )
+    if (showCancelConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelConfirmationDialog = false },
+            title = { Text("Discard changes?") },
+            text = {
+                Text(text = "You made some changes, are you sure you want to leave?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showCancelConfirmationDialog = false
+                        onDismiss()
+                    }
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelConfirmationDialog = false }) { Text("Close") }
+            }
+        )
+    }
 }
 
 // --- Shared utility ---

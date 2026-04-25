@@ -94,18 +94,13 @@ class CategoriesViewModel(
             categoryStateManager.addItem(action.categoryId, action.name)
             launchRefreshData()
         }
+        is CategoriesAction.UpdateItem -> {
+            categoryStateManager.updateItem(action.categoryId, action.item)
+            launchRefreshData()
+        }
         is CategoriesAction.RenameItem -> categoryStateManager.renameItem(action.categoryId, action.itemId, action.newName)
         is CategoriesAction.DeleteItem -> {
             categoryStateManager.deleteItem(action.categoryId, action.itemId)
-            launchRefreshData()
-        }
-        is CategoriesAction.SetItemColor -> categoryStateManager.setItemColor(action.categoryId, action.itemId, action.colorHex)
-        is CategoriesAction.AddPattern -> {
-            categoryStateManager.addPattern(action.categoryId, action.itemId, action.pattern)
-            launchRefreshData()
-        }
-        is CategoriesAction.RemovePattern -> {
-            categoryStateManager.removePattern(action.categoryId, action.itemId, action.pattern)
             launchRefreshData()
         }
     }
